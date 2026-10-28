@@ -35,8 +35,9 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "personal": ["loan_amount", "tenure_years", "age", "monthly_income", "employment_type", "credit_score", "existing_emi"],
     "home": ["loan_amount", "tenure_years", "age", "monthly_income", "employment_type", "credit_score", "existing_emi", "property_value"],
     "auto": ["loan_amount", "tenure_years", "age", "monthly_income", "employment_type", "credit_score", "existing_emi", "vehicle_price"],
-    "education": ["loan_amount", "tenure_years", "age", "study_abroad", "co_applicant_income", "co_applicant_credit_score", "co_applicant_existing_emi"],
+    "education": ["loan_amount", "tenure_years", "age", "study_abroad"],  # + co-applicant fields per policy (below)
 }
+CO_APPLICANT_FIELDS = ["co_applicant_income", "co_applicant_credit_score", "co_applicant_existing_emi"]
 # Fields that only make sense for one product; dropped when the applicant switches product.
 PRODUCT_SPECIFIC = {
     "home": {"property_value"},
@@ -86,6 +87,8 @@ def load_rules() -> dict[str, Any]:
 
 
 RULES = load_rules()
+if RULES["products"]["education"].get("co_applicant_required", True):
+    REQUIRED_FIELDS["education"] += CO_APPLICANT_FIELDS
 
 
 # ---------------------------------------------------------------- formatting

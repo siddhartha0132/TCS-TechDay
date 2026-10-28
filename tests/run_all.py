@@ -2,6 +2,7 @@
 
     .venv/bin/python tests/run_all.py
 """
+import os
 import subprocess
 import sys
 import time
@@ -19,10 +20,14 @@ SUITE = [
     ("labelled eval (deterministic)", [PY, "-m", "eval.run_eval", "--no-llm"]),
 ]
 
+if __name__ != "__main__":
+    raise ImportError("run directly, or use pytest tests/test_suite.py")
+
 failed = 0
 for name, cmd in SUITE:
     t = time.perf_counter()
-    r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+                       env={**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"})
     ok = r.returncode == 0 and "Traceback" not in r.stdout + r.stderr
     failed += not ok
     print(f"{'PASS' if ok else 'FAIL'}  {name:45s} {time.perf_counter() - t:5.1f}s")

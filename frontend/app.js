@@ -87,6 +87,7 @@
     const p = PRODUCT[profile.loan_type] || PRODUCT.personal;
     const co = profile.loan_type === "education" ? "My father's " : "";
     switch (field) {
+      case "__confirm__": return [["✅ Yes, confirm", "Yes, confirm"], ["✏️ Change something", "__edit__"]];
       case "loan_type": return Object.entries(PRODUCT).map(([k, v]) => [v.label, `I want a ${v.label.toLowerCase()}`]);
       case "loan_amount": return p.amounts.map((a) => [fmtINR(a), `${a / 1e5} lakh`]);
       case "tenure_years": return p.tenures.map((t) => [`${t} years`, `${t} years`]);
@@ -117,7 +118,9 @@
       `<button type="button" class="chip${text === "__reset__" ? " alt" : ""}" data-i="${i}">${esc(label)}</button>`).join("");
     $("quick").querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => {
       const text = items[+c.dataset.i][1];
-      if (text === "__reset__") resetAll(); else send(text);
+      if (text === "__reset__") resetAll();
+      else if (text === "__edit__") { input.placeholder = "e.g. “my salary is 65,000 per month”"; input.focus(); }
+      else send(text);
     }));
   }
 
@@ -188,15 +191,17 @@
       refreshLenders(profile);
     } else {
       pill.className = "pill pill-INCOMPLETE";
-      pill.textContent = keys.length ? `Collecting details · ${keys.length}/${total}` : "Awaiting details";
+      pill.textContent = r.pending_confirmation ? "Confirm your details" : keys.length ? `Collecting details · ${keys.length}/${total}` : "Awaiting details";
       $("resultLabel").textContent = "Your eligible amount";
-      $("resultAmount").textContent = "—";
-      $("resultSub").textContent = missing.length ? "Still needed: " + missing.map((k) => (FIELD_LABELS[k] || k).toLowerCase()).join(", ") : "";
+      $("resultAmount").textContent = r.pending_confirmation ? "One step left" : "—";
+      $("resultSub").textContent = r.pending_confirmation
+        ? "Check the values in the chat and confirm — your result appears right after."
+        : missing.length ? "Still needed: " + missing.map((k) => (FIELD_LABELS[k] || k).toLowerCase()).join(", ") : "";
       $("simCard").hidden = true;
       $("lendersCard").hidden = true;
     }
     updateStepper(profile, ev);
-    renderQuick(r.next_field, profile, ev);
+    renderQuick(r.pending_confirmation ? "__confirm__" : r.next_field, profile, ev);
 
     const lb = $("latencyBadge");
     lb.textContent = `⏱ ${(r.latency_ms / 1000).toFixed(1)} s`;

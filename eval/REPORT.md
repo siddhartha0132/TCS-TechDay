@@ -1,7 +1,7 @@
 # Evaluation report
 
 - Mode: **deterministic**
-- Generated: 2026-10-28 14:25
+- Generated: 2026-10-28 14:39
 
 ## A. Rules engine — 17/17 = **100%**
 
@@ -68,49 +68,49 @@
 
 ## C. End-to-end conversation (deterministic) — verdict 36/36 = **100%**
 
-- Replies under 15 s: **36/36** (100%) · latency p50 0 ms · p95 0 ms · max 0 ms
-- Average turns to verdict: 1.0
-- Replies where the LLM failed and the deterministic fallback answered: **0/36**
+- Replies under 15 s: **69/69** (100%) · latency p50 0 ms · p95 0 ms · max 0 ms
+- Average turns to verdict: 1.9
+- Replies where the LLM failed and the deterministic fallback answered: **0/69**
 - PII masking on labelled cases: ✅
 
 | id | lang | expected | got | ok | turns | max ms |
 |---|---|---|---|---|---|---|
-| nl01 | en | ELIGIBLE | ELIGIBLE | ✅ | 1 | 0 |
-| nl02 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
-| nl03 | hinglish | ELIGIBLE | ELIGIBLE | ✅ | 1 | 0 |
-| nl04 | hi | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
-| nl05 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 1 | 0 |
-| nl06 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
-| nl07 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 1 | 0 |
-| nl08 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 1 | 0 |
-| nl09 | hinglish | ELIGIBLE | ELIGIBLE | ✅ | 1 | 0 |
-| nl10 | hi | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
-| nl11 | en | ELIGIBLE | ELIGIBLE | ✅ | 1 | 0 |
-| nl12 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
-| nl13 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 1 | 0 |
-| nl14 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
-| nl15 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 1 | 0 |
-| nl16 | en | ELIGIBLE | ELIGIBLE | ✅ | 1 | 0 |
-| nl17 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 1 | 0 |
-| nl18 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
+| nl01 | en | ELIGIBLE | ELIGIBLE | ✅ | 2 | 0 |
+| nl02 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
+| nl03 | hinglish | ELIGIBLE | ELIGIBLE | ✅ | 2 | 0 |
+| nl04 | hi | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
+| nl05 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 2 | 0 |
+| nl06 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
+| nl07 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 2 | 0 |
+| nl08 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 2 | 0 |
+| nl09 | hinglish | ELIGIBLE | ELIGIBLE | ✅ | 2 | 0 |
+| nl10 | hi | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
+| nl11 | en | ELIGIBLE | ELIGIBLE | ✅ | 2 | 0 |
+| nl12 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
+| nl13 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 2 | 0 |
+| nl14 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
+| nl15 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 2 | 0 |
+| nl16 | en | ELIGIBLE | ELIGIBLE | ✅ | 2 | 0 |
+| nl17 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 2 | 0 |
+| nl18 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
 | nl19 | en | INCOMPLETE | INCOMPLETE | ✅ | 1 | 0 |
 | nl20 | en | INCOMPLETE | INCOMPLETE | ✅ | 1 | 0 |
-| nl21 | en | ELIGIBLE | ELIGIBLE | ✅ | 1 | 0 |
-| nl22 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
-| nl23 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
-| nl24 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 1 | 0 |
-| nl25 | hinglish | ELIGIBLE | ELIGIBLE | ✅ | 1 | 0 |
-| nl26 | hi | ELIGIBLE | ELIGIBLE | ✅ | 1 | 0 |
-| nl27 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 1 | 0 |
-| nl28 | en | ELIGIBLE | ELIGIBLE | ✅ | 1 | 0 |
-| nl29 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 1 | 0 |
-| nl30 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
-| nl31 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 1 | 0 |
-| nl32 | en | ELIGIBLE | ELIGIBLE | ✅ | 1 | 0 |
-| nl33 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
+| nl21 | en | ELIGIBLE | ELIGIBLE | ✅ | 2 | 0 |
+| nl22 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
+| nl23 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
+| nl24 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 2 | 0 |
+| nl25 | hinglish | ELIGIBLE | ELIGIBLE | ✅ | 2 | 0 |
+| nl26 | hi | ELIGIBLE | ELIGIBLE | ✅ | 2 | 0 |
+| nl27 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 2 | 0 |
+| nl28 | en | ELIGIBLE | ELIGIBLE | ✅ | 2 | 0 |
+| nl29 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 2 | 0 |
+| nl30 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
+| nl31 | en | NOT_ELIGIBLE | NOT_ELIGIBLE | ✅ | 2 | 0 |
+| nl32 | en | ELIGIBLE | ELIGIBLE | ✅ | 2 | 0 |
+| nl33 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
 | nl34 | hinglish | INCOMPLETE | INCOMPLETE | ✅ | 1 | 0 |
-| nl35 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
-| nl36 | en | CONDITIONAL | CONDITIONAL | ✅ | 1 | 0 |
+| nl35 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
+| nl36 | en | CONDITIONAL | CONDITIONAL | ✅ | 2 | 0 |
 
 ## How to read this
 

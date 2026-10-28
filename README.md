@@ -1,137 +1,139 @@
 # LoanMitra — Automated Loan Eligibility Chatbot
 
-Single-agent GenAI chatbot that talks to a loan applicant in **English, Hindi or Hinglish** (text or voice),
-collects the facts it needs, runs them through an **auditable rules engine**, and replies with an instant verdict,
-the reasons, the EMI, and concrete *what-you-can-do-next* steps — in well under 15 seconds.
-
-Built for the TCS Technology Day problem statement *"Banking: Automated Loan Eligibility Chatbot"*.
-
-## Why this design
-
-| Problem statement asks for | How LoanMitra does it |
-|---|---|
-| Single-agent chatbot | One Claude agent with three tools (`update_applicant_profile`, `what_if`, `list_required_documents`) |
-| Evaluates input against eligibility rules | Deterministic engine in [backend/rules.py](backend/rules.py), policy in [data/rules.json](data/rules.json) — the LLM never decides eligibility |
-| Personalised feedback + next steps | Counterfactuals computed from the rules: max eligible amount, tenure that would work, EMIs to close, score points needed, co-applicant income needed |
-| 80%+ accuracy | Labelled test set + eval harness ([eval/run_eval.py](eval/run_eval.py)); current run: 100% on rules, extraction and end-to-end verdicts |
-| < 15 s response | Latency measured per reply and shown in the UI; `effort=low` on the model keeps GenAI replies fast |
-| Synthetic data, privacy | 300 generated applicants ([data/generate_synthetic.py](data/generate_synthetic.py)); PAN / Aadhaar / phone / email masked before any processing; sessions in memory only |
-| Chat UI, docs, demo | [frontend/](frontend/), [docs/](docs/) |
-
-**Works with or without an API key.** Without `ANTHROPIC_API_KEY` the same tools are driven by a slot-filling
-state machine with regex extraction (deterministic mode). Add the key and the agent switches to Claude automatically.
+Single-agent GenAI chatbot for the TCS Technology Day problem statement *"Banking: Automated Loan Eligibility
+Chatbot"*. An applicant types or speaks in **English, Hindi, Hinglish or 9 more Indian languages**; the agent collects
+the facts, **shows them back for confirmation**, then an **auditable rules engine** decides. The reply gives the verdict,
+reasons, EMI, a plan to become eligible, and a comparison across a (simulated) lender panel.
 
 ## Quick start
 
 ```bash
-cd loan-eligibility-chatbot
-uv venv --python 3.12 .venv            # or: python3.12 -m venv .venv
-uv pip install --python .venv/bin/python -r requirements.txt
-cp .env.example .env                   # add ANTHROPIC_API_KEY=... to enable GenAI mode
-.venv/bin/uvicorn backend.main:app --reload --port 8000
-# open http://localhost:8000 (overview) → "Check my eligibility" → /chat
+git clone https://github.com/siddhartha0132/TCS-TechDay.git && cd TCS-TechDay
+uv venv --python 3.12 .venv                                    # or: python3.12 -m venv .venv
+uv pip install --python .venv/bin/python -r requirements.txt   # exact, tested versions
+cp .env.example .env                                           # every key is optional (see Configuration)
+.venv/bin/uvicorn backend.main:app --port 8000
+# http://localhost:8000      overview: problem, relevance, market gap, FAQ
+# http://localhost:8000/chat the chatbot (Chat tab) and the eligibility form (Quick form tab)
 ```
 
-Regenerate data and run the evaluation:
+Docker (single replica — read [docs/SCALING.md](docs/SCALING.md) before scaling out):
 
 ```bash
-.venv/bin/python -m data.generate_synthetic --n 300
-.venv/bin/python -m eval.run_eval          # GenAI mode if key present
-.venv/bin/python -m eval.run_eval --no-llm # deterministic baseline
-# -> eval/REPORT.md
+docker build -t loanmitra . && docker run -p 8000:8000 --env-file .env loanmitra
 ```
+
+## How a check works
+
+1. **PII masking** — PAN, Aadhaar, phone, email, card and account numbers are masked before anything else sees the text.
+2. **Language** — English / Hindi / Hinglish handled natively; other Indian languages are translated to English and
+   the reply translated back (Sarvam AI).
+3. **Understanding** — an AI agent (or, with no AI available, a rule-based extractor) turns the message into facts and
+   asks only for what's missing.
+4. **Confirmation** — once everything is collected, the bot lists the exact values (with warnings such as
+   "monthly income ₹6.5 L — is that per year?"). **No verdict is shown until the applicant confirms**; any later change
+   asks again.
+5. **Decision** — `backend/rules.py` evaluates `data/rules.json` (age, income, CIBIL, FOIR, LTV, tenure, income
+   multiple). The AI explains; it never decides. Every reply carries an engine-authored verdict chip.
+6. **Plan & compare** — improvement steps that are re-verified to actually help, what-if questions, and the same
+   profile evaluated at four simulated lenders.
 
 ## Project layout
 
 ```
 backend/
-  main.py        FastAPI app: /api/chat, /api/evaluate, /api/rules, /api/samples, /api/health, static UI
-  agent.py       Session + GenAIAgent (Claude tool loop) + DeterministicAgent (fallback) + tools
-  rules.py       Eligibility engine: EMI, FOIR, LTV, age-at-maturity, income multiples, counterfactuals
-  extractor.py   Regex extraction of facts from EN / HI / Hinglish text (fallback + eval baseline)
-  privacy.py     PII masking
+  main.py        FastAPI app and routes (below); serves frontend/
+  agent.py       Session, AI tool loop over the provider chain, rule-based fallback agent, confirmation flow
+  rules.py       Eligibility engine: validation, EMI, FOIR, LTV, age-at-maturity, caps, improvement plan
+  lenders.py     Multi-lender comparison over data/lenders.json
+  simulated.py   Simulated credit bureau + Account Aggregator services
+  extractor.py   Rule-based fact extraction (EN / HI / Hinglish)
+  numbers.py     Shared parsing of Indian amounts ("5 lacs", "12 LPA", "70 hazaar", "five lakh", Devanagari digits)
+  privacy.py     PII masking (checksum + context aware)
+  security.py    Rate limits, request-size limits, security headers / CSP
+  store.py       Bounded in-memory session store with per-session locks
+  voice.py       Sarvam AI speech-to-text, text-to-speech, translation
+  audit.py       Decision audit log (no chat text or identifiers)
+  i18n.py        Language detection and rule-mode reply templates
   documents.py   Document checklists
-  i18n.py        Language detection + templated replies (fallback mode)
-frontend/        Chat UI with eligibility dashboard, voice in/out (Web Speech API)
-data/
-  rules.json     The bank's (synthetic) policy — edit without touching code
-  test_cases.json  36 labelled conversations + 15 rule-boundary cases
-  generate_synthetic.py -> applicants.csv
-eval/run_eval.py Accuracy + latency report
-docs/            ARCHITECTURE.md, DEMO_SCRIPT.md, PITCH.md
+frontend/        landing.html (overview), chat.html + app.js (chat, quick form, dashboard)
+data/            rules.json (policy), lenders.json (lender panel), test_cases.json, generate_synthetic.py
+eval/run_eval.py Labelled evaluation (accuracy + latency) -> eval/REPORT.md
+tests/           Attack / regression suite (pytest entry point: tests/test_suite.py)
+docs/            ARCHITECTURE, SCALING, PRIVACY, DEMO_SCRIPT, PITCH
 ```
 
 ## API
 
-```bash
-curl -s localhost:8000/api/chat -H 'content-type: application/json' \
-  -d '{"message":"I am 29, salaried, earn 65k, need 6 lakh personal loan for 4 years, cibil 760, no EMIs"}'
-```
+| Route | Purpose |
+|---|---|
+| `POST /api/chat` | `{message, session_id?, language?}` → reply, profile, `pending_confirmation`, `review`, `evaluation`, `verified_verdict`, latency |
+| `POST /api/reset` | Clear a session |
+| `POST /api/evaluate` | `{applicant}` → rules-engine decision (direct integration; see note below) |
+| `GET /api/lenders`, `POST /api/lenders/compare` | Lender panel; one applicant compared across lenders |
+| `POST /api/sim/lenders/{id}/eligibility` | Simulated per-lender eligibility API |
+| `POST /api/sim/bureau/soft-pull`, `POST /api/sim/aa/income` | Simulated bureau / Account Aggregator; require `consent: true` |
+| `POST /api/stt`, `POST /api/tts` | Sarvam voice (only when `SARVAM_API_KEY` is set; the UI otherwise uses browser speech) |
+| `GET /api/samples`, `GET /api/health` | Sample messages; status, active model, voice engine |
 
-Response includes `reply`, `evaluation` (status, checks, EMI, FOIR, max eligible, improvements), `profile`,
-`documents`, `latency_ms`, `pii_masked`, `mode`.
-
-`POST /api/evaluate {"applicant": {...}}` hits the rules engine directly.
+`/api/evaluate` and the lender endpoints decide on the profile exactly as supplied — they are meant for the quick form
+(where the user typed every value) and system integrations. A production integration would add authentication.
 
 ## Configuration
 
-All keys are optional. With none, everything runs on the rules engine.
+Every key is optional; with none, the rules engine answers everything.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | — | Claude (paid) as first choice in the model chain |
-| `ANTHROPIC_MODEL` | `claude-opus-5-5` | Claude model when the key above is set |
-| `OPENROUTER_API_KEY` | — | Free models via OpenRouter |
-| `OPENROUTER_MODEL` | `nvidia/nemotron-3.5-super-vl:free` | Primary free model (fastest with correct tool calling in our tests: ~7 s) |
-| `OPENROUTER_FALLBACK_MODELS` | `nvidia/nemotron-3.5-lightning:free,…` | Tried after NVIDIA if the primary is rate-limited |
-| `NVIDIA_API_KEY` | — | NVIDIA's free API (Nemotron Ultra), second in the chain |
-| `SARVAM_API_KEY` | — | Sarvam AI speech-to-text / text-to-speech for Indian languages; browser speech otherwise |
-| `LLM_TURN_BUDGET_S` | `13` | Hard latency budget per reply; past it the rules engine answers, so replies stay < 15 s |
-| `LLM_EFFORT` | `low` | Reasoning effort for Claude |
-| `RATE_CHAT_PER_MIN` / `RATE_VOICE_PER_MIN` / `RATE_API_PER_MIN` | 20 / 10 / 120 | Per-client rate limits |
-| `ALLOWED_ORIGINS` | — (same-origin) | Comma-separated origins allowed to call the API cross-site |
+| `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | — / `claude-opus-5-5` | Claude, first in the chain when set |
+| `ANTHROPIC_SERVER_FALLBACK` | `0` | `1` enables Anthropic's server-side refusal-fallback beta header (off by default) |
+| `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | — / `nvidia/nemotron-3.5-super-vl:free` | Free models via OpenRouter |
+| `OPENROUTER_FALLBACK_MODELS` | `nvidia/nemotron-3.5-lightning:free,…` | Tried after NVIDIA |
+| `NVIDIA_API_KEY` / `NVIDIA_MODEL` | — / `nvidia/nemotron-3-ultra-550b-a55b` | NVIDIA's API |
+| `SARVAM_API_KEY` | — | Indian-language voice and translation |
+| `LLM_TURN_BUDGET_S` | `13` | Hard per-reply budget; past it the rules engine answers |
+| `RATE_CHAT_PER_MIN` / `RATE_VOICE_PER_MIN` / `RATE_API_PER_MIN` | 20 / 10 / 120 | Per-client rate limits (in-process) |
+| `TRUST_PROXY` | `0` | `1` = take client IP from `X-Forwarded-For` (only behind your own proxy) |
+| `ALLOWED_ORIGINS` | same-origin | Comma-separated origins allowed cross-site |
+| `MAX_SESSIONS` / `SESSION_TTL_S` | 5000 / 3600 | In-memory session bounds |
+| `AUDIT_LOG_PATH` | `logs/audit.jsonl` | Decision audit log |
 
-**Model chain:** Claude (if keyed) → OpenRouter free → NVIDIA free → more OpenRouter free → rules engine.
-Each step is skipped on rate limit / error / timeout. If a model can't explain a verdict inside the budget,
-the engine's own explanation is used ("fast path"), so the decision never waits on a model.
+**Provider chain:** Claude (if keyed) → OpenRouter free → NVIDIA → more OpenRouter free → rules engine. A provider is
+skipped on rate limit, error or timeout. Calls run under a wall-clock deadline, so slow providers can't exceed the
+budget; when the explanation can't fit, the engine renders it ("fast path"). Free tiers are rate-limited
+(OpenRouter ≈ 50 requests/day without credits).
 
-## Tests (attack suite)
+## Tests and what they do — and don't — show
 
 ```bash
-.venv/bin/python tests/run_all.py   # never calls a paid API
+uv pip install --python .venv/bin/python -r requirements-dev.txt
+.venv/bin/python -m pytest tests/test_suite.py -v      # or: .venv/bin/python tests/run_all.py
+.venv/bin/python -m eval.run_eval --no-llm             # labelled eval, rules mode -> eval/REPORT.md
 ```
 
-Invariant fuzzer over 30k random profiles (EMI/FOIR maths, monotonicity, every "you qualify for up to X"
-and every improvement suggestion re-checked), NaN/inf/garbage inputs, 81 realistic EN/HI/Hinglish messages,
-PII masking, HTTP hardening (rate limits, body limits, headers), multi-turn conversations, labelled eval.
+Measured on 28 Oct 2026, rules mode (no AI), on the repository's own data:
 
-## Verdict categories
+| Check | Result | Limitation |
+|---|---|---|
+| Invariant fuzzer, 20–30k random profiles (EMI/FOIR maths, monotonicity, every "up to X" and improvement tip re-verified) | 0 violations | Proves internal consistency, not that the policy is the right policy |
+| 17 rule-boundary cases | 17/17 | Same author as the engine |
+| 36 labelled multilingual conversations (verdict) | 36/36 | Small, same-author set; extractor was tuned on similar phrasing |
+| 81 realistic extraction messages | 81/81 | Written by our red-team pass, not blind |
+| PII masking, HTTP hardening, multi-turn probes | pass | — |
 
-- **ELIGIBLE** — all hard rules pass.
-- **CONDITIONAL** — eligible for a smaller amount, or passes with a caveat (score near cut-off, collateral needed, tenure clamped).
-- **NOT_ELIGIBLE** — a hard rule fails (score, income, age, employment); the reply says what to fix.
-- **INCOMPLETE** — still collecting facts.
+Not yet established: **accuracy on blind messages written by other people**, and a **measured GenAI-mode accuracy**
+(live AI runs were spot checks, not a scored evaluation). `data/applicants.csv` labels come from the engine itself, so
+it is demo data, not a validation set.
 
-This is an indicative *soft check*: no bureau enquiry is made and no data is stored.
+## Verdicts
 
-## Multi-lender comparison & simulated APIs
+- **ELIGIBLE** — every hard rule passes. **CONDITIONAL** — eligible for a smaller amount, or with a caveat
+  (score near the cut-off, collateral, unknown score). **NOT_ELIGIBLE** — a hard rule fails; the reply says what to fix.
+- An indicative *soft check*: no bureau enquiry, nothing stored. See [docs/PRIVACY.md](docs/PRIVACY.md).
 
-The same applicant is evaluated against a **synthetic lender panel** (`data/lenders.json`: public bank, private bank,
-small finance bank, NBFC — fictional names, illustrative rates). Each lender overrides the reference policy's rate,
-CIBIL cut-off, FOIR limit and caps; the same rules engine decides for every lender. Ranking: lenders that can give the
-full amount (cheapest rate first), then the largest reduced amount.
+## Lenders and simulated services
 
-| Endpoint | Simulates |
-|---|---|
-| `GET /api/lenders` | Lender panel with headline rates |
-| `POST /api/lenders/compare` | Eligibility, rate, EMI, fee at every lender, best first |
-| `POST /api/sim/lenders/{id}/eligibility` | One lender's eligibility API |
-| `POST /api/sim/bureau/soft-pull` | Credit bureau soft pull (score, active loans, enquiries) — needs `consent: true` |
-| `POST /api/sim/aa/income` | Account Aggregator: 6 months of income credits and EMI debits — needs `consent: true` |
-
-Simulated services are deterministic per `mobile_last4`, return `"simulated": true`, and never touch real data.
-
-## Languages
-
-English, हिंदी and Hinglish natively; বাংলা, தமிழ், తెలుగు, मराठी, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, ଓଡ଼ିଆ via Sarvam
-translation (message → English → same agent → reply translated back). Voice in and out in all of them.
+`data/lenders.json` holds four **fictional** lenders (public, private, small finance bank, NBFC) with illustrative
+rates and cut-offs; each overrides the reference policy and the same engine decides. Ranking: full amount at the
+lowest rate first, otherwise the largest amount. Simulated bureau and Account Aggregator responses are deterministic
+per `mobile_last4`, flagged `"simulated": true`, and never touch real data.

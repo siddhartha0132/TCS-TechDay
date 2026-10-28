@@ -54,15 +54,14 @@
               <div class="b bot"><span class="chip ok">🏦 4 lenders compared</span> Closest to your amount: <b>Udaan Finance</b> — up to ₹49 L at 9.75%.</div>
             </div>
           </div>
-          <div class="pedestal" aria-hidden="true"><span class="coin c1">₹</span><span class="coin c2">₹</span><span class="coin c3">₹</span></div>
         </div>
       </div>
 
       <div class="hero-stats">
-        <div><b>36/36</b><span>verdicts correct</span></div>
+        <div><b>36/36</b><span>labelled test cases (rules mode)</span></div>
         <div><b>&lt;15 s</b><span>every reply</span></div>
         <div><b>12</b><span>Indian languages</span></div>
-        <div><b>30k</b><span>profiles fuzz-tested</span></div>
+        <div><b>30k</b><span>profiles fuzz-tested, 0 rule errors</span></div>
       </div>
     </div>
   </section>
@@ -213,7 +212,9 @@
       <details><summary>Does the AI decide who gets a loan?</summary>
         <p>No. The AI only understands what you say and explains the result. The yes/no, the EMI and the maximum amount come from a deterministic rules engine whose policy lives in one JSON file — the same input always gives the same, auditable answer.</p></details>
       <details><summary>How accurate is it, and how did you measure it?</summary>
-        <p>36 of 36 labelled multilingual conversations reach the correct verdict. The rules engine was attacked with 30,000 random applicant profiles checking EMI and FOIR maths, monotonicity, and that every “you qualify for up to X” and every improvement tip is actually true — zero violations.</p></details>
+        <p>In rules mode, 36 of 36 labelled multilingual conversations reach the expected verdict, and an invariant fuzzer over 30,000 random profiles found zero rule errors (EMI and FOIR maths, monotonicity, and every “you qualify for up to X” and improvement tip re-verified). Honest limits: the labelled set is small and written by the same team, and AI-mode accuracy on blind messages from other people is the next thing to measure.</p></details>
+      <details><summary>Could a misread number give a wrong verdict?</summary>
+        <p>That's why there's a confirmation step: before any verdict, the bot lists the exact values it will use and flags unusual ones (e.g. “monthly income ₹6.5 L — is that per year?”). Nothing is decided until the applicant confirms, and any correction asks again.</p></details>
       <details><summary>What if the AI service is down or slow?</summary>
         <p>Replies have a hard 13-second budget. Models are tried in a chain (several free models from two providers); if all are busy, the built-in rules agent answers. Decisions never depend on an external API being up.</p></details>
       <details><summary>Does checking affect my credit score?</summary>

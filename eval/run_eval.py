@@ -116,6 +116,11 @@ def run() -> str:
         turns = 1
         # Keep answering what the bot asks for, from the labelled facts, up to 8 turns
         while r["evaluation"] is None and turns < 8:
+            if r.get("pending_confirmation"):
+                r = agent.handle_message(s, "Yes, confirm")
+                latencies.append(r["latency_ms"])
+                turns += 1
+                continue
             missing = r["missing_fields"] or ["loan_type"]
             answers = [a for a in (answer_for(f, facts) for f in missing[:3]) if a]
             if not answers:

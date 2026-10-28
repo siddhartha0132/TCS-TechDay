@@ -25,7 +25,7 @@ from typing import Any, Optional
 import httpx
 from dotenv import load_dotenv
 
-from . import i18n, lenders, voice
+from . import audit, i18n, lenders, voice
 from .documents import required_documents
 from .extractor import extract
 from .privacy import mask_pii
@@ -49,7 +49,8 @@ NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 OPENROUTER_FREE_DEFAULT = "nvidia/nemotron-3.5-super-vl:free"
 OPENROUTER_FREE_FALLBACKS = "nvidia/nemotron-3.5-lightning:free,nvidia/nemotron-3-ultra-550b-a55b:free"
 NVIDIA_DEFAULT = "nvidia/nemotron-3-ultra-550b-a55b"
-TURN_BUDGET_S = float(os.getenv("LLM_TURN_BUDGET_S", "13"))  # leaves headroom under the 15 s target
+TURN_BUDGET_S = float(os.getenv("LLM_TURN_BUDGET_S", "13"))
+SERVER_FALLBACK = os.getenv("ANTHROPIC_SERVER_FALLBACK", "0") == "1"  # leaves headroom under the 15 s target
 MIN_CALL_S = 2.0
 DEFAULT_CALL_ESTIMATE_S = 6.0
 
@@ -102,9 +103,12 @@ class Session:
     updated: float = field(default_factory=time.time)
     last_model: Optional[str] = None
     reply_source: Optional[str] = None  # genai | genai+rules-template | rules
+    confirmed_sig: Optional[str] = None  # signature of the profile the applicant confirmed
+    pending_confirmation: bool = False
 
     def reset(self) -> None:
         self.profile, self.evaluation, self.expected_field, self.history = {}, None, None, []
+        self.confirmed_sig, self.pending_confirmation = None, False
 
 
 # ------------------------------------------------------------------ tools (shared by both brains)
@@ -142,11 +146,68 @@ def _range_note(invalid: list[str]) -> str:
     return "Rejected as invalid or out of range, ask again: " + ", ".join(parts)
 
 
+def _sig(profile: dict[str, Any]) -> str:
+    return json.dumps(profile, sort_keys=True, default=str)
+
+
+def plausibility_warnings(p: dict[str, Any]) -> list[str]:
+    """Values that are valid but unusual: likely magnitude or monthly/annual mix-ups worth a second look."""
+    w = []
+    inc = p.get("monthly_income") or p.get("co_applicant_income")
+    if isinstance(inc, (int, float)):
+        if inc > 500000:
+            w.append(f"Monthly income {fmt_inr(inc)} is very high — is that per year?")
+        elif inc < 8000:
+            w.append(f"Monthly income {fmt_inr(inc)} looks low — is that correct?")
+    amt = p.get("loan_amount")
+    if isinstance(amt, (int, float)) and isinstance(inc, (int, float)) and inc > 0 and p.get("loan_type") != "education" and amt > 120 * inc:
+        w.append(f"The loan ({fmt_inr(amt)}) is over 120× your monthly income — please check both figures.")
+    emi = p.get("existing_emi")
+    if isinstance(emi, (int, float)) and isinstance(p.get("monthly_income"), (int, float)) and emi > p["monthly_income"]:
+        w.append("Existing EMIs are higher than your monthly income — please check.")
+    asset = p.get("property_value") or p.get("vehicle_price")
+    if isinstance(asset, (int, float)) and isinstance(amt, (int, float)) and amt > asset:
+        w.append("The loan is larger than the property / vehicle value — please check.")
+    return w
+
+
+REVIEW_ORDER = ["loan_type", "loan_amount", "tenure_years", "age", "employment_type", "employment_months", "monthly_income",
+                "credit_score", "existing_emi", "property_value", "vehicle_price", "study_abroad", "co_applicant_income",
+                "co_applicant_credit_score", "co_applicant_existing_emi"]
+
+
+def review_items(p: dict[str, Any]) -> list[dict[str, str]]:
+    def label(k: str) -> str:
+        text = FIELD_LABELS.get(k, k).split(" (")[0]
+        return text[:1].upper() + text[1:]
+
+    def value(k: str, v: Any) -> str:
+        shown = DeterministicAgent._show(k, v)
+        return {"tenure_years": f"{shown} years", "employment_months": f"{shown} months", "loan_type": f"{shown} loan"}.get(k, shown) \
+            .replace("auto loan", "car loan")
+    keys = [k for k in REVIEW_ORDER if k in p] + [k for k in p if k not in REVIEW_ORDER]
+    return [{"field": k, "label": label(k), "value": value(k, p[k])} for k in keys]
+
+
 def tool_update_profile(session: Session, fields: dict[str, Any]) -> dict:
-    """Merge newly learned facts and re-run the rules engine."""
+    """Merge newly learned facts and re-run the rules engine.
+
+    The verdict is withheld until the applicant confirms the exact values the engine will use
+    (status NEEDS_CONFIRMATION); any change to a confirmed profile asks for confirmation again.
+    """
     clean, invalid = validate_profile(_mark_unknown_scores(fields))
     session.profile = _merge(session.profile, clean)
     ev = evaluate(session.profile).as_dict()
+    if ev["status"] != "INCOMPLETE" and _sig(session.profile) != session.confirmed_sig:
+        session.evaluation, session.pending_confirmation = None, True
+        out = {"status": "NEEDS_CONFIRMATION", "profile": session.profile, "review": review_items(session.profile),
+               "warnings": plausibility_warnings(session.profile), "invalid_fields": invalid,
+               "instruction": "All details are collected. List these values for the applicant and ask them to reply "
+                              "'confirm' or correct anything. Do NOT state any verdict, amount or EMI yet."}
+        if invalid:
+            out["note"] = _range_note(invalid)
+        return out
+    session.pending_confirmation = False
     session.evaluation = ev if ev["status"] != "INCOMPLETE" else None  # never show a verdict for an old profile
     out = dict(ev)
     out["profile"] = session.profile
@@ -158,8 +219,26 @@ def tool_update_profile(session: Session, fields: dict[str, Any]) -> dict:
     return out
 
 
+def confirm_profile(session: Session) -> dict:
+    """Applicant confirmed the values on screen: unlock the verdict for exactly this profile."""
+    session.confirmed_sig = _sig(session.profile)
+    return tool_update_profile(session, {})
+
+
+def render_confirmation(lang: str, out: dict) -> str:
+    lines = [i18n.t(lang, "confirm_intro")]
+    lines += [f"• {it['label']}: {it['value']}" for it in out.get("review", [])]
+    if out.get("warnings"):
+        lines.append(i18n.t(lang, "confirm_warn"))
+        lines += [f"• ⚠️ {w}" for w in out["warnings"]]
+    lines.append(i18n.t(lang, "confirm_ask"))
+    return "\n".join(lines)
+
+
 def tool_what_if(session: Session, changes: dict[str, Any]) -> dict:
     """Hypothetical re-evaluation without changing the saved profile."""
+    if session.evaluation is None:
+        return {"status": "NEEDS_CONFIRMATION", "instruction": "Ask the applicant to confirm their details first."}
     clean, invalid = validate_profile(_mark_unknown_scores(changes))
     out = evaluate(_merge(session.profile, clean)).as_dict()
     out["hypothetical_changes"] = clean
@@ -327,10 +406,11 @@ class GenAIAgent:
                       system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
                       output_config={"effort": EFFORT})
         try:
-            if b.kind == "openrouter":
-                r = client.messages.create(**params)
-            else:
+            if b.kind == "anthropic" and SERVER_FALLBACK:
+                # Opt-in: Anthropic server-side refusal fallback (beta). Off by default; our own chain covers failures.
                 r = client.beta.messages.create(**params, betas=["server-side-fallback-2026-07-01"], fallbacks="default")
+            else:
+                r = client.messages.create(**params)
         except (anthropic.APIStatusError, anthropic.APITimeoutError, anthropic.APIConnectionError) as exc:
             raise BackendUnavailable(type(exc).__name__) from exc
         return LLMReply(r.stop_reason, list(r.content))
@@ -402,6 +482,7 @@ class GenAIAgent:
         session.history.append({"role": "user", "content": text})
         reply = None
         last_tool: Optional[tuple[str, dict]] = None
+        confirm_card: Optional[dict] = None
         for _ in range(MAX_TOOL_ROUNDS + 1):
             # Fast path: the facts are already processed by the rules engine; if the model can't explain them
             # inside the budget, render the engine's own explanation instead of blowing the 15 s target.
@@ -432,17 +513,25 @@ class GenAIAgent:
                     elif name == "what_if":
                         out = tool_what_if(session, args.get("changes") or {})
                     elif name == "compare_lenders":
-                        out = lenders.compare(session.profile)
+                        out = lenders.compare(session.profile) if session.evaluation else \
+                            {"status": "NEEDS_CONFIRMATION", "instruction": "Ask the applicant to confirm their details first."}
                     elif name == "list_required_documents":
                         out = tool_documents(args.get("loan_type", ""), args.get("employment_type"))
                     else:
                         out = {"error": f"unknown tool {name}"}
                     last_tool = (name, out)
+                    if out.get("status") == "NEEDS_CONFIRMATION" and name == "update_applicant_profile" and out.get("review"):
+                        confirm_card = out
                     results.append({"type": "tool_result", "tool_use_id": tid, "content": json.dumps(out, ensure_ascii=False)})
                 except Exception as exc:  # keep the loop alive; let the model recover
                     log.exception("tool %s failed", name)
                     results.append({"type": "tool_result", "tool_use_id": tid, "content": f"error: {type(exc).__name__}", "is_error": True})
             session.history.append({"role": "user", "content": results})
+            if confirm_card:
+                text_reply = render_confirmation(session.lang, confirm_card)
+                session.history.append({"role": "assistant", "content": [{"type": "text", "text": text_reply}]})
+                session.reply_source = "genai+rules-template"
+                return text_reply
 
         texts = [_bget(b, "text") for b in (reply.content if reply else []) if _bget(b, "type") == "text"]
         out_text = "\n".join(t for t in texts if t and t.strip()).strip()
@@ -456,6 +545,8 @@ class GenAIAgent:
             return lenders.compare_text(out)
         if tool == "list_required_documents":
             return i18n.t(lang, "documents") + "\n" + "\n".join(f"• {d}" for d in out.get("documents", []))
+        if out.get("status") == "NEEDS_CONFIRMATION":
+            return render_confirmation(lang, out) if out.get("review") else i18n.t(lang, "confirm_ask")
         if out.get("status") == "INCOMPLETE":
             missing = out.get("missing_fields") or ["loan_type"]
             return " ".join(i18n.ask_for(lang, f) for f in missing[:2])
@@ -490,6 +581,8 @@ def _to_openai(history: list) -> list[dict]:
 
 # ------------------------------------------------------------------ deterministic brain
 # Only a standalone command resets ("naya flat hai" or "dobara check karo" must not wipe the application)
+CONFIRM_RE = re.compile(r"^\s*(?:✅\s*)?(?:yes|yeah|yep|y|ok|okay|confirm(?:ed)?|correct|right|all good|looks good|that'?s right|"
+                        r"haan|ha|ji|ji haan|sahi|sahi hai|theek hai|thik hai|हाँ|हां|सही|सही है|ठीक है)\b[\w\s,.!'’-]{0,40}$", re.I)
 RESET_CMD = re.compile(r"^\s*(?:please\s+)?(?:reset|restart|start over|start again|new application|naya application|"
                        r"phir se shuru(?:\s+kar(?:o|ein|en))?|dobara shuru(?:\s+kar(?:o|ein|en))?|फिर से शुरू(?:\s+कर(?:ें|ो))?)\s*[.!]*\s*$", re.I)
 WHAT_IF = re.compile(r"^\s*(?:what if|and if|if i|if my|suppose|agar|kya hoga agar)\b|^\s*अगर", re.I)
@@ -547,6 +640,9 @@ class DeterministicAgent:
             nxt = result["missing_fields"][0]
             session.expected_field = nxt
             return prefix + i18n.ask_for(lang, nxt)
+        if result["status"] == "NEEDS_CONFIRMATION":
+            session.expected_field = None
+            return render_confirmation(lang, result)
 
         session.expected_field = None
         # The details panel already lists every fact; only echo short updates (e.g. a single correction).
@@ -606,9 +702,19 @@ def handle_message(session: Session, raw_text: str, lang_pref: str = "auto") -> 
     session.last_model = None
     session.reply_source = "rules"
     brain, mode = _brain()
+    if session.pending_confirmation and CONFIRM_RE.match(text) and not re.search(r"\d", text):
+        result = confirm_profile(session)
+        reply = i18n.render_evaluation(session.lang, result, result.get("documents", []))
+        if session.history and session.history[-1]["role"] == "assistant":
+            session.history.append({"role": "user", "content": "I confirm these details are correct."})
+            session.history.append({"role": "assistant", "content": [{"type": "text", "text": reply}]})
+        session.reply_source = "rules"
+    else:
+        reply = None
     try:
-        # Explicit per-turn language instruction: free models otherwise drift into Hindi after any Hindi turn.
-        reply = brain.respond(session, f"{text}\n\n[Reply in {LANG_NAMES[session.lang]}]" if mode == "genai" else text)
+        if reply is None:
+            # Explicit per-turn language instruction: free models otherwise drift into Hindi after any Hindi turn.
+            reply = brain.respond(session, f"{text}\n\n[Reply in {LANG_NAMES[session.lang]}]" if mode == "genai" else text)
     except Exception as exc:  # GenAI failure (network, key, quota, budget) -> degrade gracefully, never crash the demo
         if mode != "genai":
             raise
@@ -638,9 +744,17 @@ def handle_message(session: Session, raw_text: str, lang_pref: str = "auto") -> 
     # (which a prompt injection could steer) can never be the only statement of the decision.
     verified = ({"status": ev["status"], "summary": ev["summary"]}
                 if ev and (ev["status"], ev["summary"]) != before else None)
+    if verified or session.pending_confirmation:
+        audit.record("verdict" if verified else "awaiting_confirmation", session.id,
+                     loan_type=session.profile.get("loan_type"), status=verified["status"] if verified else None,
+                     mode=mode, source=session.reply_source, language=session.lang, latency_ms=latency_ms,
+                     pii_masked=len(pii), warnings=len(plausibility_warnings(session.profile)))
     return {
         "reply": reply,
         "verified_verdict": verified,
+        "pending_confirmation": session.pending_confirmation,
+        "review": review_items(session.profile) if session.pending_confirmation else None,
+        "warnings": plausibility_warnings(session.profile) if session.pending_confirmation else [],
         "reply_source": session.reply_source if mode == "genai" else "rules",
         "mode": mode,
         "model": (session.last_model or MODEL) if mode == "genai" else None,

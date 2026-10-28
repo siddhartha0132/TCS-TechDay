@@ -27,7 +27,7 @@ body {
     repeating-linear-gradient(90deg, transparent 0 40px, rgba(124, 58, 237, .06) 40px 54px, transparent 54px 100px),
     #07040f;
   background-attachment: fixed;
-  font-size: 15px; line-height: 1.5;
+  font-size: 14.5px; line-height: 1.5;
 }
 b, strong { font-weight: 600; }
 button { font: inherit; color: inherit; }
@@ -139,7 +139,7 @@ button { font: inherit; color: inherit; }
 .pill-CONDITIONAL { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
 .pill-NOT_ELIGIBLE { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
 .result-label { color: var(--muted); font-size: 13px; margin-top: 10px; }
-.result-amount { font-family: Syne, Manrope, sans-serif; font-size: 34px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+.result-amount { font-family: Syne, Manrope, sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
 .result-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
 .gauge-wrap { position: relative; width: 120px; flex: none; }
 .gauge { width: 120px; height: 72px; display: block; }

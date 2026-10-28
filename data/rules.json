@@ -1,12 +1,15 @@
 {
-  "_comment": "Synthetic eligibility policy for an Indian retail bank. Amounts in INR. Editable without touching code.",
+  "_comment": "Synthetic eligibility policy for an Indian retail bank. Amounts in INR. Every key here is enforced by backend/rules.py (tests/fuzz_rules.py checks the maths). Edit without touching code.",
   "common": {
     "min_age": 21,
-    "max_age_at_maturity": { "salaried": 60, "self_employed": 65 },
-    "min_employment_months": { "salaried": 12, "self_employed": 24 },
-    "min_current_job_months": 6,
-    "max_active_loans": 4,
-    "default_credit_score_if_missing": null
+    "max_age_at_maturity": {
+      "salaried": 60,
+      "self_employed": 65
+    },
+    "min_employment_months": {
+      "salaried": 12,
+      "self_employed": 24
+    }
   },
   "products": {
     "personal": {
@@ -17,10 +20,12 @@
       "min_tenure_years": 1,
       "max_tenure_years": 5,
       "min_credit_score": 700,
-      "min_monthly_income": { "salaried": 25000, "self_employed": 30000 },
-      "max_foir": 0.50,
-      "income_multiple_cap": 24,
-      "requires_collateral": false
+      "min_monthly_income": {
+        "salaried": 25000,
+        "self_employed": 30000
+      },
+      "max_foir": 0.5,
+      "income_multiple_cap": 24
     },
     "home": {
       "label": "Home Loan",
@@ -30,14 +35,25 @@
       "min_tenure_years": 5,
       "max_tenure_years": 30,
       "min_credit_score": 650,
-      "min_monthly_income": { "salaried": 30000, "self_employed": 35000 },
+      "min_monthly_income": {
+        "salaried": 30000,
+        "self_employed": 35000
+      },
       "max_foir": 0.55,
       "income_multiple_cap": 72,
-      "requires_collateral": true,
       "ltv_slabs": [
-        { "upto": 3000000, "max_ltv": 0.90 },
-        { "upto": 7500000, "max_ltv": 0.80 },
-        { "upto": null, "max_ltv": 0.75 }
+        {
+          "upto": 3000000,
+          "max_ltv": 0.9
+        },
+        {
+          "upto": 7500000,
+          "max_ltv": 0.8
+        },
+        {
+          "upto": null,
+          "max_ltv": 0.75
+        }
       ]
     },
     "auto": {
@@ -48,11 +64,13 @@
       "min_tenure_years": 1,
       "max_tenure_years": 7,
       "min_credit_score": 650,
-      "min_monthly_income": { "salaried": 20000, "self_employed": 25000 },
-      "max_foir": 0.50,
+      "min_monthly_income": {
+        "salaried": 20000,
+        "self_employed": 25000
+      },
+      "max_foir": 0.5,
       "income_multiple_cap": 36,
-      "requires_collateral": true,
-      "max_ltv": 0.90
+      "max_ltv": 0.9
     },
     "education": {
       "label": "Education Loan",
@@ -65,16 +83,28 @@
       "min_credit_score": 650,
       "co_applicant_required": true,
       "min_co_applicant_income": 25000,
-      "max_foir": 0.60,
+      "max_foir": 0.6,
       "requires_collateral_above": 750000,
       "student_min_age": 17,
       "student_max_age": 35
     }
   },
   "credit_score_bands": [
-    { "min": 750, "label": "Excellent" },
-    { "min": 700, "label": "Good" },
-    { "min": 650, "label": "Fair" },
-    { "min": 300, "label": "Poor" }
+    {
+      "min": 750,
+      "label": "Excellent"
+    },
+    {
+      "min": 700,
+      "label": "Good"
+    },
+    {
+      "min": 650,
+      "label": "Fair"
+    },
+    {
+      "min": 300,
+      "label": "Poor"
+    }
   ]
 }

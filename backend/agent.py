@@ -28,6 +28,7 @@ from dotenv import load_dotenv
 from . import audit, i18n, lenders, voice
 from .documents import required_documents
 from .extractor import extract
+from .numbers import normalize_text, parse_number
 from .privacy import mask_pii
 from .rules import (CREDIT_UNKNOWN, FIELD_LABELS, NUMERIC_RANGES, PRODUCT_SPECIFIC, REQUIRED_FIELDS, RULES, evaluate,
                     fmt_inr, validate_profile)
@@ -106,10 +107,12 @@ class Session:
     confirmed_sig: Optional[str] = None  # signature of the profile the applicant confirmed
     pending_confirmation: bool = False
     statement: Optional[dict] = None  # aggregates from an uploaded bank statement (no transactions)
+    asked_fields: list[str] = field(default_factory=list)  # details still missing when the bot last replied, in order
 
     def reset(self) -> None:
         self.profile, self.evaluation, self.expected_field, self.history = {}, None, None, []
         self.confirmed_sig, self.pending_confirmation, self.statement = None, False, None
+        self.asked_fields = []
 
 
 # ------------------------------------------------------------------ tools (shared by both brains)
@@ -345,8 +348,8 @@ through your tools, and explain the result in plain language with concrete next 
 
 Rules you must follow
 - Every verdict comes from the `update_applicant_profile` tool. Never guess eligibility, EMI, or amounts yourself.
-  Call the tool as soon as the user shares any detail, even one. If it returns INCOMPLETE, ask for the missing fields
-  (at most 2 or 3 per message, in a natural order). Do not ask for things you already know.
+  Call the tool as soon as the user shares any detail, even one. If it returns INCOMPLETE, ask for the next missing
+  fields in exactly the order of `missing_fields`, at most 2 per message. Do not ask for things you already know.
 - Language: every user message ends with a bracketed note such as [Reply in English]. Always reply in exactly
   that language, even if earlier turns used another one. Keep numbers in Indian format (₹5 L, ₹1.2 Cr).
 - When you give a verdict: one line with the verdict and the amount / EMI, then at most 2 short reasons (only
@@ -601,6 +604,56 @@ COMPARE = re.compile(r"\b(?:compare|comparison|which bank|best bank|other banks?
 MONEY_FIELDS = {"monthly_income", "existing_emi", "co_applicant_income", "co_applicant_existing_emi"}
 
 
+# ------------------------------------------------------------------ list answers
+# When the bot asked for several details and the applicant replies with a list of bare values ("20000 / 5 / 22 /
+# india / 50000 / 600 / none"), map them in order to the details that were still missing. Deterministic and instant,
+# so it works even when the model is slow; the confirmation card then shows every value with its label, so a value
+# in the wrong place is caught by the applicant before any verdict.
+LIST_SPLIT = re.compile(r"\n+|;|,(?=\s)|\s+/\s+")
+VALUE_WORDS = re.compile(
+    r"₹|\brs\.?|\binr\b|\b(?:lakhs?|lacs?|laakh|crores?|cr|thousand|hazaa?r|k|l|lpa|years?|yrs?|saal|per month|a month|"
+    r"monthly|pm|india|indian|domestic|abroad|foreign|overseas|none|no|nil|zero|nahi|nahin|salaried|self[- ]employed|"
+    r"business|not working|unemployed|don'?t know|dont know|unknown|not sure|pata)\b|लाख|करोड़|हज़ार|हजार|भारत|विदेश|नहीं|कोई|पता|साल",
+    re.I)
+ABROAD = re.compile(r"\b(?:abroad|foreign|overseas|usa|uk|canada|australia|germany)\b|विदेश", re.I)
+IN_INDIA = re.compile(r"\b(?:india|indian|domestic)\b|भारत|इंडिया", re.I)
+NONE_WORDS = re.compile(r"^\s*(?:no|none|nil|zero|nahi|nahin|no emis?)\s*$|नहीं|कोई नहीं", re.I)
+
+
+def _list_value(f: str, part: str) -> Any:
+    if f == "study_abroad":
+        return True if ABROAD.search(part) else False if IN_INDIA.search(part) else None
+    if f == "employment_type":
+        low = part.lower()
+        return ("self_employed" if re.search(r"self|business", low) else "not_employed" if re.search(r"not working|unemployed", low)
+                else "salaried" if "salaried" in low else None)
+    if f in ("existing_emi", "co_applicant_existing_emi") and NONE_WORDS.search(part):
+        return 0.0
+    if f in ("credit_score", "co_applicant_credit_score") and UNKNOWN_WORDS.search(part) and not re.search(r"\d", part):
+        return CREDIT_UNKNOWN
+    if f == "loan_type":
+        return None
+    return parse_number(normalize_text(part))
+
+
+def parse_list_answer(text: str, asked: list[str]) -> Optional[dict[str, Any]]:
+    """{field: value} when `text` is a list of bare values answering `asked` in order, else None."""
+    if len(asked) < 2:
+        return None
+    parts = [p.strip(" .") for p in LIST_SPLIT.split(text) if p and p.strip(" .")]
+    if not 2 <= len(parts) <= len(asked):
+        return None
+    if any(re.search(r"[A-Za-z\u0900-\u097F]", VALUE_WORDS.sub(" ", p)) for p in parts):
+        return None  # a part carries its own words ("my age is 22"): let the normal understanding handle it
+    out: dict[str, Any] = {}
+    for f, part in zip(asked, parts):
+        v = _list_value(f, part)
+        if v is None:
+            return None
+        out[f] = v
+    return out
+
+
 class DeterministicAgent:
     """Slot-filling fallback. Same tools, no LLM."""
 
@@ -627,7 +680,11 @@ class DeterministicAgent:
         if asked in ("credit_score", "co_applicant_credit_score") and asked not in fields and UNKNOWN_WORDS.search(text) \
                 and not re.search(r"\d", text):
             fields[asked] = CREDIT_UNKNOWN
+        return self.apply_fields(session, fields, text, asked)
 
+    def apply_fields(self, session: Session, fields: dict[str, Any], text: str, asked: Optional[str] = None) -> str:
+        """Merge facts, then ask for the next detail, ask for confirmation, or explain the verdict."""
+        lang = session.lang
         prefix = ""
         if fields:
             result = tool_update_profile(session, fields)
@@ -722,6 +779,14 @@ def handle_message(session: Session, raw_text: str, lang_pref: str = "auto") -> 
         session.reply_source = "rules"
     else:
         reply = None
+        listed = None if session.evaluation or session.pending_confirmation else parse_list_answer(text, session.asked_fields)
+        if listed:
+            reply = _det.apply_fields(session, listed, text)
+            if session.history and session.history[-1]["role"] == "assistant":
+                shown = "; ".join(f"{FIELD_LABELS.get(k, k)} = {DeterministicAgent._show(k, v)}" for k, v in listed.items())
+                session.history.append({"role": "user", "content": f"{text}\n[Read in order as: {shown}]"})
+                session.history.append({"role": "assistant", "content": [{"type": "text", "text": reply}]})
+            session.reply_source = "rules"
     try:
         if reply is None:
             # Explicit per-turn language instruction: free models otherwise drift into Hindi after any Hindi turn.
@@ -751,6 +816,9 @@ def handle_message(session: Session, raw_text: str, lang_pref: str = "auto") -> 
     session.transcript.append({"role": "assistant", "text": reply, "latency_ms": latency_ms})
     del session.transcript[:-MAX_TRANSCRIPT]
     ev = session.evaluation
+    missing = [f for f in REQUIRED_FIELDS.get(session.profile.get("loan_type", ""), ["loan_type"]) if session.profile.get(f) is None] \
+        if session.profile.get("loan_type") else ["loan_type"]
+    session.asked_fields = [] if ev or session.pending_confirmation else missing
     # Engine-authored verdict for this turn. The UI pins it to the bubble so model text
     # (which a prompt injection could steer) can never be the only statement of the decision.
     verified = ({"status": ev["status"], "summary": ev["summary"]}
@@ -773,8 +841,7 @@ def handle_message(session: Session, raw_text: str, lang_pref: str = "auto") -> 
         "pii_masked": pii,
         "latency_ms": latency_ms,
         "profile": session.profile,
-        "missing_fields": [f for f in REQUIRED_FIELDS.get(session.profile.get("loan_type", ""), ["loan_type"]) if session.profile.get(f) is None]
-        if session.profile.get("loan_type") else ["loan_type"],
+        "missing_fields": missing,
         "evaluation": session.evaluation,
         "next_field": None if session.evaluation else (
             next((f for f in REQUIRED_FIELDS.get(session.profile.get("loan_type", ""), []) if session.profile.get(f) is None), None)

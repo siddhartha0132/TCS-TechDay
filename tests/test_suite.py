@@ -18,6 +18,7 @@ SUITES = {
     "pii_masking": ["tests/probe_privacy.py"],
     "http_hardening": ["tests/probe_http.py"],
     "multi_turn_conversations": ["tests/probe_agent.py"],
+    "list_answers": ["tests/probe_list_answers.py"],
     "labelled_eval_rules_mode": ["-m", "eval.run_eval", "--no-llm"],
 }
 

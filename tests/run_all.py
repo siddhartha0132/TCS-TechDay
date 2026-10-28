@@ -17,6 +17,7 @@ SUITE = [
     ("PII masking", [PY, "tests/probe_privacy.py"]),
     ("HTTP hardening", [PY, "tests/probe_http.py"]),
     ("multi-turn conversations", [PY, "tests/probe_agent.py"]),
+    ("list answers (bare values, one per line)", [PY, "tests/probe_list_answers.py"]),
     ("labelled eval (deterministic)", [PY, "-m", "eval.run_eval", "--no-llm"]),
 ]
 

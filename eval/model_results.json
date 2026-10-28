@@ -1,0 +1,3596 @@
+{
+ "deterministic:all": {
+  "config": "deterministic",
+  "model": "Rule-based agent (no AI)",
+  "cases": "all",
+  "ran_at": "2026-10-28 15:30",
+  "budget_s": 13.0,
+  "wall_s": 0,
+  "results": [
+   {
+    "id": "nl01",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 1,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl02",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl03",
+    "lang": "hinglish",
+    "loan_type": "auto",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl04",
+    "lang": "hi",
+    "loan_type": "education",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl05",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl06",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl07",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl08",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl09",
+    "lang": "hinglish",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl10",
+    "lang": "hi",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl11",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl12",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl13",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl14",
+    "lang": "en",
+    "loan_type": "auto",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl15",
+    "lang": "en",
+    "loan_type": "auto",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl16",
+    "lang": "en",
+    "loan_type": "education",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl17",
+    "lang": "en",
+    "loan_type": "education",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl18",
+    "lang": "en",
+    "loan_type": "education",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl19",
+    "lang": "en",
+    "loan_type": null,
+    "expected": "INCOMPLETE",
+    "got": "INCOMPLETE",
+    "correct": true,
+    "first_fields": [
+     0,
+     0
+    ],
+    "final_fields": [
+     0,
+     0
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl20",
+    "lang": "en",
+    "loan_type": null,
+    "expected": "INCOMPLETE",
+    "got": "INCOMPLETE",
+    "correct": true,
+    "first_fields": [
+     0,
+     0
+    ],
+    "final_fields": [
+     0,
+     0
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl21",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl22",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl23",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl24",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl25",
+    "lang": "hinglish",
+    "loan_type": "home",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl26",
+    "lang": "hi",
+    "loan_type": "auto",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl27",
+    "lang": "en",
+    "loan_type": "education",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl28",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl29",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl30",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl31",
+    "lang": "en",
+    "loan_type": "auto",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl32",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl33",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl34",
+    "lang": "hinglish",
+    "loan_type": "personal",
+    "expected": "INCOMPLETE",
+    "got": "INCOMPLETE",
+    "correct": true,
+    "first_fields": [
+     7,
+     7
+    ],
+    "final_fields": [
+     7,
+     7
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl35",
+    "lang": "en",
+    "loan_type": "auto",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl36",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   }
+  ],
+  "calls": [],
+  "commit": "e65daf1"
+ },
+ "deterministic:subset": {
+  "config": "deterministic",
+  "model": "Rule-based agent (no AI)",
+  "cases": "subset",
+  "ran_at": "2026-10-28 15:30",
+  "budget_s": 13.0,
+  "wall_s": 0,
+  "results": [
+   {
+    "id": "nl03",
+    "lang": "hinglish",
+    "loan_type": "auto",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 1,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl04",
+    "lang": "hi",
+    "loan_type": "education",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl09",
+    "lang": "hinglish",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl10",
+    "lang": "hi",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl25",
+    "lang": "hinglish",
+    "loan_type": "home",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl26",
+    "lang": "hi",
+    "loan_type": "auto",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl34",
+    "lang": "hinglish",
+    "loan_type": "personal",
+    "expected": "INCOMPLETE",
+    "got": "INCOMPLETE",
+    "correct": true,
+    "first_fields": [
+     7,
+     7
+    ],
+    "final_fields": [
+     7,
+     7
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl01",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl02",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl05",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl06",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl11",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "deterministic",
+      "model": null,
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   }
+  ],
+  "calls": [],
+  "commit": "e65daf1"
+ },
+ "nvidia:all": {
+  "config": "nvidia",
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "cases": "all",
+  "ran_at": "2026-10-28 15:33",
+  "budget_s": 13.0,
+  "wall_s": 182,
+  "results": [
+   {
+    "id": "nl01",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 589,
+      "source": "rules",
+      "mode": "deterministic (genai error)",
+      "model": null,
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl02",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 13006,
+      "source": "rules",
+      "mode": "deterministic (genai error)",
+      "model": null,
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl03",
+    "lang": "hinglish",
+    "loan_type": "auto",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 6080,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl04",
+    "lang": "hi",
+    "loan_type": "education",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     7,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 7679,
+      "source": "genai",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 2,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 423,
+      "source": "rules",
+      "mode": "deterministic (genai error)",
+      "model": null,
+      "calls": 1,
+      "lang_ok": false
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": false
+     }
+    ]
+   },
+   {
+    "id": "nl05",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 4656,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl06",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 8634,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl07",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 5976,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl08",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 556,
+      "source": "rules",
+      "mode": "deterministic (genai error)",
+      "model": null,
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl09",
+    "lang": "hinglish",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 2463,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl10",
+    "lang": "hi",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 2059,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl11",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 2975,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl12",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 2744,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl13",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 5050,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl14",
+    "lang": "en",
+    "loan_type": "auto",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 8184,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl15",
+    "lang": "en",
+    "loan_type": "auto",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 2074,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl16",
+    "lang": "en",
+    "loan_type": "education",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 13005,
+      "source": "rules",
+      "mode": "deterministic (genai error)",
+      "model": null,
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl17",
+    "lang": "en",
+    "loan_type": "education",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 4847,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl18",
+    "lang": "en",
+    "loan_type": "education",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 3166,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl19",
+    "lang": "en",
+    "loan_type": null,
+    "expected": "INCOMPLETE",
+    "got": "INCOMPLETE",
+    "correct": true,
+    "first_fields": [
+     0,
+     0
+    ],
+    "final_fields": [
+     0,
+     0
+    ],
+    "turns": [
+     {
+      "latency_ms": 1055,
+      "source": "genai",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl20",
+    "lang": "en",
+    "loan_type": null,
+    "expected": "INCOMPLETE",
+    "got": "INCOMPLETE",
+    "correct": true,
+    "first_fields": [
+     0,
+     0
+    ],
+    "final_fields": [
+     0,
+     0
+    ],
+    "turns": [
+     {
+      "latency_ms": 3502,
+      "source": "genai",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl21",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 13002,
+      "source": "rules",
+      "mode": "deterministic (genai error)",
+      "model": null,
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl22",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 3434,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl23",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 11108,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl24",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 5279,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl25",
+    "lang": "hinglish",
+    "loan_type": "home",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 3739,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl26",
+    "lang": "hi",
+    "loan_type": "auto",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 3208,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl27",
+    "lang": "en",
+    "loan_type": "education",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 2928,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl28",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 2243,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl29",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 4290,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl30",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 7215,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl31",
+    "lang": "en",
+    "loan_type": "auto",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 3017,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl32",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 8053,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl33",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 2389,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl34",
+    "lang": "hinglish",
+    "loan_type": "personal",
+    "expected": "INCOMPLETE",
+    "got": "CONDITIONAL",
+    "correct": false,
+    "first_fields": [
+     7,
+     7
+    ],
+    "final_fields": [
+     7,
+     7
+    ],
+    "turns": [
+     {
+      "latency_ms": 8263,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl35",
+    "lang": "en",
+    "loan_type": "auto",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 2751,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl36",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 2615,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   }
+  ],
+  "calls": [
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 0.5841335410004831,
+    "ok": false,
+    "error": "HTTP 500"
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 13.003182000000379,
+    "ok": false,
+    "error": "ReadTimeout"
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 6.078353375000006,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 4.842000832999474,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.836706999998569,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 0.4217604580007901,
+    "ok": false,
+    "error": "HTTP 500"
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 4.655952707998949,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 8.633770708001975,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 5.976149083002383,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 0.5547042500002135,
+    "ok": false,
+    "error": "HTTP 500"
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.462832541001262,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.0588994589998038,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.974851500002842,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.7439811670010386,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 5.049705458997778,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 8.183095042000787,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.073854250000295,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 13.002906540998083,
+    "ok": false,
+    "error": "ReadTimeout"
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 4.846617875002266,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 3.166046541999094,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 1.0548816250011441,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 3.5025315000020782,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 13.001872958000604,
+    "ok": false,
+    "error": "ReadTimeout"
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 3.4342084579984657,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 11.10785437499726,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 5.27871870799936,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 3.738622333999956,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 3.207187416999659,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.9276059999974677,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.2427766250002605,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 4.289822083999752,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 7.214755167002295,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 3.017035749999195,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 8.052412209002796,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.3886928749998333,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 8.262205458002427,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.751002791999781,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "s": 2.614890791999642,
+    "ok": true,
+    "in_time": true
+   }
+  ],
+  "commit": "e65daf1"
+ },
+ "openrouter:subset": {
+  "config": "openrouter",
+  "model": "nvidia/nemotron-3.5-super-vl:free",
+  "cases": "subset",
+  "ran_at": "2026-10-28 15:41",
+  "budget_s": 13.0,
+  "wall_s": 53,
+  "results": [
+   {
+    "id": "nl03",
+    "lang": "hinglish",
+    "loan_type": "auto",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 5272,
+      "source": "genai",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 2,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 1948,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl04",
+    "lang": "hi",
+    "loan_type": "education",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 6645,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl09",
+    "lang": "hinglish",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 3759,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl10",
+    "lang": "hi",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 2285,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl25",
+    "lang": "hinglish",
+    "loan_type": "home",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 6426,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl26",
+    "lang": "hi",
+    "loan_type": "auto",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 4234,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl34",
+    "lang": "hinglish",
+    "loan_type": "personal",
+    "expected": "INCOMPLETE",
+    "got": "CONDITIONAL",
+    "correct": false,
+    "first_fields": [
+     7,
+     7
+    ],
+    "final_fields": [
+     7,
+     7
+    ],
+    "turns": [
+     {
+      "latency_ms": 3287,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl01",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 2474,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl02",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 2328,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl05",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "NOT_ELIGIBLE",
+    "got": "NOT_ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 2863,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl06",
+    "lang": "en",
+    "loan_type": "personal",
+    "expected": "CONDITIONAL",
+    "got": "CONDITIONAL",
+    "correct": true,
+    "first_fields": [
+     8,
+     8
+    ],
+    "final_fields": [
+     8,
+     8
+    ],
+    "turns": [
+     {
+      "latency_ms": 2051,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   },
+   {
+    "id": "nl11",
+    "lang": "en",
+    "loan_type": "home",
+    "expected": "ELIGIBLE",
+    "got": "ELIGIBLE",
+    "correct": true,
+    "first_fields": [
+     9,
+     9
+    ],
+    "final_fields": [
+     9,
+     9
+    ],
+    "turns": [
+     {
+      "latency_ms": 9567,
+      "source": "genai+rules-template",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 1,
+      "lang_ok": true
+     },
+     {
+      "latency_ms": 0,
+      "source": "rules",
+      "mode": "genai",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "calls": 0,
+      "lang_ok": true
+     }
+    ]
+   }
+  ],
+  "calls": [
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 3.407888958998228,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 1.8642633339986787,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 1.9480271249994985,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 6.644117499999993,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 3.758530625000276,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 2.2852461660004337,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 6.424772416998167,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 4.233977750001941,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 3.2872582500021963,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 2.473380082999938,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 2.327381458999298,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 2.862743582998519,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 2.0508146659994964,
+    "ok": true,
+    "in_time": true
+   },
+   {
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "s": 9.566536375001306,
+    "ok": true,
+    "in_time": true
+   }
+  ],
+  "commit": "e65daf1 + list-answer fix"
+ }
+}

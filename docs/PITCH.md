@@ -25,6 +25,21 @@ Diagram from ARCHITECTURE.md. Single agent, three tools, deterministic rules eng
 "GenAI understands and explains; code decides." Claude tool-use, prompt caching, effort tuning for < 15 s,
 automatic fallback brain if the API is unavailable.
 
+### 5b. Market gap — what exists vs. what doesn't (Relevance + Innovation)
+| | Eligibility calculators (lender sites) | Loan marketplaces | Bank chatbots (e.g. EVA, SIA) | LoanMitra |
+|---|---|---|---|---|
+| Conversation, no forms | ✕ | ✕ | ✓ | ✓ |
+| Why, rule by rule | ✕ one number | ~ | ✕ FAQs | ✓ |
+| Plan to become eligible | ✕ | ✕ | ✕ | ✓ |
+| Hindi / Hinglish + voice | ✕ | ✕ | ~ some Hindi | ✓ |
+| No credit-score impact | ✓ | ✓ soft check | ✓ | ✓ |
+| Auditable rules | ~ | ✕ | ✕ | ✓ |
+
+- ~30% of Indians have faced a loan/card rejection, many without knowing why (Business Today, May 2026).
+- Lender calculators ask for age, income, obligations and return a single number (e.g. Bajaj Finserv, SMFG, Fibe pages).
+- RBI fair-practices guidance expects main rejection reasons to be conveyed — LoanMitra makes them visible *before* applying.
+- Caveat for Q&A: comparison is by tool category from public descriptions; individual products vary.
+
 ### 6. What makes it different (Innovation)
 - **Counterfactual next steps**: not "no", but "₹40.9 L yes, or ₹60 L if you add ₹30 k co-applicant income".
 - **What-if conversations** without re-entering data.

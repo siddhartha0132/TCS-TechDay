@@ -22,9 +22,9 @@ RATE_LIMITS = {
     "voice": int(os.getenv("RATE_VOICE_PER_MIN", "10")),
     "api": int(os.getenv("RATE_API_PER_MIN", "120")),
 }
-ROUTE_GROUPS = {"/api/chat": "chat", "/api/stt": "voice", "/api/tts": "voice"}
+ROUTE_GROUPS = {"/api/chat": "chat", "/api/stt": "voice", "/api/tts": "voice", "/api/statement/analyze": "voice"}
 
-MAX_BODY_BYTES = {"/api/stt": 5 * 1024 * 1024}  # one short voice note
+MAX_BODY_BYTES = {"/api/stt": 5 * 1024 * 1024, "/api/statement/analyze": 5 * 1024 * 1024}  # voice note / bank statement
 DEFAULT_MAX_BODY = 64 * 1024
 
 CSP = "; ".join([

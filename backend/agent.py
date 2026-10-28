@@ -105,10 +105,11 @@ class Session:
     reply_source: Optional[str] = None  # genai | genai+rules-template | rules
     confirmed_sig: Optional[str] = None  # signature of the profile the applicant confirmed
     pending_confirmation: bool = False
+    statement: Optional[dict] = None  # aggregates from an uploaded bank statement (no transactions)
 
     def reset(self) -> None:
         self.profile, self.evaluation, self.expected_field, self.history = {}, None, None, []
-        self.confirmed_sig, self.pending_confirmation = None, False
+        self.confirmed_sig, self.pending_confirmation, self.statement = None, False, None
 
 
 # ------------------------------------------------------------------ tools (shared by both brains)
@@ -150,9 +151,19 @@ def _sig(profile: dict[str, Any]) -> str:
     return json.dumps(profile, sort_keys=True, default=str)
 
 
-def plausibility_warnings(p: dict[str, Any]) -> list[str]:
-    """Values that are valid but unusual: likely magnitude or monthly/annual mix-ups worth a second look."""
+def plausibility_warnings(p: dict[str, Any], statement: Optional[dict] = None) -> list[str]:
+    """Values that are valid but unusual: likely magnitude or monthly/annual mix-ups worth a second look,
+    plus disagreements with the applicant's own bank statement when one was uploaded."""
     w = []
+    if statement:
+        stated, seen = p.get("monthly_income"), statement.get("avg_monthly_income") or 0
+        if isinstance(stated, (int, float)) and seen and abs(stated - seen) > 0.2 * seen:
+            w.append(f"You said {fmt_inr(stated)}/month, but your bank statement shows about {fmt_inr(seen)}/month.")
+        emi_s, emi_seen = p.get("existing_emi"), statement.get("avg_monthly_emi") or 0
+        if isinstance(emi_s, (int, float)) and emi_seen and emi_s + 500 < emi_seen * 0.8:
+            w.append(f"Your statement shows EMI payments of about {fmt_inr(emi_seen)}/month.")
+        if statement.get("bounced_payments"):
+            w.append(f"The statement shows {statement['bounced_payments']} bounced payment(s); lenders check this.")
     inc = p.get("monthly_income") or p.get("co_applicant_income")
     if isinstance(inc, (int, float)):
         if inc > 500000:
@@ -201,7 +212,7 @@ def tool_update_profile(session: Session, fields: dict[str, Any]) -> dict:
     if ev["status"] != "INCOMPLETE" and _sig(session.profile) != session.confirmed_sig:
         session.evaluation, session.pending_confirmation = None, True
         out = {"status": "NEEDS_CONFIRMATION", "profile": session.profile, "review": review_items(session.profile),
-               "warnings": plausibility_warnings(session.profile), "invalid_fields": invalid,
+               "warnings": plausibility_warnings(session.profile, session.statement), "invalid_fields": invalid,
                "instruction": "All details are collected. List these values for the applicant and ask them to reply "
                               "'confirm' or correct anything. Do NOT state any verdict, amount or EMI yet."}
         if invalid:
@@ -748,13 +759,13 @@ def handle_message(session: Session, raw_text: str, lang_pref: str = "auto") -> 
         audit.record("verdict" if verified else "awaiting_confirmation", session.id,
                      loan_type=session.profile.get("loan_type"), status=verified["status"] if verified else None,
                      mode=mode, source=session.reply_source, language=session.lang, latency_ms=latency_ms,
-                     pii_masked=len(pii), warnings=len(plausibility_warnings(session.profile)))
+                     pii_masked=len(pii), warnings=len(plausibility_warnings(session.profile, session.statement)))
     return {
         "reply": reply,
         "verified_verdict": verified,
         "pending_confirmation": session.pending_confirmation,
         "review": review_items(session.profile) if session.pending_confirmation else None,
-        "warnings": plausibility_warnings(session.profile) if session.pending_confirmation else [],
+        "warnings": plausibility_warnings(session.profile, session.statement) if session.pending_confirmation else [],
         "reply_source": session.reply_source if mode == "genai" else "rules",
         "mode": mode,
         "model": (session.last_model or MODEL) if mode == "genai" else None,

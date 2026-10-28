@@ -1,7 +1,7 @@
 # Evaluation report
 
 - Mode: **deterministic**
-- Generated: 2026-10-28 14:39
+- Generated: 2026-10-28 14:49
 
 ## A. Rules engine — 17/17 = **100%**
 

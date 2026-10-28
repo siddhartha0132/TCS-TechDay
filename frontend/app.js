@@ -524,6 +524,54 @@
     } catch (e) { out.textContent = "Couldn't fetch right now (" + e.message + ")."; }
   });
 
+  // ------------------------------------------------------------ bank statement (live, in-memory analysis)
+  async function analyzeStatement(file) {
+    if (file.size > 5 * 1024 * 1024) throw new Error("File is larger than 5 MB");
+    const type = file.type || (file.name.toLowerCase().endsWith(".csv") ? "text/csv" : "application/pdf");
+    const qs = new URLSearchParams({ consent: "true", ...(sessionId ? { session_id: sessionId } : {}) });
+    const res = await fetch(`/api/statement/analyze?${qs}`, { method: "POST", headers: { "Content-Type": type }, body: file });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : `HTTP ${res.status}`);
+    return j;
+  }
+  const stmtSummary = (a) => `${a.months_covered} months read · ${a.income_type === "salaried" ? "salary" : "income"} ≈ ${fmtINR(a.avg_monthly_income)}/month · ` +
+    `EMIs ≈ ${fmtINR(a.avg_monthly_emi)}/month · ${a.bounced_payments} bounced payment(s)`;
+
+  $("attachBtn").addEventListener("click", () => {
+    if (!confirm("Read your bank statement to verify income and EMIs?\n\nIt is analysed in memory and never stored; only monthly totals are used.")) return;
+    $("stmtFile").click();
+  });
+  $("stmtFile").addEventListener("change", async () => {
+    const file = $("stmtFile").files[0];
+    $("stmtFile").value = "";
+    if (!file) return;
+    addMessage("user", `📎 ${file.name}`);
+    const typing = addTyping();
+    try {
+      const a = await analyzeStatement(file);
+      sessionId = a.session_id || sessionId;
+      typing.remove();
+      addMessage("bot", `📄 Statement analysed (${a.period}). ${stmtSummary(a)}.\nThe file wasn't stored.`);
+      send(`My bank statement shows ${a.income_type === "salaried" ? "a salary" : "income"} of ${Math.round(a.avg_monthly_income)} per month and ` +
+        `${a.avg_monthly_emi ? `EMIs of ${Math.round(a.avg_monthly_emi)} per month` : "no EMIs"}. I am ${a.income_type === "salaried" ? "salaried" : "self-employed"}.`);
+    } catch (e) { typing.remove(); addMessage("bot", "Sorry — " + e.message); }
+  });
+
+  $("fStmt").addEventListener("change", async () => {
+    const file = $("fStmt").files[0], out = $("stmtOut");
+    if (!file) return;
+    out.textContent = "Analysing…";
+    try {
+      const a = await analyzeStatement(file);
+      if ($("fType").value === "education") { $("fType").value = "personal"; syncFormFields(); }
+      $("fEmp").value = a.income_type;
+      $("fIncome").value = String(Math.round(a.avg_monthly_income)); $("fIncome").dispatchEvent(new Event("input"));
+      $("fEmi").value = String(Math.round(a.avg_monthly_emi));
+      out.textContent = `✓ Verified from statement: ${stmtSummary(a)}. File not stored.`;
+    } catch (e) { out.textContent = "Couldn't read it: " + e.message; }
+    finally { $("fStmt").value = ""; }
+  });
+
   // ------------------------------------------------------------ boot
   (async () => {
     try {

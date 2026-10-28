@@ -23,8 +23,8 @@ body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: Manrope, "Noto Sans Devanagari", system-ui, -apple-system, Segoe UI, sans-serif;
   background:
-    radial-gradient(900px 500px at 85% -10%, rgba(124, 58, 237, .35), transparent 70%),
-    repeating-linear-gradient(90deg, transparent 0 40px, rgba(124, 58, 237, .06) 40px 54px, transparent 54px 100px),
+    radial-gradient(900px 500px at 85% -10%, rgba(124, 58, 237, .30), transparent 70%),
+    radial-gradient(700px 500px at 0% 100%, rgba(124, 58, 237, .14), transparent 70%),
     #07040f;
   background-attachment: fixed;
   font-size: 14.5px; line-height: 1.5;
@@ -93,6 +93,7 @@ button { font: inherit; color: inherit; }
 .msg.bot .bubble { background: var(--bot); border-bottom-left-radius: 4px; }
 .msg.user .bubble { background: linear-gradient(135deg, #7c3aed, #9f67ff); color: #fff; border-bottom-right-radius: 4px; }
 .bubble ul { margin: 6px 0 0; padding-left: 18px; }
+.bubble.welcome { white-space: normal; }
 .bubble li { margin: 2px 0; }
 .bubble .tag { font-size: 11px; color: var(--muted); margin-top: 6px; }
 .verified { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; margin-bottom: 8px; }
@@ -243,3 +244,9 @@ html { scroll-behavior: smooth; }
 .chip:hover { background: #7c3aed; color: #fff; }
 .autofill { background: rgba(124, 58, 237, .1); }
 .autofill-row input[type="text"] { background: rgba(255, 255, 255, .05); }
+
+.stmt-head { margin-top: 12px; }
+.live-tag { font-size: 10.5px; font-weight: 600; color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); padding: 2px 7px; border-radius: 999px; margin-left: 6px; }
+#fStmt { font-size: 12.5px; color: var(--muted); max-width: 260px; }
+#stmtOut { margin-top: 6px; font-size: 12.5px; }
+.hint a { color: var(--brand); }

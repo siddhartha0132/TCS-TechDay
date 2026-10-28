@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
-from . import agent, lenders, simulated, voice
+from . import agent, audit, lenders, simulated, statement, voice
 from .documents import required_documents
 from .rules import evaluate
 from .security import SecurityMiddleware
@@ -160,6 +160,36 @@ def sim_bureau(body: SimConsentIn):
 def sim_aa(body: SimConsentIn):
     """SIMULATED Account Aggregator income summary from 6 months of statements."""
     return simulated.aa_income(body.mobile_last4)
+
+
+STATEMENT_TYPES = {"application/pdf", "text/csv", "text/plain", "application/vnd.ms-excel", "application/octet-stream"}
+
+
+@app.post("/api/statement/analyze")
+async def statement_analyze(request: Request, consent: bool = False, session_id: Optional[str] = None):
+    """Analyse an uploaded bank statement (PDF/CSV) in memory. Returns aggregates only; nothing is stored.
+
+    With a session_id, the aggregates are attached to that chat session so the confirmation step can flag
+    differences between what the applicant states and what the statement shows."""
+    if not consent:
+        raise HTTPException(422, "Consent is required to read a bank statement.")
+    ctype = request.headers.get("content-type", "").split(";")[0].strip().lower()
+    if ctype not in STATEMENT_TYPES:
+        raise HTTPException(415, "Please upload a PDF or CSV statement.")
+    data = await request.body()  # size bounded by SecurityMiddleware (Content-Length)
+    try:
+        result = statement.analyze(data, ctype)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    finally:
+        del data
+    s, _ = sessions.get_or_create(session_id)
+    s.statement = {k: result[k] for k in ("avg_monthly_income", "avg_monthly_emi", "bounced_payments", "months_covered")}
+    result["session_id"] = s.id
+    session_id = s.id
+    audit.record("statement_analyzed", session_id or "anonymous", months=result["months_covered"],
+                 income_type=result["income_type"], bounced=result["bounced_payments"])
+    return result
 
 
 @app.get("/api/samples")

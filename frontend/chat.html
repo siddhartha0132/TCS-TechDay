@@ -74,21 +74,20 @@
       <div id="messages" class="messages" aria-live="polite">
         <div class="msg bot">
           <div class="avatar" aria-hidden="true">₹</div>
-          <div class="bubble">
-            Namaste! I'm <b>LoanMitra</b> 👋<br>
-            Pick a loan above, or just tell me what you need, e.g. <i>“I'm 30, salaried, earn 60k a month and need a 5 lakh personal loan for 3 years.”</i>
-          </div>
+          <div class="bubble welcome"><b>Namaste! I'm LoanMitra 👋</b><br>Pick a loan above, or just tell me what you need — e.g. <i>“I'm 30, salaried, earn 60k a month and need a 5 lakh personal loan for 3 years.”</i></div>
         </div>
       </div>
 
       <div id="quick" class="quick" aria-label="Quick replies"></div>
 
       <form id="composer" class="composer" autocomplete="off">
+        <button type="button" id="attachBtn" class="mic" title="Upload bank statement (PDF/CSV) to verify income" aria-label="Upload bank statement">📎</button>
+        <input type="file" id="stmtFile" accept=".pdf,.csv,application/pdf,text/csv" hidden>
         <button type="button" id="micBtn" class="mic" title="Speak" aria-label="Speak">🎤</button>
         <textarea id="input" rows="1" placeholder="Type your message…" aria-label="Message"></textarea>
         <button type="submit" id="sendBtn" class="btn-primary" aria-label="Send">➤</button>
       </form>
-      <div class="hint">Indicative soft check only — final approval subject to document verification.</div>
+      <div class="hint">📎 Verify your income from your bank statement — read in memory, never stored. No statement handy? <a href="/static/sample_statement.pdf" download>Try the sample</a>.</div>
       </div>
 
       <div id="formPanel" class="panel form-panel" hidden>
@@ -102,6 +101,12 @@
               <button type="button" id="fetchBtn" class="btn-ghost">Fetch</button>
             </div>
             <div id="fetchOut" class="muted" aria-live="polite"></div>
+            <div class="autofill-head stmt-head"><b>📄 Or verify from your bank statement</b> <span class="live-tag">live analysis · not stored</span></div>
+            <div class="autofill-row">
+              <input type="file" id="fStmt" accept=".pdf,.csv,application/pdf,text/csv" aria-label="Bank statement PDF or CSV">
+              <a class="muted" href="/static/sample_statement.pdf" download>Sample statement</a>
+            </div>
+            <div id="stmtOut" class="muted" aria-live="polite"></div>
           </div>
           <div class="fgrid">
             <label class="field full"><span>Loan type</span>

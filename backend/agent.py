@@ -29,13 +29,33 @@ from .rules import REQUIRED_FIELDS, FIELD_LABELS, RULES, evaluate, fmt_inr, norm
 
 load_dotenv()
 
-MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-5-5")
-EFFORT = os.getenv("CLAUDE_EFFORT", "low")  # low keeps replies well under the 15 s target
+EFFORT = os.getenv("LLM_EFFORT", "low")  # low keeps replies well under the 15 s target
 MAX_TOOL_ROUNDS = 4
+OPENROUTER_BASE_URL = "https://openrouter.ai/api"
+
+
+def provider() -> Optional[str]:
+    """'anthropic' (direct key) > 'openrouter' > None (deterministic mode)."""
+    if os.getenv("ANTHROPIC_API_KEY"):
+        return "anthropic"
+    if os.getenv("OPENROUTER_API_KEY"):
+        return "openrouter"
+    return None
 
 
 def genai_available() -> bool:
-    return bool(os.getenv("ANTHROPIC_API_KEY"))
+    return provider() is not None
+
+
+def model_name() -> str:
+    name = os.getenv("LLM_MODEL") or "claude-opus-5-5"
+    if provider() == "openrouter" and "/" not in name:
+        # Anthropic IDs (claude-opus-5-5) -> OpenRouter IDs (anthropic/claude-opus-5.5)
+        name = "anthropic/" + re.sub(r"-(\d+)-(\d+)$", r"-\1.\2", name)
+    return name
+
+
+MODEL = model_name()
 
 
 # ------------------------------------------------------------------ session
@@ -108,7 +128,8 @@ TOOLS = [
                 "property_value": {"type": ["number", "string"], "description": "Home loan: property value in INR"},
                 "vehicle_price": {"type": ["number", "string"], "description": "Car loan: on-road price in INR"},
                 "study_abroad": {"type": "boolean", "description": "Education loan: true if studying outside India"},
-                "co_applicant_income": {"type": ["number", "string"]},
+                "co_applicant_income": {"type": ["number", "string"],
+                                        "description": "Co-applicant (spouse/parent) net monthly income; required for education loans, optional for others (clubbed with applicant income)"},
                 "co_applicant_credit_score": {"type": ["number", "string"]},
                 "co_applicant_existing_emi": {"type": ["number", "string"]},
             },
@@ -180,23 +201,33 @@ class GenAIAgent:
     def __init__(self) -> None:
         import anthropic  # imported lazily so the app runs without the package configured
 
-        self.client = anthropic.Anthropic()
+        self.provider = provider()
+        if self.provider == "openrouter":
+            # OpenRouter exposes the Anthropic Messages API, so the same SDK and tool loop work unchanged.
+            self.client = anthropic.Anthropic(base_url=OPENROUTER_BASE_URL, api_key=None,
+                                              auth_token=os.environ["OPENROUTER_API_KEY"])
+        else:
+            self.client = anthropic.Anthropic()
+
+    def _create(self, session: Session):
+        params = dict(
+            model=MODEL,
+            max_tokens=2048,
+            system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
+            tools=TOOLS,
+            messages=session.history,
+            output_config={"effort": EFFORT},
+        )
+        if self.provider == "openrouter":
+            return self.client.messages.create(**params)
+        return self.client.beta.messages.create(**params, betas=["server-side-fallback-2026-07-01"], fallbacks="default")
 
     def respond(self, session: Session, text: str) -> str:
         session.history.append({"role": "user", "content": text})
         tools_used: list[str] = []
         response = None
         for _ in range(MAX_TOOL_ROUNDS + 1):
-            response = self.client.beta.messages.create(
-                model=MODEL,
-                max_tokens=2048,
-                system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
-                tools=TOOLS,
-                messages=session.history,
-                output_config={"effort": EFFORT},
-                betas=["server-side-fallback-2026-07-01"],
-                fallbacks="default",
-            )
+            response = self._create(session)
             if response.stop_reason == "refusal":
                 session.history.append({"role": "assistant", "content": [{"type": "text", "text": "I can only help with loan eligibility questions."}]})
                 return "I can only help with loan eligibility questions. Could you tell me about the loan you need?"

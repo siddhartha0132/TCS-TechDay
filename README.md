@@ -77,9 +77,11 @@ Response includes `reply`, `evaluation` (status, checks, EMI, FOIR, max eligible
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | — | Enables GenAI mode |
-| `CLAUDE_MODEL` | `claude-opus-5-5` | Any current Claude model |
-| `CLAUDE_EFFORT` | `low` | `low` / `medium` / `high` — trade reasoning depth for latency |
+| `ANTHROPIC_API_KEY` | — | Enables GenAI mode (direct Anthropic API) |
+| `OPENROUTER_API_KEY` | — | Enables GenAI mode through OpenRouter when no Anthropic key is set |
+| `SARVAM_API_KEY` | — | Sarvam AI speech-to-text / text-to-speech for EN + Indian languages; browser speech otherwise |
+| `LLM_MODEL` | `claude-opus-5-5` | Any current Claude model (mapped to `anthropic/claude-opus-5.5` on OpenRouter) |
+| `LLM_EFFORT` | `low` | `low` / `medium` / `high` — trade reasoning depth for latency |
 
 The GenAI path sends `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`) so a safety refusal
 re-runs on a fallback model instead of failing the turn. Remove those two lines in `agent.py` if your account

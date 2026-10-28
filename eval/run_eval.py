@@ -100,6 +100,7 @@ def run() -> str:
 
     # ---------------- C. end-to-end conversation through the agent (LLM if available)
     c_ok = 0
+    fallbacks = 0  # replies where the LLM errored and the deterministic brain answered
     latencies: list[int] = []
     turns_list: list[int] = []
     c_rows = []
@@ -109,6 +110,7 @@ def run() -> str:
         facts = c["expected_fields"]
         r = agent.handle_message(s, c["text"])
         latencies.append(r["latency_ms"])
+        fallbacks += "error" in r["mode"]
         if c.get("expect_pii") and not set(c["expect_pii"]) <= set(r["pii_masked"]):
             pii_ok = False
         turns = 1
@@ -120,6 +122,7 @@ def run() -> str:
                 break  # the applicant genuinely doesn't know (e.g. nl34) -> stays INCOMPLETE
             r = agent.handle_message(s, " ".join(answers))
             latencies.append(r["latency_ms"])
+            fallbacks += "error" in r["mode"]
             turns += 1
         got_status = r["evaluation"]["status"] if r["evaluation"] else "INCOMPLETE"
         ok = got_status == c["expected_status"]
@@ -133,6 +136,8 @@ def run() -> str:
     lines += [f"## C. End-to-end conversation ({mode}) — verdict {c_ok}/{len(nl)} = **{100 * c_ok / len(nl):.0f}%**", "",
               f"- Replies under 15 s: **{under}/{len(latencies)}** ({100 * under / len(latencies):.0f}%) · latency p50 {p50:.0f} ms · p95 {p95} ms · max {max(latencies)} ms",
               f"- Average turns to verdict: {statistics.mean(turns_list):.1f}",
+              f"- Replies where the LLM failed and the deterministic fallback answered: **{fallbacks}/{len(latencies)}**"
+              + (" ⚠️ section C does not reflect GenAI accuracy" if fallbacks else ""),
               f"- PII masking on labelled cases: {'✅' if pii_ok else '❌'}", "",
               "| id | lang | expected | got | ok | turns | max ms |", "|---|---|---|---|---|---|---|", *c_rows, ""]
 
@@ -150,7 +155,8 @@ if __name__ == "__main__":
     ap.add_argument("--no-llm", action="store_true", help="force deterministic mode")
     args = ap.parse_args()
     if args.no_llm:
-        os.environ.pop("ANTHROPIC_API_KEY", None)
+        for key in ("ANTHROPIC_API_KEY", "OPENROUTER_API_KEY"):
+            os.environ[key] = ""  # empty (not popped) so load_dotenv() can't refill it
     report = run()
     REPORT.write_text(report, encoding="utf-8")
     print(report)

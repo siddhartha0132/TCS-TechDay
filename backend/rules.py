@@ -230,6 +230,11 @@ def evaluate(profile_in: dict[str, Any]) -> Evaluation:
         if emp_type not in EMPLOYMENT_TYPES:
             emp_type = "salaried"
         who = "Applicant"
+        # Optional co-applicant (spouse/parent): incomes and obligations are clubbed for repayment capacity
+        if p.get("co_applicant_income"):
+            income += float(p["co_applicant_income"])
+            existing_emi += float(p.get("co_applicant_existing_emi") or 0)
+            who = "Combined"
 
     # 1. Tenure within product limits (clamp silently for the EMI maths, flag if outside)
     if tenure < product["min_tenure_years"] or tenure > product["max_tenure_years"]:
@@ -290,7 +295,8 @@ def evaluate(profile_in: dict[str, Any]) -> Evaluation:
     # 5. Credit score
     min_score = product["min_credit_score"]
     ok = score >= min_score
-    checks.append(Check("credit_score", ok, f"{who} credit score {score:g} ({credit_band(score)}) vs. minimum {min_score}."))
+    score_owner = "Co-applicant" if loan_type == "education" else "Applicant"
+    checks.append(Check("credit_score", ok, f"{score_owner} credit score {score:g} ({credit_band(score)}) vs. minimum {min_score}."))
     if not ok:
         improvements.append(f"Improve the credit score by {min_score - score:g} points (pay EMIs/cards on time, keep card utilisation under 30%, avoid new hard enquiries).")
     elif score < min_score + 30:

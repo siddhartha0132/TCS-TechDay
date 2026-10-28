@@ -8,13 +8,13 @@ import time
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import agent
+from . import agent, voice
 from .documents import required_documents
 from .rules import RULES, evaluate
 
@@ -49,9 +49,40 @@ class EvaluateIn(BaseModel):
     applicant: dict[str, Any]
 
 
+class TtsIn(BaseModel):
+    text: str = Field(..., min_length=1, max_length=4000)
+    language: str = "en"
+
+
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "mode": "genai" if agent.genai_available() else "deterministic", "model": agent.MODEL if agent.genai_available() else None}
+    return {"status": "ok", "mode": "genai" if agent.genai_available() else "deterministic",
+            "provider": agent.provider(), "model": agent.MODEL if agent.genai_available() else None,
+            "voice": "sarvam" if voice.available() else "browser"}
+
+
+@app.post("/api/stt")
+async def stt(request: Request):
+    """Body: raw audio blob from MediaRecorder (audio/webm)."""
+    if not voice.available():
+        raise HTTPException(503, "Sarvam not configured")
+    audio = await request.body()
+    if not audio or len(audio) > 10 * 1024 * 1024:
+        raise HTTPException(400, "empty or too large recording")
+    try:
+        return voice.speech_to_text(audio, request.headers.get("content-type", "audio/webm"))
+    except Exception as exc:
+        raise HTTPException(502, f"speech-to-text failed: {type(exc).__name__}")
+
+
+@app.post("/api/tts")
+def tts(body: TtsIn):
+    if not voice.available():
+        raise HTTPException(503, "Sarvam not configured")
+    try:
+        return {"audio_wav_base64": voice.text_to_speech(body.text, body.language)}
+    except Exception as exc:
+        raise HTTPException(502, f"text-to-speech failed: {type(exc).__name__}")
 
 
 @app.post("/api/chat")

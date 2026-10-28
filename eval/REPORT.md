@@ -1,9 +1,9 @@
 # Evaluation report
 
 - Mode: **deterministic**
-- Generated: 2026-10-28 12:43
+- Generated: 2026-10-28 13:01
 
-## A. Rules engine — 15/15 = **100%**
+## A. Rules engine — 17/17 = **100%**
 
 | id | case | expected | got | ok |
 |---|---|---|---|---|
@@ -22,6 +22,8 @@
 | st13 | missing credit score -> INCOMPLETE | INCOMPLETE | INCOMPLETE | ✅ |
 | st14 | string amounts normalised | ELIGIBLE | ELIGIBLE | ✅ |
 | st15 | personal above 24x income | CONDITIONAL | CONDITIONAL | ✅ |
+| st16 | home FOIR fails alone (70%) | CONDITIONAL | CONDITIONAL | ✅ |
+| st17 | same + spouse co-applicant 40k clubbed -> FOIR 43% | ELIGIBLE | ELIGIBLE | ✅ |
 
 ## B. Regex extraction baseline (single message) — fields 283/283 = **100%**, verdict 36/36 = **100%**
 
@@ -68,6 +70,7 @@
 
 - Replies under 15 s: **36/36** (100%) · latency p50 0 ms · p95 0 ms · max 0 ms
 - Average turns to verdict: 1.0
+- Replies where the LLM failed and the deterministic fallback answered: **0/36**
 - PII masking on labelled cases: ✅
 
 | id | lang | expected | got | ok | turns | max ms |

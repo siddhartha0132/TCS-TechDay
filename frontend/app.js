@@ -178,10 +178,48 @@
   });
 
   // ------------------------------------------------------------ voice
+  // Sarvam AI (server-proxied) when configured; browser Web Speech API otherwise.
+  let voiceEngine = "browser";
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let rec = null;
-  if (!SR) { micBtn.title = "Voice input needs Chrome/Edge"; micBtn.disabled = true; micBtn.style.opacity = .5; }
+  let recorder = null;
+  const MAX_RECORDING_MS = 20000;
+
+  async function startSarvamRecording() {
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch { addMessage("bot", "Microphone permission was denied."); return; }
+    const chunks = [];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    recorder.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      micBtn.classList.remove("listening");
+      recorder = null;
+      const blob = new Blob(chunks, { type: chunks[0]?.type || "audio/webm" });
+      input.placeholder = "Transcribing…";
+      try {
+        const res = await fetch("/api/stt", { method: "POST", headers: { "Content-Type": blob.type }, body: blob });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { transcript } = await res.json();
+        input.placeholder = "";
+        if (transcript && transcript.trim()) { input.value = transcript.trim(); autosize(); send(); }
+      } catch (e) {
+        input.placeholder = "";
+        addMessage("bot", "Sorry, I couldn't transcribe that. Please try again or type. (" + e.message + ")");
+      }
+    };
+    recorder.start();
+    micBtn.classList.add("listening");
+    setTimeout(() => recorder && recorder.state === "recording" && recorder.stop(), MAX_RECORDING_MS);
+  }
+
   micBtn.addEventListener("click", () => {
+    if (voiceEngine === "sarvam") {
+      if (recorder) recorder.stop(); else startSarvamRecording();
+      return;
+    }
+    if (!SR) return;
     if (rec) { rec.stop(); return; }
     rec = new SR();
     rec.lang = langSelect.value === "hi" || langSelect.value === "hinglish" ? "hi-IN" : "en-IN";
@@ -200,9 +238,24 @@
 
   ttsBtn.addEventListener("click", () => {
     tts = !tts; ttsBtn.setAttribute("aria-pressed", String(tts)); ttsBtn.textContent = tts ? "🔊" : "🔈";
-    if (!tts) window.speechSynthesis?.cancel();
+    if (!tts) { window.speechSynthesis?.cancel(); currentAudio?.pause(); }
   });
-  function speak(text, lang) {
+  let currentAudio = null;
+  async function speak(text, lang) {
+    if (voiceEngine === "sarvam") {
+      try {
+        currentAudio?.pause();
+        const res = await fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, language: lang }) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { audio_wav_base64 } = await res.json();
+        currentAudio = new Audio("data:audio/wav;base64," + audio_wav_base64);
+        if (tts) currentAudio.play();
+        return;
+      } catch (e) { console.warn("Sarvam TTS failed, using browser voice", e); }
+    }
+    speakBrowser(text, lang);
+  }
+  function speakBrowser(text, lang) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const clean = text.replace(/[•✅🟡🔴→☐*#_]/g, " ").replace(/\s+/g, " ").slice(0, 900);
@@ -219,6 +272,9 @@
       const mb = $("modeBadge");
       mb.textContent = h.mode === "genai" ? `GenAI · ${h.model}` : "Deterministic mode (no API key)";
       mb.className = "badge " + (h.mode === "genai" ? "badge-ok" : "badge-warn");
+      voiceEngine = h.voice === "sarvam" && window.MediaRecorder ? "sarvam" : "browser";
+      micBtn.title = voiceEngine === "sarvam" ? "Speak — click again to stop (Sarvam AI)" : "Speak (browser speech)";
+      if (voiceEngine === "browser" && !SR) { micBtn.title = "Voice input needs Chrome/Edge"; micBtn.disabled = true; micBtn.style.opacity = .5; }
       const samples = await (await fetch("/api/samples")).json();
       $("samples").innerHTML = samples.map((s) => `<button type="button" class="chip" data-text="${esc(s.text)}">${esc(s.label)}</button>`).join("");
       $("samples").querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => send(c.dataset.text)));

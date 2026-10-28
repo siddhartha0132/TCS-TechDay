@@ -184,3 +184,34 @@ html { scroll-behavior: smooth; }
   .result-amount { font-size: 26px; }
   .product small { display: none; }
 }
+
+/* ---------- chat / form tabs */
+.mode-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); }
+.mode-tab { padding: 13px 10px; background: var(--card); border: none; border-bottom: 3px solid transparent; cursor: pointer; font-weight: 600; color: var(--muted); }
+.mode-tab[aria-selected="true"] { color: var(--brand); border-bottom-color: var(--accent); }
+.panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.panel[hidden] { display: none; }
+
+/* ---------- quick form */
+.form-panel { overflow-y: auto; }
+.qform { padding: 18px; }
+.form-intro { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+.fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.field { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; }
+.field.full { grid-column: 1 / -1; }
+.field[hidden] { display: none; }
+.field input, .field select {
+  font: inherit; font-weight: 400; font-size: 15px; padding: 11px 12px; border-radius: 10px;
+  border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); outline: none;
+}
+.field input:focus, .field select:focus { border-color: var(--brand-2); }
+.field input:invalid:not(:placeholder-shown) { border-color: var(--bad); }
+.fmt { color: var(--muted); font-weight: 500; min-height: 1em; }
+.form-actions { display: flex; align-items: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
+.btn-cta { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 13px 22px; font-weight: 700; font-size: 15.5px; cursor: pointer; }
+.btn-cta:disabled { opacity: .6; }
+.form-result { margin-top: 16px; padding: 14px 16px; border-radius: 14px; background: var(--bot); font-size: 14.5px; }
+.form-result .verified { margin-bottom: 6px; }
+.form-result ul { margin: 6px 0 0; padding-left: 18px; }
+.link-btn { background: none; border: none; color: var(--brand); font-weight: 700; cursor: pointer; padding: 8px 0 0; }
+@media (max-width: 560px) { .fgrid { grid-template-columns: 1fr; } }

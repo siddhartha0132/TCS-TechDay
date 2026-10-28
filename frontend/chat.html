@@ -49,6 +49,12 @@
   <main class="wrap layout">
     <!-- ================= Chat ================= -->
     <section class="chat card" aria-label="Chat with LoanMitra">
+      <div class="mode-tabs" role="tablist" aria-label="How do you want to check?">
+        <button type="button" class="mode-tab" id="tabChat" role="tab" aria-selected="true">💬 Chat with LoanMitra</button>
+        <button type="button" class="mode-tab" id="tabForm" role="tab" aria-selected="false">📝 Quick form</button>
+      </div>
+
+      <div id="chatPanel" class="panel">
       <ol class="stepper" id="stepper" aria-label="Progress">
         <li data-step="0"><span>1</span>Loan</li>
         <li data-step="1"><span>2</span>About you</li>
@@ -74,6 +80,59 @@
         <button type="submit" id="sendBtn" class="btn-primary" aria-label="Send">➤</button>
       </form>
       <div class="hint">Indicative soft check only — final approval subject to document verification.</div>
+      </div>
+
+      <div id="formPanel" class="panel form-panel" hidden>
+        <form id="quickForm" class="qform" novalidate>
+          <p class="form-intro">Prefer a form? Fill these in and get your result instantly. Nothing is stored.</p>
+          <div class="fgrid">
+            <label class="field full"><span>Loan type</span>
+              <select id="fType" required>
+                <option value="personal">Personal loan</option>
+                <option value="home">Home loan</option>
+                <option value="auto">Car loan</option>
+                <option value="education">Education loan</option>
+              </select></label>
+            <label class="field"><span>Loan amount (₹)</span><input id="fAmount" type="number" inputmode="numeric" min="10000" step="10000" placeholder="500000" required><small class="fmt" data-for="fAmount"></small></label>
+            <label class="field"><span>Repay over (years)</span><input id="fTenure" type="number" inputmode="decimal" min="1" max="30" step="1" placeholder="3" required></label>
+            <label class="field"><span>Your age</span><input id="fAge" type="number" inputmode="numeric" min="17" max="80" placeholder="30" required></label>
+
+            <label class="field" data-show="personal home auto"><span>Employment</span>
+              <select id="fEmp">
+                <option value="salaried">Salaried</option>
+                <option value="self_employed">Self-employed / business</option>
+                <option value="not_employed">Not working</option>
+              </select></label>
+            <label class="field" data-show="personal home auto"><span>Net monthly income (₹)</span><input id="fIncome" type="number" inputmode="numeric" min="0" step="1000" placeholder="60000"><small class="fmt" data-for="fIncome"></small></label>
+            <label class="field" data-show="personal home auto"><span>Credit score (CIBIL)</span>
+              <select id="fScore">
+                <option value="780">750 and above (excellent)</option>
+                <option value="725">700 – 749 (good)</option>
+                <option value="675">650 – 699 (fair)</option>
+                <option value="620">Below 650</option>
+                <option value="unknown">I don't know</option>
+              </select></label>
+            <label class="field" data-show="personal home auto"><span>Existing EMIs per month (₹)</span><input id="fEmi" type="number" inputmode="numeric" min="0" step="500" value="0"></label>
+            <label class="field" data-show="home"><span>Property value (₹)</span><input id="fProperty" type="number" inputmode="numeric" min="100000" step="100000" placeholder="7000000"><small class="fmt" data-for="fProperty"></small></label>
+            <label class="field" data-show="auto"><span>Vehicle on-road price (₹)</span><input id="fVehicle" type="number" inputmode="numeric" min="50000" step="10000" placeholder="1000000"><small class="fmt" data-for="fVehicle"></small></label>
+
+            <label class="field" data-show="education"><span>Where is the course?</span>
+              <select id="fAbroad"><option value="false">In India</option><option value="true">Abroad</option></select></label>
+            <label class="field" data-show="education"><span>Parent / guardian monthly income (₹)</span><input id="fCoIncome" type="number" inputmode="numeric" min="0" step="1000" placeholder="80000"><small class="fmt" data-for="fCoIncome"></small></label>
+            <label class="field" data-show="education"><span>Parent / guardian credit score</span>
+              <select id="fCoScore">
+                <option value="780">750 and above</option><option value="725">700 – 749</option>
+                <option value="675">650 – 699</option><option value="620">Below 650</option><option value="unknown">Don't know</option>
+              </select></label>
+            <label class="field" data-show="education"><span>Parent / guardian EMIs per month (₹)</span><input id="fCoEmi" type="number" inputmode="numeric" min="0" step="500" value="0"></label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-cta">Check eligibility</button>
+            <span class="muted">Soft check · no CIBIL impact</span>
+          </div>
+          <div id="formResult" class="form-result" hidden aria-live="polite"></div>
+        </form>
+      </div>
     </section>
 
     <!-- ================= Result / dashboard ================= -->

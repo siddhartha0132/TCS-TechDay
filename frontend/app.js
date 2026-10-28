@@ -206,6 +206,7 @@
     setModeBadge(r.mode, r.model);
   }
   function setModeBadge(mode, model) {
+    if (mode) { currentMode = mode; currentModel = model; }
     const mb = $("modeBadge");
     const short = (model || "").split("/").pop().replace(":free", "");
     mb.textContent = mode === "genai" ? `✨ AI · ${short}` : mode && mode.includes("error") ? "Rules engine (AI busy)" : "Rules engine";
@@ -377,6 +378,98 @@
     window.speechSynthesis.speak(u);
   }
 
+  // ------------------------------------------------------------ chat / quick-form tabs
+  let currentMode = null, currentModel = null;
+  function showTab(which) {
+    const form = which === "form";
+    $("tabChat").setAttribute("aria-selected", String(!form));
+    $("tabForm").setAttribute("aria-selected", String(form));
+    $("chatPanel").hidden = form;
+    $("formPanel").hidden = !form;
+    if (form) $("fAmount").focus(); else input.focus();
+  }
+  $("tabChat").addEventListener("click", () => showTab("chat"));
+  $("tabForm").addEventListener("click", () => showTab("form"));
+
+  function syncFormFields() {
+    const type = $("fType").value;
+    document.querySelectorAll("#quickForm [data-show]").forEach((el) => { el.hidden = !el.dataset.show.split(" ").includes(type); });
+    const [lo, hi] = PRODUCT[type].tenure;
+    $("fTenure").min = String(lo); $("fTenure").max = String(hi); $("fTenure").placeholder = String(PRODUCT[type].tenures[1]);
+    selectProduct(type);
+  }
+  $("fType").addEventListener("change", syncFormFields);
+  document.querySelectorAll("#quickForm .fmt").forEach((hint) => {
+    const field = $(hint.dataset.for);
+    field.addEventListener("input", () => { hint.textContent = field.value ? fmtINR(+field.value) : ""; });
+  });
+  // Product tabs also pre-select the form's loan type
+  document.querySelectorAll(".product").forEach((b) => b.addEventListener("click", () => { $("fType").value = b.dataset.type; syncFormFields(); }));
+
+  function formApplicant() {
+    const type = $("fType").value, num = (id) => ($(id).value === "" ? null : +$(id).value);
+    const a = { loan_type: type, loan_amount: num("fAmount"), tenure_years: num("fTenure"), age: num("fAge") };
+    if (type === "education") {
+      Object.assign(a, { study_abroad: $("fAbroad").value === "true", co_applicant_income: num("fCoIncome"),
+        co_applicant_credit_score: $("fCoScore").value === "unknown" ? "unknown" : +$("fCoScore").value, co_applicant_existing_emi: num("fCoEmi") ?? 0 });
+    } else {
+      Object.assign(a, { employment_type: $("fEmp").value, monthly_income: num("fIncome"),
+        credit_score: $("fScore").value === "unknown" ? "unknown" : +$("fScore").value, existing_emi: num("fEmi") ?? 0 });
+      if (type === "home") a.property_value = num("fProperty");
+      if (type === "auto") a.vehicle_price = num("fVehicle");
+    }
+    for (const k of Object.keys(a)) if (a[k] === null) delete a[k];
+    return a;
+  }
+
+  function chatSentence(a) {
+    const parts = [`I want a ${PRODUCT[a.loan_type].label.toLowerCase()} of ${fmtINR(a.loan_amount)} for ${a.tenure_years} years.`, `I am ${a.age}.`];
+    if (a.loan_type === "education") {
+      parts.push(`The course is ${a.study_abroad ? "abroad" : "in India"}. My father earns ${a.co_applicant_income} per month,`,
+        a.co_applicant_credit_score === "unknown" ? "his credit score is unknown," : `his credit score is ${a.co_applicant_credit_score},`,
+        a.co_applicant_existing_emi ? `he pays ${a.co_applicant_existing_emi} EMI.` : "he has no EMIs.");
+    } else {
+      parts.push(a.employment_type === "self_employed" ? "I am self-employed," : a.employment_type === "not_employed" ? "I am not working," : "I am salaried,",
+        `my salary is ${a.monthly_income} per month,`, a.credit_score === "unknown" ? "I don't know my credit score," : `my credit score is ${a.credit_score},`,
+        a.existing_emi ? `I pay ${a.existing_emi} EMI.` : "no EMIs.");
+      if (a.property_value) parts.push(`The property is worth ${fmtINR(a.property_value)}.`);
+      if (a.vehicle_price) parts.push(`On-road price is ${fmtINR(a.vehicle_price)}.`);
+    }
+    return parts.join(" ");
+  }
+
+  $("quickForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const out = $("formResult"), btn = $("quickForm").querySelector(".btn-cta");
+    const required = ["fAmount", "fTenure", "fAge"].concat($("fType").value === "education" ? ["fCoIncome"] : ["fIncome"])
+      .concat($("fType").value === "home" ? ["fProperty"] : $("fType").value === "auto" ? ["fVehicle"] : []);
+    const empty = required.filter((id) => $(id).value === "");
+    if (empty.length) { out.hidden = false; out.textContent = "Please fill in the highlighted fields."; $(empty[0]).focus(); return; }
+    const applicant = formApplicant();
+    btn.disabled = true;
+    const started = performance.now();
+    try {
+      const res = await fetch("/api/evaluate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ applicant }) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const ev = await res.json();
+      const ms = Math.round(performance.now() - started);
+      if (ev.status === "INCOMPLETE") {
+        out.hidden = false;
+        out.textContent = "Some values look off: " + (ev.invalid_fields || ev.missing_fields || []).map((k) => (FIELD_LABELS[k] || k).toLowerCase()).join(", ") + ". Please check them.";
+        return;
+      }
+      updateDashboard({ evaluation: ev, profile: applicant, missing_fields: [], documents: ev.documents || [], latency_ms: ms,
+        pii_masked: [], language: "en", mode: currentMode, model: currentModel, next_field: null });
+      out.hidden = false;
+      out.innerHTML = `<span class="verified v-${esc(ev.status)}">🔒 ${esc(VERDICT[ev.status] || ev.status)}</span><div>${esc(ev.summary)}</div>` +
+        (ev.improvements.length ? `<ul>${ev.improvements.slice(0, 2).map((s) => `<li>${esc(s)}</li>`).join("")}</ul>` : "") +
+        `<button type="button" class="link-btn" id="discussBtn">💬 Discuss this result in chat →</button>`;
+      $("discussBtn").addEventListener("click", () => { showTab("chat"); send(chatSentence(applicant)); });
+    } catch (err) {
+      out.hidden = false; out.textContent = "Couldn't check right now (" + err.message + "). Please try again.";
+    } finally { btn.disabled = false; }
+  });
+
   // ------------------------------------------------------------ boot
   (async () => {
     try {
@@ -388,6 +481,8 @@
     } catch (e) { console.error(e); }
     updateStepper({}, null);
     renderQuick("loan_type", {}, null);
+    syncFormFields();
+    selectProduct(null);
     input.focus();
   })();
 })();

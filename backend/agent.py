@@ -38,6 +38,7 @@ EFFORT = os.getenv("LLM_EFFORT", "low")  # low keeps replies well under the 15 s
 MAX_TOOL_ROUNDS = 4
 MAX_HISTORY_MESSAGES = 40  # ~10 user turns incl. tool round-trips; then the history restarts with the profile
 MAX_TRANSCRIPT = 60
+LANG_NAMES = {"en": "English", "hi": "Hindi (Devanagari script)", "hinglish": "Hinglish (Hindi written in Roman letters)"}
 log = logging.getLogger("loanmitra.agent")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api"
 
@@ -245,17 +246,18 @@ Rules you must follow
 - Every verdict comes from the `update_applicant_profile` tool. Never guess eligibility, EMI, or amounts yourself.
   Call the tool as soon as the user shares any detail, even one. If it returns INCOMPLETE, ask for the missing fields
   (at most 2 or 3 per message, in a natural order). Do not ask for things you already know.
-- Reply in the language the user writes in: English, Hindi (Devanagari) or Hinglish (romanised Hindi). If the user
-  writes in Hindi, answer fully in Hindi. Keep the numbers in Indian format (₹5 L, ₹1.2 Cr).
-- When you give a verdict: state it clearly, give the key reasons (from the tool's checks), the EMI, and the
-  improvement steps / what-if options from the tool. Mention the document checklist when eligible or conditional.
+- Language: every user message ends with a bracketed note such as [Reply in English]. Always reply in exactly
+  that language, even if earlier turns used another one. Keep numbers in Indian format (₹5 L, ₹1.2 Cr).
+- When you give a verdict: one line with the verdict and the amount / EMI, then at most 2 short reasons (only
+  the failed or borderline checks) and at most 2 next steps from the tool. The screen already shows every rule,
+  the full plan and the document list, so do not repeat them; mention documents only when asked.
 - Use `what_if` for hypothetical questions ("what if I add my wife as co-applicant", "and for 7 years?").
-- This is an indicative soft check, not a sanction letter; say so once at the end of a verdict, briefly.
+- This is an indicative soft check; mention it in a few words only on the first verdict.
 - Personal data: do not ask for PAN, Aadhaar, phone or account numbers; they are not needed for a soft check.
   If the user shares them they are already masked before reaching you.
 - Stay on topic (loan eligibility, documents, EMIs, credit score guidance). Politely decline anything else.
-- Be warm and concise: short paragraphs or short bullet lists, no tables, no headings, no markdown bold spam.
-  A verdict message should fit on a phone screen.
+- Be warm and brief: at most about 60 words per reply, plain sentences or up to 4 short bullets, no tables, no
+  headings. When asking for details, ask in one short sentence.
 
 Bank policy snapshot (the tool holds the full rules):
 {POLICY_SUMMARY}
@@ -308,7 +310,7 @@ class GenAIAgent:
         import anthropic
 
         client = self._anthropic_client(b.kind).with_options(timeout=timeout)
-        params = dict(model=b.model, max_tokens=2048, tools=TOOLS, messages=history,
+        params = dict(model=b.model, max_tokens=1024, tools=TOOLS, messages=history,
                       system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
                       output_config={"effort": EFFORT})
         try:
@@ -505,9 +507,11 @@ class DeterministicAgent:
         if fields:
             result = tool_update_profile(session, fields)
             accepted = {k: v for k, v in fields.items() if k not in result["invalid_fields"]}
-            if accepted:
+            if accepted and len(accepted) <= 3:
                 learned = ", ".join(f"{FIELD_LABELS.get(k, k)}: {self._show(k, v)}" for k, v in accepted.items())
                 prefix = i18n.t(lang, "noted") + f"({learned})\n"
+            elif accepted:
+                prefix = i18n.t(lang, "noted")
             if result["invalid_fields"]:
                 bad = result["invalid_fields"][0]
                 session.expected_field = bad
@@ -524,6 +528,9 @@ class DeterministicAgent:
             return prefix + i18n.ask_for(lang, nxt)
 
         session.expected_field = None
+        # The details panel already lists every fact; only echo short updates (e.g. a single correction).
+        if len(fields) > 2:
+            prefix = ""
         return prefix + i18n.render_evaluation(lang, result, result.get("documents", []))
 
     @staticmethod
@@ -569,7 +576,8 @@ def handle_message(session: Session, raw_text: str, lang_pref: str = "auto") -> 
     session.reply_source = "rules"
     brain, mode = _brain()
     try:
-        reply = brain.respond(session, text)
+        # Explicit per-turn language instruction: free models otherwise drift into Hindi after any Hindi turn.
+        reply = brain.respond(session, f"{text}\n\n[Reply in {LANG_NAMES[session.lang]}]" if mode == "genai" else text)
     except Exception as exc:  # GenAI failure (network, key, quota, budget) -> degrade gracefully, never crash the demo
         if mode != "genai":
             raise

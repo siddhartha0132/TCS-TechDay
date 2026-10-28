@@ -117,6 +117,9 @@ T = {
         "hi": "आप मुझसे 'क्या होगा अगर' वाले सवाल भी पूछ सकते हैं, जैसे “अगर 7 साल के लिए लूँ तो?”",
         "hinglish": "Aap 'what if' sawaal bhi pooch sakte hain, jaise “7 saal ke liye loon to?”",
     },
+    "see_panel": {"en": "Full rule-by-rule breakdown and documents are on the right. Indicative soft check — no CIBIL impact.",
+                  "hi": "पूरा विवरण और दस्तावेज़ सूची दाईं ओर है। यह केवल सांकेतिक जाँच है — CIBIL पर कोई असर नहीं।",
+                  "hinglish": "Poora breakdown aur documents right side mein hain. Ye sirf indicative check hai — CIBIL pe koi asar nahi."},
     "reset": {"en": "Starting over. ", "hi": "फिर से शुरू करते हैं। ", "hinglish": "Phir se shuru karte hain. "},
     "what_if": {"en": "Here's what would happen if you change that", "hi": "अगर आप यह बदलें तो परिणाम यह होगा",
                 "hinglish": "Agar aap ye badlein to result ye hoga"},
@@ -137,26 +140,17 @@ def ask_for(lang: str, field: str) -> str:
 
 
 def render_evaluation(lang: str, ev: dict, documents: list[str], hypothetical: bool = False) -> str:
+    """Short, phone-sized verdict: status, one-line summary, up to 2 reasons and 2 next steps.
+    The full rule-by-rule breakdown and the document list are shown in the side panel."""
     if ev["status"] == "INCOMPLETE":
         return ev["summary"]
-    lines = [t(lang, ev["status"]), ev["summary"], ""]
+    lines = [f"{t(lang, ev['status'])} {ev['summary']}"]
     failed = [c for c in ev["checks"] if not c["passed"]]
-    passed = [c for c in ev["checks"] if c["passed"]]
     if failed:
         lines.append(t(lang, "why"))
-        lines += [f"• {c['detail']}" for c in failed]
-    elif passed:
-        lines.append(t(lang, "why"))
-        lines += [f"• {c['detail']}" for c in passed[:4]]
+        lines += [f"• {c['detail']}" for c in failed[:2]]
     if ev["improvements"]:
-        lines.append("")
         lines.append(t(lang, "next_steps"))
-        lines += [f"• {i}" for i in ev["improvements"]]
-    if documents and ev["status"] != "NOT_ELIGIBLE":
-        lines.append("")
-        lines.append(t(lang, "documents"))
-        lines += [f"• {d}" for d in documents]
-    lines += ["", t(lang, "hypothetical") if hypothetical else t(lang, "disclaimer")]
-    if not hypothetical:
-        lines.append(t(lang, "ask_more"))
+        lines += [f"• {i}" for i in ev["improvements"][:2]]
+    lines.append(t(lang, "hypothetical") if hypothetical else t(lang, "see_panel"))
     return "\n".join(lines)

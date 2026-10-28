@@ -13,8 +13,8 @@ Built for the TCS Technology Day problem statement *"Banking: Automated Loan Eli
 | Single-agent chatbot | One Claude agent with three tools (`update_applicant_profile`, `what_if`, `list_required_documents`) |
 | Evaluates input against eligibility rules | Deterministic engine in [backend/rules.py](backend/rules.py), policy in [data/rules.json](data/rules.json) — the LLM never decides eligibility |
 | Personalised feedback + next steps | Counterfactuals computed from the rules: max eligible amount, tenure that would work, EMIs to close, score points needed, co-applicant income needed |
-| 80%+ accuracy | Labelled test set + eval harness ([eval/run_eval.py](eval/run_eval.py)); current run: 100% on rules, extraction and end-to-end verdicts |
-| < 15 s response | Latency measured per reply and shown in the UI; `effort=low` on the model keeps GenAI replies fast |
+| 80%+ accuracy | Labelled test set + eval harness ([eval/run_eval.py](eval/run_eval.py)); current run ([eval/REPORT.md](eval/REPORT.md)): rules 17/17, extraction fields 283/283, end-to-end verdicts 35/36 GenAI (36/36 deterministic) |
+| < 15 s response | Hard 13 s turn budget with deterministic fallback; measured 36/37 replies under 15 s (p50 13.0 s, p95 13.8 s, max 18.9 s) in the current GenAI run; latency shown per reply in the UI |
 | Synthetic data, privacy | 300 generated applicants ([data/generate_synthetic.py](data/generate_synthetic.py)); PAN / Aadhaar / phone / email masked before any processing; sessions in memory only |
 | Chat UI, docs, demo | [frontend/](frontend/), [docs/](docs/) |
 
@@ -52,10 +52,10 @@ backend/
   privacy.py     PII masking
   documents.py   Document checklists
   i18n.py        Language detection + templated replies (fallback mode)
-frontend/        Chat UI with eligibility dashboard, voice in/out (Web Speech API)
+frontend/        Landing page + chat UI with eligibility dashboard, voice in/out (Sarvam AI, browser Web Speech fallback)
 data/
   rules.json     The bank's (synthetic) policy — edit without touching code
-  test_cases.json  36 labelled conversations + 15 rule-boundary cases
+  test_cases.json  36 labelled conversations + 17 rule-boundary cases
   generate_synthetic.py -> applicants.csv
 eval/run_eval.py Accuracy + latency report
 docs/            ARCHITECTURE.md, DEMO_SCRIPT.md, PITCH.md

@@ -52,10 +52,28 @@ class Figure:
     currency: bool
     annual: bool
     is_range: bool
+    range_high: Optional[float] = None  # upper bound when is_range (value keeps the lower bound)
+
+
+_WORD_NUMS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
+              "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16,
+              "seventeen": 17, "eighteen": 18, "nineteen": 19, "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
+              "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90, "hundred": 100,
+              "ek": 1, "do": 2, "teen": 3, "chaar": 4, "paanch": 5, "che": 6, "saat": 7, "aath": 8, "nau": 9, "das": 10}
+_WORD_NUM_RE = re.compile(r"\b(" + "|".join(sorted(_WORD_NUMS, key=len, reverse=True)) + r")\b(?=\s*(?:" +
+                          _UNIT_ALT + r")(?![a-z]))", re.I)
+
+
+def _words_to_digits(text: str) -> str:
+    """'five lakh' -> '   5 lakh' (only directly before a unit, so 'take care' never matches).
+    Right-padded to the original width so character spans stay valid for callers."""
+    return _WORD_NUM_RE.sub(lambda m: str(_WORD_NUMS[m.group(1).lower()]).rjust(len(m.group(1))), text)
 
 
 def figures(text: str) -> list[Figure]:
-    """All numeric mentions in already-normalised text, with spans. Ranges keep the lower bound."""
+    """All numeric mentions in already-normalised text, with spans. Ranges keep the lower bound in
+    `value` and expose the upper bound in `range_high` so callers can ask the user to confirm."""
+    text = _words_to_digits(text)
     out: list[Figure] = []
     for m in MONEY_RE.finditer(text):
         try:
@@ -64,11 +82,17 @@ def figures(text: str) -> list[Figure]:
             continue
         unit = (m.group("unit") or "").lower() or None
         mult, annual = UNITS.get(unit, (1.0, False)) if unit else (1.0, False)
-        val *= mult
+        val = round(val * mult, 2)  # paise precision; kills 1.1*1e5-style float dust
         if not math.isfinite(val):
             continue
+        high = None
+        if m.group("b"):
+            try:
+                high = round(float(m.group("b").replace(",", "")) * mult, 2)
+            except ValueError:
+                high = None
         out.append(Figure(val, m.start("a") if not m.group("cur") else m.start(), m.end(), unit,
-                          bool(m.group("cur")), annual, bool(m.group("b"))))
+                          bool(m.group("cur")), annual, bool(m.group("b")), high))
     return out
 
 
@@ -95,4 +119,5 @@ def parse_number(val: object) -> Optional[float]:
         return None
     f = figs[0]
     v = f.value / 12 if (f.annual or re.search(r"per annum|p\.?a\.?\b|a year|per year|yearly|annual", s)) else f.value
+    v = round(v, 2)
     return -v if negative else v

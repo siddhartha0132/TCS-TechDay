@@ -5,7 +5,7 @@
   const langSelect = $("langSelect"), micBtn = $("micBtn"), ttsBtn = $("ttsBtn"), resetBtn = $("resetBtn");
 
   let sessionId = null, tts = false, busy = false, voiceEngine = "browser";
-  let lastProfile = {}, lastEval = null;
+  let lastProfile = {}, lastEval = null, lastText = "", lastVerdict = null;
 
   const PRODUCT = {
     personal: { label: "Personal Loan", amounts: [200000, 500000, 1000000], tenures: [2, 3, 5], tenure: [1, 5] },
@@ -13,16 +13,17 @@
     auto: { label: "Car Loan", amounts: [500000, 800000, 1200000], tenures: [3, 5, 7], tenure: [1, 7] },
     education: { label: "Education Loan", amounts: [1000000, 2000000, 4000000], tenures: [5, 10, 15], tenure: [5, 15] },
   };
+  const FOIR_LIMIT = { personal: 0.50, home: 0.55, auto: 0.50, education: 0.60 };  // mirrors data/rules.json
   const FIELD_LABELS = {
-    loan_type: "Loan type", loan_amount: "Amount", tenure_years: "Tenure", age: "Age", monthly_income: "Net income / month",
-    employment_type: "Employment", employment_months: "Experience", credit_score: "Credit score", existing_emi: "Existing EMIs",
-    property_value: "Property value", vehicle_price: "Vehicle price", study_abroad: "Study location",
-    co_applicant_income: "Co-applicant income", co_applicant_credit_score: "Co-applicant score", co_applicant_existing_emi: "Co-applicant EMIs",
+    loan_type: "Loan type", loan_amount: "Loan amount", tenure_years: "Tenure", age: "Age", monthly_income: "Monthly take-home",
+    employment_type: "Employment", employment_months: "Work experience", credit_score: "Credit score (CIBIL)", existing_emi: "Existing EMIs / month",
+    property_value: "Property price", vehicle_price: "Car price", study_abroad: "Study place",
+    co_applicant_income: "Co-applicant income", co_applicant_credit_score: "Co-applicant score", co_applicant_existing_emi: "Co-applicant EMIs / month",
   };
   const RULE_LABELS = {
-    tenure_range: "Tenure within product limits", age: "Age at loan maturity", employment: "Employment", employment_vintage: "Work experience",
-    min_income: "Minimum income", credit_score: "Credit score", credit_score_margin: "Score margin", amount_range: "Amount within product range",
-    ltv: "Loan-to-value", collateral: "Collateral", foir: "Repayment capacity (FOIR)", foir_margin: "FOIR margin", income_multiple: "Income multiple cap",
+    tenure_range: "Tenure fits this loan", age: "Age at loan end", employment: "Employment", employment_vintage: "Work experience",
+    min_income: "Minimum income", credit_score: "Credit score cut-off", credit_score_margin: "Score safety margin", amount_range: "Amount in allowed range",
+    ltv: "Down-payment check", collateral: "Collateral needed", foir: "Monthly budget check", foir_margin: "Budget safety margin", income_multiple: "Loan size vs income",
   };
   const VERDICT = { ELIGIBLE: "Eligible", CONDITIONAL: "Conditionally eligible", NOT_ELIGIBLE: "Not eligible right now" };
   const STEP_FIELDS = [
@@ -50,17 +51,26 @@
     return fmtINR(v);
   };
 
-  /** Minimal markdown: bold + bullets; everything else stays escaped plain text. */
+  /** Render replies: paragraphs, bold, bullets and numbered lists; everything else stays escaped. */
   function renderText(text) {
-    const lines = esc(text).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").split("\n");
-    let html = "", inList = false;
+    const safe = esc(text).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    const lines = safe.split("\n");
+    let html = "", para = "", list = null;
+    const flushPara = () => { if (para.trim()) html += `<p>${para.trim()}</p>`; para = ""; };
+    const closeList = () => { if (list) { html += list === "ul" ? "</ul>" : "</ol>"; list = null; } };
     for (const ln of lines) {
-      const m = ln.match(/^\s*(?:[-•*]|\d+[.)])\s+(.*)$/);
-      if (m) { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${m[1]}</li>`; }
-      else { if (inList) { html += "</ul>"; inList = false; } html += ln + "\n"; }
+      const bullet = ln.match(/^\s*(?:[-•*])\s+(.*)$/);
+      const numbered = ln.match(/^\s*\d+[.)]\s+(.*)$/);
+      if (bullet || numbered) {
+        flushPara();
+        const kind = bullet ? "ul" : "ol";
+        if (list !== kind) { closeList(); html += `<${kind}>`; list = kind; }
+        html += `<li>${(bullet || numbered)[1]}</li>`;
+      } else if (!ln.trim()) { flushPara(); closeList(); }
+      else { closeList(); para += (para ? " " : "") + ln.trim(); }
     }
-    if (inList) html += "</ul>";
-    return html.replace(/\n+$/, "");
+    flushPara(); closeList();
+    return html || "<p></p>";
   }
 
   function addMessage(role, text, tag, verdict) {
@@ -68,16 +78,26 @@
     wrap.className = `msg ${role}`;
     // The chip comes from the rules engine, not the model: it is the authoritative decision.
     const chip = verdict && VERDICT[verdict.status]
-      ? `<div class="verified v-${verdict.status}" title="${esc(verdict.summary)}">🔒 Rules-engine verdict: ${VERDICT[verdict.status]}</div>` : "";
+      ? `<div class="verified v-${verdict.status}" title="${esc(verdict.summary)}">Rules-engine verdict: ${VERDICT[verdict.status]}</div>` : "";
     const avatar = role === "bot" ? `<div class="avatar" aria-hidden="true">₹</div>` : "";
     wrap.innerHTML = `${avatar}<div class="bubble">${chip}${renderText(text)}${tag ? `<div class="tag">${esc(tag)}</div>` : ""}</div>`;
+    messagesEl.appendChild(wrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+  function addError() {
+    const wrap = document.createElement("div");
+    wrap.className = "msg bot";
+    wrap.innerHTML = `<div class="avatar" aria-hidden="true">₹</div>
+      <div class="error-card"><div><b>That check didn't go through.</b><br>Please check your connection and retry — nothing was saved or lost.</div>
+      <button type="button" class="retry">Retry</button></div>`;
+    wrap.querySelector(".retry").addEventListener("click", () => { wrap.remove(); send(lastText); });
     messagesEl.appendChild(wrap);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
   function addTyping() {
     const el = document.createElement("div");
     el.className = "msg bot";
-    el.innerHTML = `<div class="avatar" aria-hidden="true">₹</div><div class="bubble typing"><span></span><span></span><span></span></div>`;
+    el.innerHTML = `<div class="avatar" aria-hidden="true">₹</div><div class="bubble typing"><span></span><span></span><span></span><em>Checking bank rules…</em></div>`;
     messagesEl.appendChild(el); messagesEl.scrollTop = messagesEl.scrollHeight;
     return el;
   }
@@ -104,7 +124,7 @@
     }
     if (ev) {
       const t = Number(profile.tenure_years || 0), max = p.tenure[1];
-      const out = [["📄 Documents needed", "Which documents do I need?"]];
+      const out = [["Documents needed", "Which documents do I need?"]];
       if (t && t < max) out.unshift([`What if ${Math.min(max, t + (max > 10 ? 5 : 2))} years?`, `What if I take it for ${Math.min(max, t + (max > 10 ? 5 : 2))} years?`]);
       out.push(["↺ New check", "__reset__"]);
       return out;
@@ -158,8 +178,9 @@
     const total = keys.length + missing.filter((k) => !(k in profile)).length;
     $("profileProgress").textContent = total ? `${keys.length}/${total}` : "";
 
-    const pill = $("statusPill"), gaugeFill = $("gaugeFill");
+    const pill = $("statusPill"), gaugeFill = $("gaugeFill"), card = $("resultCard");
     if (ev) {
+      card.dataset.status = ev.status;
       pill.className = `pill pill-${ev.status}`;
       pill.textContent = VERDICT[ev.status] || ev.status;
       const eligibleAmt = ev.status === "ELIGIBLE" ? ev.requested_amount : ev.max_eligible_amount;
@@ -168,49 +189,73 @@
       $("resultSub").textContent = ev.summary;
       $("gaugeScore").textContent = ev.score;
       gaugeFill.style.strokeDashoffset = String(157 - (157 * ev.score) / 100);
-      gaugeFill.style.stroke = ev.status === "ELIGIBLE" ? "var(--ok)" : ev.status === "CONDITIONAL" ? "var(--warn)" : "var(--bad)";
+      gaugeFill.style.stroke = ev.status === "ELIGIBLE" ? "var(--leaf)" : ev.status === "CONDITIONAL" ? "var(--amber)" : "var(--rose)";
       $("kpiEmi").textContent = ev.emi ? fmtINR(ev.emi) : "–";
       $("kpiRate").textContent = ev.interest_rate ? ev.interest_rate + "%" : "–";
       $("kpiTenure").textContent = ev.tenure_years ? ev.tenure_years + " yrs" : "–";
       $("kpiFoir").textContent = ev.foir != null ? Math.round(ev.foir * 100) + "%" : "–";
+      const fl = FOIR_LIMIT[profile.loan_type] || 0.55, bar = $("foirBar");
+      if (ev.foir != null) {
+        bar.style.width = Math.min(100, (ev.foir / fl) * 100).toFixed(1) + "%";
+        bar.dataset.zone = ev.foir > fl ? "bad" : ev.foir > fl * 0.85 ? "warn" : "ok";
+        bar.parentElement.title = `Budget use ${Math.round(ev.foir * 100)}% of income; bank limit ${Math.round(fl * 100)}%`;
+      } else { bar.style.width = "0"; bar.dataset.zone = "ok"; }
+      renderDonut(ev);
+      $("dlCard").hidden = false;
+      lastVerdict = { status: ev.status, amount: eligibleAmt, emi: ev.emi, rate: ev.interest_rate,
+                      tenure: ev.tenure_years, checks: ev.checks };
 
       const cl = $("checksList"); cl.innerHTML = "";
       for (const c of ev.checks) {
         const cls = c.passed ? "pass" : c.hard ? "fail" : "warn";
-        cl.insertAdjacentHTML("beforeend", `<li><span class="dot ${cls}">${c.passed ? "✓" : c.hard ? "✕" : "!"}</span><div><b>${RULE_LABELS[c.rule] || esc(c.rule)}</b><br><span class="muted">${esc(c.detail)}</span></div></li>`);
+        const word = c.passed ? "Pass" : c.hard ? "Fix needed" : "Check";
+        cl.insertAdjacentHTML("beforeend",
+          `<li><details><summary><span class="dot ${cls}" aria-hidden="true">${c.passed ? "✓" : c.hard ? "✕" : "!"}</span><span>${esc(RULE_LABELS[c.rule] || c.rule)}</span><span class="st ${cls}">${word}</span></summary><p>${esc(c.detail)}</p></details></li>`);
       }
       $("checksEmpty").hidden = ev.checks.length > 0;
       $("stepsCard").hidden = !ev.improvements.length;
-      $("stepsList").innerHTML = ev.improvements.map((s) => `<li>${esc(s)}</li>`).join("");
+      $("stepsList").innerHTML = ev.improvements.map((s) =>
+        `<li>${esc(s)}<button type="button" class="try-btn">Try in simulator</button></li>`).join("");
+      $("stepsList").querySelectorAll(".try-btn").forEach((b) => b.addEventListener("click", () => {
+        if ($("simCard").hidden) return;
+        $("simCard").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        $("simAmount").focus({ preventScroll: true });
+      }));
       $("docsCard").hidden = !(r.documents && r.documents.length);
       $("docsList").innerHTML = (r.documents || []).map((d) => `<li>${esc(d)}</li>`).join("");
       setupSimulator(profile, ev);
     } else {
+      card.dataset.status = "INCOMPLETE";
       pill.className = "pill pill-INCOMPLETE";
       pill.textContent = keys.length ? `Collecting details · ${keys.length}/${total}` : "Awaiting details";
       $("resultLabel").textContent = "Your eligible amount";
       $("resultAmount").textContent = "—";
       $("resultSub").textContent = missing.length ? "Still needed: " + missing.map((k) => (FIELD_LABELS[k] || k).toLowerCase()).join(", ") : "";
       $("simCard").hidden = true;
+      $("donutRow").hidden = true;
+      $("dlCard").hidden = true;
+      lastVerdict = null;
+      $("foirBar").style.width = "0";
     }
     updateStepper(profile, ev);
     renderQuick(r.next_field, profile, ev);
 
     const lb = $("latencyBadge");
-    lb.textContent = `⏱ ${(r.latency_ms / 1000).toFixed(1)} s`;
+    lb.textContent = `replied in ${(r.latency_ms / 1000).toFixed(1)} s`;
     lb.className = "badge " + (r.latency_ms < 15000 ? "badge-ok" : "badge-bad");
     const pb = $("piiBadge");
-    if (r.pii_masked && r.pii_masked.length) { pb.textContent = `🔒 masked: ${r.pii_masked.join(", ")}`; pb.className = "badge badge-warn"; }
-    else { pb.textContent = "🔒 PII guard on"; pb.className = "badge badge-muted"; }
-    $("langBadge").textContent = "🌐 " + ({ en: "English", hi: "हिंदी", hinglish: "Hinglish" }[r.language] || r.language);
+    if (r.pii_masked && r.pii_masked.length) { pb.textContent = `masked: ${r.pii_masked.join(", ")}`; pb.className = "badge badge-warn"; }
+    else { pb.textContent = "PII guard on"; pb.className = "badge badge-muted"; }
+    $("langBadge").textContent = ({ en: "English", hi: "हिंदी", hinglish: "Hinglish" }[r.language] || r.language);
     setModeBadge(r.mode, r.model);
   }
   function setModeBadge(mode, model) {
     if (mode) { currentMode = mode; currentModel = model; }
     const mb = $("modeBadge");
     const short = (model || "").split("/").pop().replace(":free", "");
-    mb.textContent = mode === "genai" ? `✨ AI · ${short}` : mode && mode.includes("error") ? "Rules engine (AI busy)" : "Rules engine";
+    mb.textContent = mode === "genai" ? `AI · ${short}` : mode && mode.includes("error") ? "Rules engine (AI busy)" : "Rules engine";
     mb.className = "badge " + (mode === "genai" ? "badge-ok" : "badge-warn");
+    mb.title = mode === "genai" ? "Answered by the AI agent over the rules engine" : "Answered by the built-in rules engine";
   }
 
   // ------------------------------------------------------------ what-if sliders (rules engine, instant)
@@ -230,6 +275,56 @@
     $("simAmountVal").textContent = fmtINR(+$("simAmount").value);
     $("simTenureVal").textContent = `${$("simTenure").value} years`;
   }
+
+  // ------------------------------------------------------------ principal-vs-interest donut
+  function renderDonut(ev) {
+    const row = $("donutRow");
+    const shown = ev.status === "ELIGIBLE" ? ev.requested_amount : ev.max_eligible_amount;
+    const months = Math.round((ev.tenure_years || 0) * 12);
+    if (!shown || !ev.emi || !months) { row.hidden = true; return; }
+    const total = ev.emi * months, interest = Math.max(0, total - shown);
+    const share = total > 0 ? (interest / total) * 100 : 0;
+    $("donutInterest").setAttribute("stroke-dasharray", `${share.toFixed(1)} ${(100 - share).toFixed(1)}`);
+    $("donutP").textContent = fmtINR(shown);
+    $("donutI").textContent = fmtINR(interest);
+    row.hidden = false;
+  }
+
+  // ------------------------------------------------------------ shareable verdict card (PNG download)
+  $("dlCard").addEventListener("click", () => {
+    if (!lastVerdict) return;
+    const v = lastVerdict;
+    const c = document.createElement("canvas");
+    c.width = 640; c.height = 360;
+    const x = c.getContext("2d");
+    x.fillStyle = "#ffffff"; x.fillRect(0, 0, 640, 360);
+    x.fillStyle = "#0b3d91"; x.fillRect(0, 0, 640, 84);
+    x.fillStyle = "#ffffff"; x.font = "800 26px Inter, sans-serif";
+    x.fillText("₹ LoanMitra — soft check", 28, 38);
+    x.font = "500 14px Inter, sans-serif"; x.fillStyle = "#bcd4f7";
+    x.fillText("Indicative only · no CIBIL impact · not a loan offer", 28, 62);
+    const pill = v.status === "ELIGIBLE" ? "#137333" : v.status === "CONDITIONAL" ? "#8a6100" : "#c53030";
+    x.fillStyle = pill;
+    x.beginPath(); x.roundRect(28, 104, 220, 34, 17); x.fill();
+    x.fillStyle = "#ffffff"; x.font = "700 16px Inter, sans-serif";
+    x.fillText(VERDICT[v.status] || v.status, 46, 127);
+    x.fillStyle = "#0d1b3e"; x.font = "600 40px 'IBM Plex Mono', monospace";
+    x.fillText(v.status === "NOT_ELIGIBLE" ? "Not yet" : fmtINR(v.amount), 28, 190);
+    x.font = "500 15px Inter, sans-serif"; x.fillStyle = "#4b5b76";
+    x.fillText(`EMI ${fmtINR(v.emi)}/mo · ${v.rate}% p.a. · ${v.tenure} yrs`, 28, 218);
+    x.font = "500 14px Inter, sans-serif";
+    (v.checks || []).slice(0, 4).forEach((ch, i) => {
+      const ok = ch.passed;
+      x.fillStyle = ok ? "#137333" : "#c53030";
+      x.fillText(ok ? "✓" : "✕", 28, 248 + i * 26);
+      x.fillStyle = "#0d1b3e";
+      x.fillText((RULE_LABELS[ch.rule] || ch.rule).slice(0, 52), 52, 248 + i * 26);
+    });
+    const a = document.createElement("a");
+    a.download = "loanmitra-verdict.png";
+    a.href = c.toDataURL("image/png");
+    a.click();
+  });
   function onSim() {
     paintSim();
     clearTimeout(simTimer);
@@ -241,9 +336,9 @@
         const ev = await res.json();
         const cls = { ELIGIBLE: "v-ELIGIBLE", CONDITIONAL: "v-CONDITIONAL", NOT_ELIGIBLE: "v-NOT_ELIGIBLE" }[ev.status] || "";
         $("simOut").innerHTML = `<span class="verified ${cls}">${esc(VERDICT[ev.status] || ev.status)}</span><br>` +
-          `EMI <b>${esc(fmtINR(ev.emi))}</b>/month · FOIR <b>${ev.foir != null ? Math.round(ev.foir * 100) + "%" : "–"}</b>` +
+          `EMI <b>${esc(fmtINR(ev.emi))}</b>/month · budget use <b>${ev.foir != null ? Math.round(ev.foir * 100) + "%" : "–"}</b>` +
           (ev.status !== "ELIGIBLE" && ev.max_eligible_amount ? ` · max <b>${esc(fmtINR(ev.max_eligible_amount))}</b>` : "");
-      } catch (e) { $("simOut").textContent = "Couldn't recalculate right now (" + e.message + ")."; }
+      } catch (e) { console.warn("simulator recalc failed", e); $("simOut").textContent = "Couldn't recalculate right now — please try again."; }
     }, 250);
   }
   $("simAmount").addEventListener("input", onSim);
@@ -253,7 +348,7 @@
   async function send(text) {
     text = (text || input.value).trim();
     if (!text || busy) return;
-    busy = true; sendBtn.disabled = true;
+    busy = true; sendBtn.disabled = true; lastText = text;
     input.value = ""; autosize();
     $("quick").innerHTML = "";
     addMessage("user", text);
@@ -277,7 +372,8 @@
       if (tts) speak(r.reply, r.language);
     } catch (e) {
       typing.remove();
-      addMessage("bot", "Sorry — " + e.message);
+      console.warn("chat failed", e);
+      addError();
       renderQuick(lastEval ? null : "loan_type", lastProfile, lastEval);
     } finally {
       busy = false; sendBtn.disabled = false; input.focus();
@@ -295,11 +391,15 @@
     sessionId = null; lastProfile = {}; lastEval = null; lastMissing = [];
     messagesEl.querySelectorAll(".msg").forEach((m, i) => { if (i > 0) m.remove(); });
     $("profileList").innerHTML = ""; $("profileProgress").textContent = "";
+    $("resultCard").dataset.status = "idle";
     $("statusPill").className = "pill pill-idle"; $("statusPill").textContent = "Awaiting details";
     $("resultLabel").textContent = "Your eligible amount"; $("resultAmount").textContent = "—";
     $("resultSub").textContent = "Share your details and your eligibility appears here.";
     $("gaugeScore").textContent = "–"; $("gaugeFill").style.strokeDashoffset = "157";
+    $("gaugeFill").style.stroke = "var(--brand-2)";
     ["kpiEmi", "kpiRate", "kpiTenure", "kpiFoir"].forEach((id) => ($(id).textContent = "–"));
+    $("foirBar").style.width = "0"; $("foirBar").dataset.zone = "ok";
+    $("donutRow").hidden = true; $("dlCard").hidden = true; lastVerdict = null;
     $("checksList").innerHTML = ""; $("checksEmpty").hidden = false;
     ["stepsCard", "docsCard", "simCard"].forEach((id) => ($(id).hidden = true));
     selectProduct(null);
@@ -314,7 +414,7 @@
   async function startSarvamRecording() {
     let stream;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch { addMessage("bot", "Microphone permission was denied."); return; }
+    catch { addMessage("bot", "Microphone permission was denied. You can still type — everything works by typing."); return; }
     const chunks = [];
     recorder = new MediaRecorder(stream);
     recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
@@ -328,7 +428,7 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { transcript } = await res.json();
         if (transcript && transcript.trim()) { input.value = transcript.trim(); autosize(); send(); }
-      } catch (e) { addMessage("bot", "Sorry, I couldn't hear that clearly. Please try again or type. (" + e.message + ")"); }
+      } catch (e) { console.warn("stt failed", e); addMessage("bot", "Sorry, I couldn't hear that clearly. Please try again or type your answer."); }
       finally { input.placeholder = "Type your message…"; }
     };
     recorder.start();
@@ -356,7 +456,7 @@
 
   let currentAudio = null;
   ttsBtn.addEventListener("click", () => {
-    tts = !tts; ttsBtn.setAttribute("aria-pressed", String(tts)); ttsBtn.textContent = tts ? "🔊" : "🔈";
+    tts = !tts; ttsBtn.setAttribute("aria-pressed", String(tts));
     if (!tts) { window.speechSynthesis?.cancel(); currentAudio?.pause(); }
   });
   async function speak(text, lang) {
@@ -373,7 +473,7 @@
     }
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text.replace(/[•✅🟡🔴→☐*#_]/g, " ").replace(/\s+/g, " ").slice(0, 900));
+    const u = new SpeechSynthesisUtterance(text.replace(/[*_#]/g, " ").replace(/\s+/g, " ").slice(0, 900));
     u.lang = /[ऀ-ॿ]/.test(text) || lang === "hi" ? "hi-IN" : "en-IN";
     window.speechSynthesis.speak(u);
   }
@@ -381,12 +481,12 @@
   // ------------------------------------------------------------ chat / quick-form tabs
   let currentMode = null, currentModel = null;
   function showTab(which) {
-    const form = which === "form";
-    $("tabChat").setAttribute("aria-selected", String(!form));
-    $("tabForm").setAttribute("aria-selected", String(form));
-    $("chatPanel").hidden = form;
-    $("formPanel").hidden = !form;
-    if (form) $("fAmount").focus(); else input.focus();
+    const isForm = which === "form";
+    $("tabChat").setAttribute("aria-selected", String(!isForm));
+    $("tabForm").setAttribute("aria-selected", String(isForm));
+    $("chatPanel").hidden = isForm;
+    $("formPanel").hidden = !isForm;
+    if (isForm) $("fAmount").focus(); else input.focus();
   }
   $("tabChat").addEventListener("click", () => showTab("chat"));
   $("tabForm").addEventListener("click", () => showTab("form"));
@@ -405,6 +505,25 @@
   });
   // Product tabs also pre-select the form's loan type
   document.querySelectorAll(".product").forEach((b) => b.addEventListener("click", () => { $("fType").value = b.dataset.type; syncFormFields(); }));
+
+  // ------------------------------------------------------------ 1-click demo personas for the quick form
+  const PERSONAS = {
+    salaried: { fType: "personal", fAmount: "500000", fTenure: "4", fAge: "30", fEmp: "salaried",
+                fIncome: "60000", fScore: "780", fEmi: "0" },
+    tight: { fType: "home", fAmount: "6000000", fTenure: "20", fAge: "38", fEmp: "self_employed",
+             fIncome: "110000", fScore: "725", fEmi: "25000", fProperty: "7000000" },
+    coapp: { fType: "education", fAmount: "4000000", fTenure: "10", fAge: "23", fAbroad: "true",
+             fCoIncome: "150000", fCoScore: "780", fCoEmi: "0" },
+  };
+  document.querySelectorAll("[data-persona]").forEach((b) => b.addEventListener("click", () => {
+    const p = PERSONAS[b.dataset.persona];
+    if (!p) return;
+    for (const [id, val] of Object.entries(p)) {
+      const el = $(id);
+      if (el) { el.value = val; el.dispatchEvent(new Event("input", { bubbles: true })); }
+    }
+    syncFormFields();
+  }));
 
   function formApplicant() {
     const type = $("fType").value, num = (id) => ($(id).value === "" ? null : +$(id).value);
@@ -461,12 +580,13 @@
       updateDashboard({ evaluation: ev, profile: applicant, missing_fields: [], documents: ev.documents || [], latency_ms: ms,
         pii_masked: [], language: "en", mode: currentMode, model: currentModel, next_field: null });
       out.hidden = false;
-      out.innerHTML = `<span class="verified v-${esc(ev.status)}">🔒 ${esc(VERDICT[ev.status] || ev.status)}</span><div>${esc(ev.summary)}</div>` +
+      out.innerHTML = `<span class="verified v-${esc(ev.status)}">${esc(VERDICT[ev.status] || ev.status)}</span><div>${esc(ev.summary)}</div>` +
         (ev.improvements.length ? `<ul>${ev.improvements.slice(0, 2).map((s) => `<li>${esc(s)}</li>`).join("")}</ul>` : "") +
-        `<button type="button" class="link-btn" id="discussBtn">💬 Discuss this result in chat →</button>`;
+        `<button type="button" class="link-btn" id="discussBtn">Discuss this result in chat →</button>`;
       $("discussBtn").addEventListener("click", () => { showTab("chat"); send(chatSentence(applicant)); });
     } catch (err) {
-      out.hidden = false; out.textContent = "Couldn't check right now (" + err.message + "). Please try again.";
+      console.warn("quick form check failed", err);
+      out.hidden = false; out.textContent = "Couldn't check right now — please try again.";
     } finally { btn.disabled = false; }
   });
 
@@ -477,7 +597,7 @@
       setModeBadge(h.mode, h.model);
       voiceEngine = h.voice === "sarvam" && window.MediaRecorder ? "sarvam" : "browser";
       micBtn.title = voiceEngine === "sarvam" ? "Speak — tap again to stop" : "Speak";
-      if (voiceEngine === "browser" && !SR) { micBtn.disabled = true; micBtn.title = "Voice input needs Chrome or Edge"; }
+      if (voiceEngine === "browser" && !SR) { micBtn.disabled = true; micBtn.title = "Voice input needs Chrome or Edge — typing works everywhere"; }
     } catch (e) { console.error(e); }
     updateStepper({}, null);
     renderQuick("loan_type", {}, null);

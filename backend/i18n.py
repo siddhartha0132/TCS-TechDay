@@ -20,7 +20,10 @@ def detect_language(text: str, preference: str | None = None) -> str:
     if DEVANAGARI.search(text):
         return "hi"
     words = set(re.findall(r"[a-z]+", text.lower()))
-    if len(words & HINGLISH_WORDS) >= 1 and len(words & HINGLISH_WORDS) / max(len(words), 1) > 0.12:
+    hits = words & HINGLISH_WORDS
+    # One stray word ("aur", "toh") must not flip English to Hinglish: need two hits,
+    # or a single hit that dominates a very short message ("kitna?", "chahiye").
+    if len(hits) >= 2 or (len(hits) == 1 and len(hits) / max(len(words), 1) >= 0.3):
         return "hinglish"
     return "en"
 
@@ -53,9 +56,9 @@ ASK = {
         "hinglish": "Aap salaried hain ya self-employed / business?",
     },
     "credit_score": {
-        "en": "What is your credit (CIBIL) score? If you don't know, say 'unknown' and I'll assume 700.",
-        "hi": "आपका क्रेडिट (CIBIL) स्कोर कितना है? पता न हो तो 'unknown' लिखें, मैं 700 मान लूंगा।",
-        "hinglish": "Aapka CIBIL score kitna hai? Pata na ho to 'unknown' likhiye, main 700 maan lunga.",
+        "en": "What is your credit (CIBIL) score? If you don't know, say 'unknown' and I'll continue without it.",
+        "hi": "आपका क्रेडिट (CIBIL) स्कोर कितना है? पता न हो तो 'unknown' लिखें, मैं उसके बिना आगे बढ़ूंगा।",
+        "hinglish": "Aapka CIBIL score kitna hai? Pata na ho to 'unknown' likhiye, main uske bina aage badhunga.",
     },
     "existing_emi": {
         "en": "How much do you currently pay in EMIs every month? (say 'none' if nothing)",
@@ -83,9 +86,9 @@ ASK = {
         "hinglish": "Aapke co-applicant (parent/guardian) ki monthly income kitni hai?",
     },
     "co_applicant_credit_score": {
-        "en": "What is your co-applicant's credit score? (say 'unknown' to assume 700)",
-        "hi": "आपके सह-आवेदक का क्रेडिट स्कोर कितना है? (पता न हो तो 'unknown')",
-        "hinglish": "Co-applicant ka credit score kitna hai? (pata na ho to 'unknown')",
+        "en": "What is your co-applicant's credit score? (say 'unknown' to continue without it)",
+        "hi": "आपके सह-आवेदक का क्रेडिट स्कोर कितना है? (पता न हो तो 'unknown' लिखें)",
+        "hinglish": "Co-applicant ka credit score kitna hai? (pata na ho to 'unknown' likhiye)",
     },
     "co_applicant_existing_emi": {
         "en": "How much does your co-applicant pay in EMIs every month? (say 'none' if nothing)",
@@ -128,6 +131,8 @@ T = {
     "invalid": {"en": "That {field} doesn't look right.", "hi": "यह {field} सही नहीं लग रहा।", "hinglish": "Ye {field} sahi nahi lag raha."},
     "estimate_ok": {"en": "An approximate figure is fine, e.g. “about 40k”. ", "hi": "अनुमानित राशि भी चलेगी, जैसे “लगभग 40 हज़ार”। ",
                     "hinglish": "Approx figure bhi chalega, jaise “around 40k”. "},
+    "more": {"en": "+{n} more in the side panel.", "hi": "साइड पैनल में +{n} और देखें।",
+             "hinglish": "Side panel mein +{n} aur dekhein."},
 }
 
 
@@ -149,8 +154,12 @@ def render_evaluation(lang: str, ev: dict, documents: list[str], hypothetical: b
     if failed:
         lines.append(t(lang, "why"))
         lines += [f"• {c['detail']}" for c in failed[:2]]
+        if len(failed) > 2:
+            lines.append(t(lang, "more").format(n=len(failed) - 2))
     if ev["improvements"]:
         lines.append(t(lang, "next_steps"))
         lines += [f"• {i}" for i in ev["improvements"][:2]]
+        if len(ev["improvements"]) > 2:
+            lines.append(t(lang, "more").format(n=len(ev["improvements"]) - 2))
     lines.append(t(lang, "hypothetical") if hypothetical else t(lang, "see_panel"))
     return "\n".join(lines)

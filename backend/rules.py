@@ -304,9 +304,40 @@ def normalize_profile(raw: dict[str, Any]) -> dict[str, Any]:
 
 parse_amount = parse_number  # public name kept for integrations
 
+LOAN_LABEL = {
+    "personal": {"hi": "पर्सनल लोन", "hinglish": "personal loan"},
+    "home": {"hi": "होम लोन", "hinglish": "home loan"},
+    "auto": {"hi": "कार लोन", "hinglish": "car loan"},
+    "education": {"hi": "एजुकेशन लोन", "hinglish": "education loan"},
+}
+# Verdict summaries per language. Rule details stay in English and are passed through as {details}.
+SUMMARY_T = {
+    "en": {
+        "eligible": "You are eligible for a {label} of {amount} over {tenure} years. Indicative EMI: {emi}/month at {rate}% p.a.",
+        "cond_min": "The minimum {label} is {min_amt}; you are eligible for anything from {min_amt} up to {max_amt} over {tenure} years.",
+        "cond_cap": "{amount} is above what you qualify for, but you are eligible for up to {max_amt} over {tenure} years (EMI about {emi_max}/month).",
+        "cond_soft": "You are eligible for {amount} over {tenure} years, subject to: {details}",
+        "not_el": "You are not eligible for a {label} of {amount} right now. Main reasons: {details}",
+    },
+    "hi": {
+        "eligible": "आप {tenure} साल के लिए {amount} के {label} के पात्र हैं। सांकेतिक EMI: {emi}/माह, ब्याज दर {rate}% वार्षिक।",
+        "cond_min": "न्यूनतम {label} {min_amt} है; आप {tenure} साल के लिए {min_amt} से {max_amt} तक के लिए पात्र हैं।",
+        "cond_cap": "{amount} आपकी पात्रता से ज़्यादा है, लेकिन आप {tenure} साल के लिए {max_amt} तक के लिए पात्र हैं (लगभग {emi_max}/माह की EMI पर)।",
+        "cond_soft": "आप {tenure} साल के लिए {amount} के पात्र हैं, इन शर्तों के साथ: {details}",
+        "not_el": "आप अभी {amount} के {label} के लिए पात्र नहीं हैं। मुख्य कारण: {details}",
+    },
+    "hinglish": {
+        "eligible": "Aap {tenure} saal ke liye {amount} ke {label} ke liye eligible hain. Indicative EMI: {emi}/month at {rate}% p.a.",
+        "cond_min": "Minimum {label} {min_amt} hai; aap {tenure} saal ke liye {min_amt} se {max_amt} tak ke liye eligible hain.",
+        "cond_cap": "{amount} aapki eligibility se zyada hai, lekin aap {tenure} saal ke liye {max_amt} tak ke liye eligible hain (lagbhag {emi_max}/month ki EMI par).",
+        "cond_soft": "Aap {tenure} saal ke liye {amount} ke liye eligible hain, in sharton ke saath: {details}",
+        "not_el": "Aap abhi {amount} ke {label} ke liye eligible nahi hain. Main reasons: {details}",
+    },
+}
+
 
 # ---------------------------------------------------------------- the engine
-def evaluate(profile_in: dict[str, Any]) -> Evaluation:
+def evaluate(profile_in: dict[str, Any], lang: str = "en") -> Evaluation:
     p, invalid = validate_profile(profile_in)
     loan_type = p.get("loan_type")
     if loan_type not in LOAN_TYPES:
@@ -529,18 +560,22 @@ def evaluate(profile_in: dict[str, Any]) -> Evaluation:
     pts = max(pts, 85) if status == "ELIGIBLE" else min(max(pts, 55), 80) if status == "CONDITIONAL" else min(pts, 45)
 
     # --- Summary
-    label = product["label"]
+    lang = lang if lang in SUMMARY_T else "en"
+    S = SUMMARY_T[lang]
+    label = product["label"] if lang == "en" else LOAN_LABEL[loan_type][lang]
+    slots = {"label": label, "amount": fmt_inr(amount), "tenure": f"{tenure:g}", "emi": fmt_inr(new_emi),
+             "rate": rate, "min_amt": fmt_inr(min_amount), "max_amt": fmt_inr(max_eligible, "floor"),
+             "emi_max": fmt_inr(emi(max_eligible, rate, tenure))}
     if status == "ELIGIBLE":
-        summary = f"You are eligible for a {label} of {fmt_inr(amount)} over {tenure:g} years. Indicative EMI: {fmt_inr(new_emi)}/month at {rate}% p.a."
+        summary = S["eligible"].format(**slots)
     elif status == "CONDITIONAL" and only_capacity_fails and amount < min_amount:
-        summary = f"The minimum {label} is {fmt_inr(min_amount)}; you are eligible for anything from {fmt_inr(min_amount)} up to {fmt_inr(max_eligible, 'floor')} over {tenure:g} years."
+        summary = S["cond_min"].format(**slots)
     elif status == "CONDITIONAL" and only_capacity_fails:
-        summary = (f"{fmt_inr(amount)} is above what you qualify for, but you are eligible for up to {fmt_inr(max_eligible, 'floor')} "
-                   f"over {tenure:g} years (EMI about {fmt_inr(emi(max_eligible, rate, tenure))}/month).")
+        summary = S["cond_cap"].format(**slots)
     elif status == "CONDITIONAL":
-        summary = f"You are eligible for {fmt_inr(amount)} over {tenure:g} years, subject to: " + "; ".join(c.detail for c in soft_flags)
+        summary = S["cond_soft"].format(details="; ".join(c.detail for c in soft_flags), **slots)
     else:
-        summary = f"You are not eligible for a {label} of {fmt_inr(amount)} right now. Main reasons: " + "; ".join(c.detail for c in hard_fails[:3])
+        summary = S["not_el"].format(details="; ".join(c.detail for c in hard_fails[:3]), **slots)
 
     seen: set[str] = set()
     improvements = [i for i in improvements if not (i in seen or seen.add(i))]

@@ -40,7 +40,8 @@ EXCLUDE_MONEY = r"\b(?:fd|fixed deposit|deposit|savings?|saving|bank balance|inv
 ANNUAL = r"\blpa\b|per annum|\bp\.?a\.?\b|a year|per year|yearly|annual\w*|saalana|सालाना|वार्षिक"
 YEARS_UNIT = re.compile(r"^\s*-?\s*(?:(?:years?|yrs?|yr|yo|saal|sal)(?![a-z])|y/o|साल|varsh|वर्ष)", re.I)
 MONTHS_UNIT = re.compile(r"^\s*-?\s*(?:(?:months?|mos?|mahine|mahina)(?![a-z])|महीने|महीना)", re.I)
-AGE_AFTER_YEARS = re.compile(r"^\s*-?\s*(?:years?|yrs?|saal|साल)\s*(?:old|ka|ki|का|की)\b|^\s*(?:y/o|yo)\b", re.I)
+# NB: no \b after का/की — Devanagari vowel signs are non-word marks, so \b never matches there.
+AGE_AFTER_YEARS = re.compile(r"^\s*-?\s*(?:years?|yrs?|saal|साल)\s*(?:old|ka|ki|का|की)(?![\w\u0900-\u097F])|^\s*(?:y/o|yo)\b", re.I)
 EXPERIENCE = re.compile(r"\b(?:experience|exp|working|worked|work|job|joined|service|naukri|kaam)\b|नौकरी", re.I)
 AGO = re.compile(r"^\s*-?\s*(?:years?|yrs?|months?|saal|mahine)\s*(?:ago|pehle|back)\b|^\s*(?:years?|months?)\s+of\s+(?:experience|exp|work)", re.I)
 SELF_AGE = re.compile(r"(?:\b(?:i am|i'm|im|main|me)\s*|मैं\s*)$", re.I)
@@ -51,6 +52,8 @@ CLAUSE_SPLIT = re.compile(r"(?<!\d)[.,]|[.,](?!\d)|[;!?।\n]|\s(?:and|but|aur|l
 ZERO_EMI = re.compile(
     r"(?:\b(?:no|not|don'?t|do not|dont|never|without|zero|nil|koi|bina)\b|नहीं|कोई|बिना)[^.;।]{0,30}?(?:\bemis?\b|\bloans?\b|\bobligations?\b|\bdues\b|ईएमआई|लोन|कर्ज)"
     r"|(?:\bemis?\b|\bloans?\b|ईएमआई|लोन)[^.;।]{0,15}?(?:\b(?:nil|zero|none|nahi|nahin|no)\b|नहीं)", re.I)
+UNKNOWN_SCORE = re.compile(r"\b(?:unknown|don'?t know|dont know|not sure|no idea|pata nahi|nahi pata|n/?a)\b|पता नहीं", re.I)
+CORRECTION = re.compile(r"\b(?:sorry|meant|actually|correction|instead|my mistake|galti|गलती)\b|माफ़", re.I)
 
 LOAN_WORDS = {
     "personal": r"personal|पर्सनल|व्यक्तिगत",
@@ -236,7 +239,9 @@ def extract(text: str, expected_field: Optional[str] = None, loan_type: Optional
         years_unit = not is_money and bool(YEARS_UNIT.match(right))
         months_unit = not is_money and bool(MONTHS_UNIT.match(right))
         clause = tl[a:b]
-        excluded = bool(re.search(EXCLUDE_MONEY, clause))
+        # Exclusion is window-scoped, not clause-wide: "5L FD, salary 60k" must not
+        # let the deposit hide the salary figure sitting elsewhere in the clause.
+        excluded = bool(re.search(EXCLUDE_MONEY, tl[max(a, f.start - 30):f.end + 12]))
 
         if years_unit or months_unit:
             if AGE_AFTER_YEARS.match(right) and years_unit:
@@ -258,25 +263,34 @@ def extract(text: str, expected_field: Optional[str] = None, loan_type: Optional
             d = _nearest(pat, tl, a, b, f)
             if d is not None and _valid(key, f, False, False):
                 candidates.append((d + 2, i, key))
+        # Weak fallback: a lakh/crore figure with no keyword is the loan amount — but only when the
+        # bot asked for the amount, or the message carries a request verb. Otherwise ask, don't guess.
+        wants_loan = expected_field == "loan_amount" or (expected_field is None and REQUEST.search(tl))
         if not excluded and f.unit in ("lakh", "lakhs", "lac", "lacs", "laakh", "लाख", "l", "crore", "crores", "cr", "karod", "करोड़") \
-                and expected_field in (None, "loan_amount") and _valid("loan", f, False, False):
-            candidates.append((60, i, "loan"))  # weak fallback: a lakh/crore figure with no keyword is the loan amount
+                and wants_loan and _valid("loan", f, False, False):
+            candidates.append((60, i, "loan"))
 
-    # --- greedy assignment: one figure -> one field, one field -> one figure
+    # --- greedy assignment: one figure -> one field, one field -> one figure.
+    # A correction ("50k — sorry, meant 60k") supersedes the earlier figure for its field.
     used_figs: set[int] = set()
-    assigned: dict[str, tuple[int, Figure]] = {}
+    assigned: dict[str, tuple[int, Figure, bool]] = {}
     for _, i, key in sorted(candidates):
         f = figs[i]
-        a, _ = _clause_of(f.start, spans)
+        a, b = _clause_of(f.start, spans)
         target = key
         if key in CO_FIELD and (_owner(tl, a, f) == "co" or eff_type == "education"):
             target = "co_" + key
-        if i in used_figs or target in assigned:
+        is_fix = bool(CORRECTION.search(tl[a:b]))
+        if i in used_figs:
             continue
+        if target in assigned and not (is_fix and not assigned[target][2]):
+            continue
+        if target in assigned:
+            used_figs.discard(assigned[target][0])
         used_figs.add(i)
-        assigned[target] = (i, f)
+        assigned[target] = (i, f, is_fix)
 
-    for target, (i, f) in assigned.items():
+    for target, (i, f, _) in assigned.items():
         a, b = _clause_of(f.start, spans)
         right = tl[f.end:b]
         if target in ("tenure", "experience"):
@@ -307,6 +321,19 @@ def extract(text: str, expected_field: Optional[str] = None, loan_type: Optional
             i not in used_figs and _valid("emi", f, False, False) for i, f in enumerate(figs))
         if not leftover_answer:
             out[emi_key] = 0.0
+
+    # --- explicit "unknown" score ("CIBIL pata nahi", "don't know my score"): the engine
+    # soft-checks without it, so record it instead of omitting the field. The no-digit
+    # test is clause-scoped so other figures in the message don't block it.
+    score_key = "co_applicant_credit_score" if eff_type == "education" else "credit_score"
+    if score_key not in out and "credit_score" not in out and "co_applicant_credit_score" not in out:
+        score_asked = expected_field in ("credit_score", "co_applicant_credit_score")
+        for a, b in spans:
+            clause = tl[a:b]
+            if (re.search(FIELD_KEYWORDS["score"], clause) or score_asked) \
+                    and UNKNOWN_SCORE.search(clause) and not re.search(r"\d", clause):
+                out[score_key] = "unknown"
+                break
 
     # --- direct answer to the question just asked (a bare figure, or yes/no)
     if expected_field and expected_field not in out:

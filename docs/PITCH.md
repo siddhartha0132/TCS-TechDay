@@ -48,12 +48,12 @@ automatic fallback brain if the API is unavailable.
 - **Explainability panel**: every rule, pass/fail, with the numbers.
 
 ### 7. Accuracy & performance (AI/ML + Feasibility)
-Table from eval/REPORT.md: rules 15/15 · extraction fields % · end-to-end verdicts % on 36 labelled multilingual
-cases · 100 % replies under 15 s · p50 latency. 300 synthetic applicants generated for testing.
+Table from eval/REPORT.md: rules 17/17 · extraction fields 283/283 · end-to-end verdicts 35/36 GenAI (36/36 deterministic)
+on 36 labelled multilingual cases · 36/37 replies under 15 s (p50 13.0 s, p95 13.8 s, max 18.9 s). 300 synthetic applicants generated for testing.
 
 ### 8. Feasibility & scale
 - Policy is data (`rules.json`) → product teams change cut-offs without a release.
-- Stateless API, in-memory sessions → Redis + N replicas; engine is pure Python, thousands of evals/sec.
+- Single-worker API with in-memory sessions today (see docs/SCALING.md) → Redis sessions + rate limiting, then N replicas; engine is pure Python, thousands of evals/sec.
 - Drop-in points for real bureau / KYC / OCR APIs behind the same tool signatures.
 - Runs on-prem or cloud; model is configurable; deterministic mode keeps the service up without an LLM.
 

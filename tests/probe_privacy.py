@@ -25,6 +25,20 @@ CASES = [  # (text, expected kinds, substring that must survive)
     ("salary 65,000 per month, need 6 lakh", [], "65,000"),
     ("need 25,00,000 for 20 years", [], "25,00,000"),
     ("I'm 29, salaried, 65000 pm, cibil 760", [], "65000"),
+    ("pay to rahul.sharma@okhdfc please", ["upi"], None),
+    ("contact me at a@b.co for details", ["email"], None),
+    ("IFSC HDFC0001234 for the transfer", ["ifsc"], None),
+    ("voter id ABC1234567 attached", ["voter id"], None),
+    ("passport Z1234567 renewal", ["passport"], None),
+    ("DL MH12 20201234567 submitted", ["driving licence"], None),
+    ("born 15/08/1990 in Pune", ["dob"], None),
+    ("15/08/1990 was a good day", [], "15/08/1990"),
+    ("mera number ९८७६५४३२१० hai", ["phone"], None),
+    ("aadhaar २३४५ ६७८९ ०१२३", ["Aadhaar"], None),
+    ("aadhaar 2345 6789 0124", ["Aadhaar"], None),
+    ("reference 12345678901234567", ["account"], None),
+    ("package of 12345678901234567 rupees", [], "12345678901234567"),
+    ("my UPI id is shyam.s@paytm, salary 50000", ["upi"], "50000"),
 ]
 
 fails = 0

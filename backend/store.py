@@ -57,5 +57,9 @@ class SessionStore:
     def __len__(self) -> int:
         return len(self._sessions)
 
+    def stats(self) -> dict:
+        with self._guard:
+            return {"active": len(self._sessions), "max_sessions": MAX_SESSIONS, "ttl_s": SESSION_TTL_S}
+
 
 sessions = SessionStore()

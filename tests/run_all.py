@@ -14,6 +14,8 @@ SUITE = [
     ("edge values (NaN/inf/0/negative/garbage)", [PY, "tests/probe_edges.py"]),
     ("extractor (81 realistic messages)", [PY, "tests/probe_extractor.py"]),
     ("PII masking", [PY, "tests/probe_privacy.py"]),
+    ("i18n + localized summaries", [PY, "tests/probe_i18n.py"]),
+    ("document checklists", [PY, "tests/probe_documents.py"]),
     ("HTTP hardening", [PY, "tests/probe_http.py"]),
     ("multi-turn conversations", [PY, "tests/probe_agent.py"]),
     ("labelled eval (deterministic)", [PY, "-m", "eval.run_eval", "--no-llm"]),

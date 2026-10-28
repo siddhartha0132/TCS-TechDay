@@ -1,0 +1,107 @@
+/* LoanMitra shared theme — single source of tokens for landing + chat.
+   Light default; explicit [data-theme] on <html> wins; otherwise OS preference. */
+:root {
+  --bg: #f4f6fb;
+  --bg-alt: #eceff6;
+  --card: #ffffff;
+  --ink: #0d1b3e;
+  --muted: #4b5b76;
+  --faint: #64748b;
+  --line: #dfe6f2;
+  --brand: #0b3d91;
+  --brand-2: #1a6dff;
+  --brand-soft: #e8f0ff;
+  --accent: #e56b00;
+  --ok: #0f8a4f;
+  --warn: #9a6a12;
+  --bad: #c53030;
+  --teal: #0e7c6b;
+  --teal-bg: #dff2ec;
+  --saffron: #b25e00;
+  --saffron-bg: #fdf0dc;
+  --sky: #e8f1fe;
+  --sky-line: #b9d0f5;
+  --leaf: #137333;
+  --leaf-bg: #e0f3e6;
+  --rose: #c53030;
+  --rose-bg: #fbe7e7;
+  --amber: #8a6100;
+  --amber-bg: #fff3d1;
+  --bot: #eef3fb;
+  --user: #0b3d91;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: Inter, "Noto Sans Devanagari", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 16px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-pill: 999px;
+  --shadow: 0 1px 2px rgba(13, 27, 62, .06), 0 8px 24px rgba(13, 27, 62, .08);
+  --focus: #1a6dff;
+}
+:root[data-theme="dark"] {
+  --bg: #0b1220;
+  --bg-alt: #0f182b;
+  --card: #131c31;
+  --ink: #e8eefb;
+  --muted: #a5b2c9;
+  --faint: #8b98b3;
+  --line: #23304d;
+  --brand: #7aa2ff;
+  --brand-2: #9dbdff;
+  --brand-soft: #18264a;
+  --accent: #ff8a2a;
+  --ok: #4cc38a;
+  --warn: #d9a83c;
+  --bad: #ef8a8a;
+  --teal: #4ec3ad;
+  --teal-bg: #123c36;
+  --saffron: #f2a94c;
+  --saffron-bg: #3d2c12;
+  --sky: #1a2b4d;
+  --sky-line: #33477a;
+  --leaf: #5fce8a;
+  --leaf-bg: #123a24;
+  --rose: #ef8a8a;
+  --rose-bg: #452020;
+  --amber: #e3b64b;
+  --amber-bg: #3a2f14;
+  --bot: #1a2540;
+  --user: #2f62d8;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  --focus: #9dbdff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1220;
+    --bg-alt: #0f182b;
+    --card: #131c31;
+    --ink: #e8eefb;
+    --muted: #a5b2c9;
+    --faint: #8b98b3;
+    --line: #23304d;
+    --brand: #7aa2ff;
+    --brand-2: #9dbdff;
+    --brand-soft: #18264a;
+    --accent: #ff8a2a;
+    --ok: #4cc38a;
+    --warn: #d9a83c;
+    --bad: #ef8a8a;
+    --teal: #4ec3ad;
+    --teal-bg: #123c36;
+    --saffron: #f2a94c;
+    --saffron-bg: #3d2c12;
+    --sky: #1a2b4d;
+    --sky-line: #33477a;
+    --leaf: #5fce8a;
+    --leaf-bg: #123a24;
+    --rose: #ef8a8a;
+    --rose-bg: #452020;
+    --amber: #e3b64b;
+    --amber-bg: #3a2f14;
+    --bot: #1a2540;
+    --user: #2f62d8;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    --focus: #9dbdff;
+  }
+}

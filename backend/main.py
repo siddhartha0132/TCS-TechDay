@@ -4,6 +4,7 @@ Run:  uvicorn backend.main:app --reload --port 8000
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from pathlib import Path
@@ -61,7 +62,25 @@ class TtsIn(BaseModel):
 def health():
     return {"status": "ok", "mode": "genai" if agent.genai_available() else "deterministic",
             "model": agent.MODEL if agent.genai_available() else None,
-            "voice": "sarvam" if voice.available() else "browser"}
+            "voice": "sarvam" if voice.available() else "browser",
+            "llm": dict(agent.LLM_STATS)}
+
+
+@app.get("/livez")
+def livez():
+    """Kubernetes liveness: the process is up. Never touches providers or disk."""
+    return {"status": "ok"}
+
+
+@app.get("/readyz")
+def readyz():
+    """Kubernetes readiness: policy + sessions usable. Still no provider calls."""
+    try:
+        from .rules import RULES
+        products = sorted(RULES["products"])
+        return {"status": "ok", "products": products, "sessions": sessions.stats()}
+    except Exception as exc:
+        raise HTTPException(503, f"not ready: {type(exc).__name__}")
 
 
 @app.post("/api/stt")
@@ -76,7 +95,8 @@ async def stt(request: Request):
     if not audio:
         raise HTTPException(400, "Empty recording")
     try:
-        return voice.speech_to_text(audio, content_type)
+        # Blocking httpx call: off the event loop so one transcription can't stall all requests.
+        return await asyncio.to_thread(voice.speech_to_text, audio, content_type)
     except Exception:
         log.exception("speech-to-text failed")
         raise HTTPException(502, "Speech service unavailable, please type instead.")
@@ -119,7 +139,8 @@ def evaluate_direct(body: EvaluateIn):
     """Direct access to the rules engine (used by tests / integrations)."""
     ev = evaluate(body.applicant).as_dict()
     if ev["status"] != "INCOMPLETE":
-        ev["documents"] = required_documents(ev["loan_type"], body.applicant.get("employment_type"))
+        ev["documents"] = required_documents(ev["loan_type"], body.applicant.get("employment_type"),
+                                             body.applicant.get("loan_amount"), body.applicant.get("study_abroad"))
     return ev
 
 

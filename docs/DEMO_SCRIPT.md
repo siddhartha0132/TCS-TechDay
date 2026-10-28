@@ -1,6 +1,6 @@
 # Demo script (≈ 4 minutes)
 
-Run `.venv/bin/uvicorn backend.main:app --port 8000`, open http://localhost:8000 in Chrome (voice needs Chrome/Edge).
+Run `.venv/bin/uvicorn backend.main:app --port 8000`, open http://localhost:8000 in Chrome (browser-fallback voice needs Chrome/Edge; with `SARVAM_API_KEY` set, any browser with mic access works).
 Reset with **New application** between scenes. Keep the dashboard visible — it is half the story.
 
 ## 0. Hook (20 s)
@@ -33,8 +33,8 @@ Type: `My PAN is ABCDE1234F and phone 9876543210, am I eligible?` → badge show
 "Identifiers never reach the model or the logs. No data is stored."
 
 ## 6. Accuracy & latency (25 s)
-Open `eval/REPORT.md`: rules 15/15, extraction and end-to-end verdicts on 36 labelled multilingual cases, all replies
-under 15 s. "The target was 80 %; the engine is deterministic so we can prove it, not estimate it."
+Open `eval/REPORT.md`: rules 17/17, extraction 283/283 fields and 36/36 verdicts, end-to-end 35/36 GenAI (36/36 deterministic),
+36/37 replies under 15 s. "The target was 80 %; the engine is deterministic so we can prove it, not estimate it."
 
 ## Backup if the API is down
 Remove the key from `.env` (or let the auto-fallback kick in) — same flows work in deterministic mode; the badge

@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import re
+import threading
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -51,6 +52,20 @@ NVIDIA_DEFAULT = "nvidia/nemotron-3-ultra-550b-a55b"
 TURN_BUDGET_S = float(os.getenv("LLM_TURN_BUDGET_S", "13"))  # leaves headroom under the 15 s target
 MIN_CALL_S = 2.0
 DEFAULT_CALL_ESTIMATE_S = 6.0
+LLM_MAX_CONCURRENCY = int(os.getenv("LLM_MAX_CONCURRENCY", "8"))  # provider calls in flight, process-wide
+LLM_CB_THRESHOLD = int(os.getenv("LLM_CB_THRESHOLD", "3"))  # consecutive failures before a backend rests
+LLM_CB_COOLDOWN_S = float(os.getenv("LLM_CB_COOLDOWN_S", "60"))
+LLM_MAX_CALLS_PER_SESSION = int(os.getenv("LLM_MAX_CALLS_PER_SESSION", "30"))  # cost bound; overflow degrades to rules
+
+_llm_semaphore = threading.BoundedSemaphore(LLM_MAX_CONCURRENCY)
+_breaker: dict[tuple[str, str], list] = {}  # (kind, model) -> [consecutive_failures, blocked_until_monotonic]
+_breaker_lock = threading.Lock()
+LLM_STATS = {"calls": 0, "timeouts": 0, "unavailable": 0, "breaker_skips": 0, "semaphore_skips": 0,
+             "budget_exceeded": 0}
+
+
+class BudgetExceeded(Exception):
+    """Per-session LLM call cap hit; the turn degrades to the deterministic agent."""
 
 
 @dataclass(frozen=True)
@@ -101,6 +116,7 @@ class Session:
     updated: float = field(default_factory=time.time)
     last_model: Optional[str] = None
     reply_source: Optional[str] = None  # genai | genai+rules-template | rules
+    llm_calls: int = 0  # provider calls this session (cost bound; not reset by New check)
 
     def reset(self) -> None:
         self.profile, self.evaluation, self.expected_field, self.history = {}, None, None, []
@@ -145,7 +161,7 @@ def tool_update_profile(session: Session, fields: dict[str, Any]) -> dict:
     """Merge newly learned facts and re-run the rules engine."""
     clean, invalid = validate_profile(_mark_unknown_scores(fields))
     session.profile = _merge(session.profile, clean)
-    ev = evaluate(session.profile).as_dict()
+    ev = evaluate(session.profile, session.lang).as_dict()
     session.evaluation = ev if ev["status"] != "INCOMPLETE" else None  # never show a verdict for an old profile
     out = dict(ev)
     out["profile"] = session.profile
@@ -153,14 +169,16 @@ def tool_update_profile(session: Session, fields: dict[str, Any]) -> dict:
     if invalid:
         out["note"] = _range_note(invalid)
     if ev["status"] != "INCOMPLETE":
-        out["documents"] = required_documents(session.profile.get("loan_type", ""), session.profile.get("employment_type"))
+        out["documents"] = required_documents(session.profile.get("loan_type", ""), session.profile.get("employment_type"),
+                                              session.profile.get("loan_amount"), session.profile.get("study_abroad"),
+                                              lang=session.lang)
     return out
 
 
 def tool_what_if(session: Session, changes: dict[str, Any]) -> dict:
     """Hypothetical re-evaluation without changing the saved profile."""
     clean, invalid = validate_profile(_mark_unknown_scores(changes))
-    out = evaluate(_merge(session.profile, clean)).as_dict()
+    out = evaluate(_merge(session.profile, clean), session.lang).as_dict()
     out["hypothetical_changes"] = clean
     out["note"] = "Hypothetical only; the saved application is unchanged." + (f" {_range_note(invalid)}" if invalid else "")
     return out
@@ -349,26 +367,65 @@ class GenAIAgent:
         stop = "tool_use" if any(c["type"] == "tool_use" for c in content) else "end_turn"
         return LLMReply(stop, content)
 
+    @staticmethod
+    def _breaker_open(b: Backend) -> bool:
+        with _breaker_lock:
+            fails, until = _breaker.get((b.kind, b.model), [0, 0.0])
+        return fails >= LLM_CB_THRESHOLD and time.monotonic() < until
+
+    @staticmethod
+    def _breaker_record(b: Backend, ok: bool) -> None:
+        with _breaker_lock:
+            fails, _ = _breaker.get((b.kind, b.model), [0, 0.0])
+            if ok:
+                _breaker[(b.kind, b.model)] = [0, 0.0]
+            else:
+                fails += 1
+                until = time.monotonic() + LLM_CB_COOLDOWN_S if fails >= LLM_CB_THRESHOLD else 0.0
+                _breaker[(b.kind, b.model)] = [fails, until]
+
     def _call(self, chain: list[Backend], session: Session, deadline: float) -> tuple[LLMReply, Backend]:
         """First backend in the chain that answers inside the budget. TimeoutError hands the turn to the rules agent."""
         for b in chain:
-            remaining = deadline - time.perf_counter()
-            if remaining < MIN_CALL_S:
-                break
-            started = time.perf_counter()
-            fn = self._call_nvidia if b.kind == "nvidia" else self._call_anthropic
-            # Hard wall-clock deadline: providers that stream keep-alive bytes never trip an HTTP read timeout,
-            # so wait on a worker thread and abandon the call (it finishes in the background) when time is up.
-            future = _POOL.submit(fn, b, list(session.history), remaining)
+            if self._breaker_open(b):
+                LLM_STATS["breaker_skips"] += 1
+                log.warning("backend %s/%s resting (circuit breaker); trying next", b.kind, b.model)
+                continue
+            if session.llm_calls >= LLM_MAX_CALLS_PER_SESSION:
+                LLM_STATS["budget_exceeded"] += 1
+                raise BudgetExceeded("per-session LLM call cap reached")
+            if not _llm_semaphore.acquire(blocking=False):
+                LLM_STATS["semaphore_skips"] += 1
+                log.warning("LLM concurrency saturated; trying next backend")
+                continue
             try:
-                reply = future.result(timeout=remaining)
-            except FuturesTimeout:
-                log.warning("backend %s/%s exceeded the turn budget; trying next", b.kind, b.model)
-                continue
-            except BackendUnavailable as exc:
-                log.warning("backend %s/%s unavailable (%s); trying next", b.kind, b.model, exc)
-                continue
+                remaining = deadline - time.perf_counter()
+                if remaining < MIN_CALL_S:
+                    break
+                started = time.perf_counter()
+                fn = self._call_nvidia if b.kind == "nvidia" else self._call_anthropic
+                # Hard wall-clock deadline: providers that stream keep-alive bytes never trip an HTTP read timeout,
+                # so wait on a worker thread and abandon the call (it finishes in the background) when time is up.
+                future = _POOL.submit(fn, b, list(session.history), remaining)
+                try:
+                    reply = future.result(timeout=remaining)
+                except FuturesTimeout:
+                    future.cancel()  # best effort; a running provider call still finishes in its thread
+                    LLM_STATS["timeouts"] += 1
+                    self._breaker_record(b, False)
+                    log.warning("backend %s/%s exceeded the turn budget; trying next", b.kind, b.model)
+                    continue
+                except BackendUnavailable as exc:
+                    LLM_STATS["unavailable"] += 1
+                    self._breaker_record(b, False)
+                    log.warning("backend %s/%s unavailable (%s); trying next", b.kind, b.model, exc)
+                    continue
+            finally:
+                _llm_semaphore.release()
             took = time.perf_counter() - started
+            session.llm_calls += 1
+            LLM_STATS["calls"] += 1
+            self._breaker_record(b, True)
             prev = self.call_seconds.get(b.model, took)
             self.call_seconds[b.model] = 0.7 * prev + 0.3 * took
             return reply, b
@@ -616,5 +673,7 @@ def handle_message(session: Session, raw_text: str, lang_pref: str = "auto") -> 
         "next_field": None if session.evaluation else (
             next((f for f in REQUIRED_FIELDS.get(session.profile.get("loan_type", ""), []) if session.profile.get(f) is None), None)
             if session.profile.get("loan_type") else "loan_type"),
-        "documents": required_documents(session.profile["loan_type"], session.profile.get("employment_type")) if session.evaluation else [],
+        "documents": required_documents(session.profile["loan_type"], session.profile.get("employment_type"),
+                                              session.profile.get("loan_amount"), session.profile.get("study_abroad"),
+                                              lang=session.lang) if session.evaluation else [],
     }

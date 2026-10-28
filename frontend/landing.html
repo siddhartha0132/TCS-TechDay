@@ -3,12 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LoanMitra — know if you'll get the loan before you apply. Single-agent AI chatbot, transparent bank rules, English, Hindi and Hinglish.">
   <title>LoanMitra — Loan eligibility, explained</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/theme.css">
   <link rel="stylesheet" href="/static/landing.css">
 </head>
 <body>
+  <div class="topstrip" aria-hidden="true"></div>
   <!-- ================= Nav ================= -->
   <header class="nav">
     <div class="container nav-inner">
@@ -20,7 +25,13 @@
         <a href="#solution">Solution</a>
         <a href="#faq">FAQ</a>
       </nav>
-      <a class="btn btn-primary btn-sm" href="/chat">Check eligibility →</a>
+      <span class="nav-cta">
+        <button id="themeBtn" class="icon-btn" title="Switch light / dark" aria-pressed="false" aria-label="Switch light or dark theme">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" hidden><path d="M20 13.5A8 8 0 0 1 10.5 4 8 8 0 1 0 20 13.5z"/></svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="/chat">Check eligibility →</a>
+      </span>
     </div>
   </header>
 
@@ -40,6 +51,7 @@
           <li>Answer in under 15 s</li>
           <li>PAN / Aadhaar auto-masked</li>
         </ul>
+        <p class="spec">EN · HI · Hinglish · text + voice — 13 s reply budget — rules decide, AI explains</p>
       </div>
 
       <div class="mock" aria-label="Example conversation">
@@ -47,7 +59,7 @@
         <div class="mock-body">
           <div class="b user">Mujhe 60 lakh ka home loan chahiye, flat 70 lakh ka hai. Salary 1.1 lakh, EMI 25k, CIBIL 720.</div>
           <div class="b bot">
-            <span class="chip warn">🔒 Rules-engine verdict: Conditionally eligible</span>
+            <span class="chip warn">Rules-engine verdict: Conditionally eligible</span>
             ₹60 L is above your limit today — but you <b>are eligible for up to ₹40.9 L</b> over 20 years.
             <ul>
               <li>Repayment ratio 70% vs 55% limit</li>
@@ -67,23 +79,23 @@
       <span class="kicker">01 · The problem</span>
       <h2>Loan eligibility is a black box — for applicants and for banks.</h2>
       <div class="stat-band">
-        <div class="stat"><b>~30%</b><span>of Indians have faced a loan or card rejection — many never told why<sup>1</sup></span></div>
-        <div class="stat"><b>1 number</b><span>is all a typical online eligibility calculator returns — no reasons, no plan<sup>2</sup></span></div>
-        <div class="stat"><b>Every</b><span>blind application risks a hard credit enquiry and another rejection</span></div>
+        <div class="stat s1"><b>~30%</b><span>of Indians have faced a loan or card rejection — many never told why<sup>1</sup></span></div>
+        <div class="stat s2"><b>1 number</b><span>is all a typical online eligibility calculator returns — no reasons, no plan<sup>2</sup></span></div>
+        <div class="stat s3"><b>Every</b><span>blind application risks a hard credit enquiry and another rejection</span></div>
       </div>
       <div class="cards-3">
         <div class="card">
-          <div class="ico">🧾</div>
+          <div class="ico t1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></div>
           <h3>Applicants</h3>
           <p>Criteria like FOIR, LTV, age-at-maturity and CIBIL cut-offs are hard to interpret. Static forms don't adapt, and a rejection rarely says what to change.</p>
         </div>
         <div class="card">
-          <div class="ico">🏦</div>
+          <div class="ico t2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9l9-6 9 6M4 9v10M20 9v10M8 12v5M12 12v5M16 12v5M2 21h20"/></svg></div>
           <h3>Bank staff</h3>
           <p>Hours go into answering the same eligibility and document questions, and into reworking applications that were never viable.</p>
         </div>
         <div class="card">
-          <div class="ico">📉</div>
+          <div class="ico t3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4v16h16"/><path d="M7 14l4-4 3 3 5-6"/><path d="M19 7v6h-6"/></svg></div>
           <h3>The business</h3>
           <p>Slow, inconsistent guidance means drop-offs, application errors and lost customers — the exact pain the TCS problem statement describes.</p>
         </div>
@@ -103,8 +115,8 @@
             <tr><td>Single-agent chatbot that interacts with applicants</td><td>One AI agent with 3 tools: update profile, what-if, documents</td><td><span class="pill ok">Live</span></td></tr>
             <tr><td>Evaluates input against eligibility rules</td><td>Transparent rules engine: age, income, CIBIL, FOIR, LTV, tenure, income multiple — 4 loan types</td><td><span class="pill ok">0 errors / 30,000 fuzzed profiles</span></td></tr>
             <tr><td>Personalised feedback & next steps</td><td>Max eligible amount, tenure that works, EMIs to reduce, co-applicant income needed — only shown when true</td><td><span class="pill ok">Every suggestion re-verified</span></td></tr>
-            <tr><td>80%+ accuracy</td><td>Verdict always computed by the rules engine; AI only understands and explains</td><td><span class="pill ok">36 / 36 labelled conversations</span></td></tr>
-            <tr><td>Response under 15 seconds</td><td>Hard 13 s budget per reply; if a model is slow, the engine answers</td><td><span class="pill ok">4–12 s live</span></td></tr>
+            <tr><td>80%+ accuracy</td><td>Verdict always computed by the rules engine; AI only understands and explains</td><td><span class="pill ok">35/36 GenAI · 36/36 rules mode</span></td></tr>
+            <tr><td>Response under 15 seconds</td><td>Hard 13 s budget per reply; if a model is slow, the engine answers</td><td><span class="pill ok">36/37 under 15 s</span></td></tr>
             <tr><td>Synthetic data, privacy compliance</td><td>300 generated applicants; PII masked before processing; nothing stored</td><td><span class="pill ok">Masking tests pass</span></td></tr>
             <tr><td>Natural-language understanding (GenAI)</td><td>English, हिंदी, Hinglish — typed or spoken (Sarvam AI speech)</td><td><span class="pill ok">Hindi voice round-trip</span></td></tr>
             <tr><td>Chat UI, documentation, demo</td><td>This site + chatbot, architecture docs, demo script, test suite</td><td><span class="pill ok">On GitHub</span></td></tr>
@@ -152,19 +164,19 @@
       <span class="kicker">04 · How we solved it</span>
       <h2>AI understands. Rules decide. You get a plan.</h2>
       <div class="flow">
-        <div class="flow-step"><span class="n">1</span><h3>Tell us, your way</h3><p>One message in English, हिंदी or Hinglish — typed or spoken. PII is masked first.</p></div>
+        <div class="flow-step f1"><span class="n">1</span><h3>Tell us, your way</h3><p>One message in English, हिंदी or Hinglish — typed or spoken. PII is masked first.</p></div>
         <div class="arrow" aria-hidden="true">→</div>
-        <div class="flow-step"><span class="n">2</span><h3>AI extracts the facts</h3><p>The agent understands “12 LPA”, “70 hazaar”, “wife earns 40k” and asks only for what's missing.</p></div>
+        <div class="flow-step f2"><span class="n">2</span><h3>AI extracts the facts</h3><p>The agent understands “12 LPA”, “70 hazaar”, “wife earns 40k” and asks only for what's missing.</p></div>
         <div class="arrow" aria-hidden="true">→</div>
-        <div class="flow-step"><span class="n">3</span><h3>Rules engine decides</h3><p>Every bank rule runs with your numbers. Auditable, repeatable — the AI never makes the decision.</p></div>
+        <div class="flow-step f3"><span class="n">3</span><h3>Rules engine decides</h3><p>Every bank rule runs with your numbers. Auditable, repeatable — the AI never makes the decision.</p></div>
         <div class="arrow" aria-hidden="true">→</div>
-        <div class="flow-step"><span class="n">4</span><h3>Verdict + plan</h3><p>Eligible, a smaller amount, or the exact steps to get there — plus EMI and documents.</p></div>
+        <div class="flow-step f4"><span class="n">4</span><h3>Verdict + plan</h3><p>Eligible, a smaller amount, or the exact steps to get there — plus EMI and documents.</p></div>
       </div>
 
       <div class="cards-3 features">
-        <div class="card"><div class="ico">🔒</div><h3>Verified verdict</h3><p>Every decision carries a chip written by the rules engine, so a prompt-injected AI can't fake an approval.</p></div>
-        <div class="card"><div class="ico">⚡</div><h3>Never misses 15 s</h3><p>Free models chained with a hard time budget. Slow or busy? The rules engine answers — the demo never breaks.</p></div>
-        <div class="card"><div class="ico">🎙️</div><h3>Built for Bharat</h3><p>Hindi and Hinglish by voice with Indian-language speech AI, and Indian number formats like lakh and crore.</p></div>
+        <div class="card"><div class="ico t1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15" r="1.4"/></svg></div><h3>Verified verdict</h3><p>Every decision carries a chip written by the rules engine, so a prompt-injected AI can't fake an approval.</p></div>
+        <div class="card"><div class="ico t2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div><h3>Never misses 15 s</h3><p>Free models chained with a hard time budget. Slow or busy? The rules engine answers — the demo never breaks.</p></div>
+        <div class="card"><div class="ico t3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div><h3>Built for Bharat</h3><p>Hindi and Hinglish by voice with Indian-language speech AI, and Indian number formats like lakh and crore.</p></div>
       </div>
     </div>
   </section>
@@ -213,5 +225,6 @@
         <sup>2</sup> Public eligibility-calculator pages of Indian lenders and NBFCs (e.g. inputs: age, income, obligations → one amount).</p>
     </div>
   </footer>
+  <script src="/static/theme.js"></script>
 </body>
 </html>

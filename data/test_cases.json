@@ -66,7 +66,7 @@
     {"id": "nl33", "lang": "en", "text": "Personal loan 45 lakh for 5 years. I'm 35, salaried, income 2.5 lakh per month, cibil 800, no EMIs.",
      "expected_fields": {"loan_type": "personal", "loan_amount": 4500000, "tenure_years": 5, "age": 35, "employment_type": "salaried", "monthly_income": 250000, "credit_score": 800, "existing_emi": 0}, "expected_status": "CONDITIONAL"},
     {"id": "nl34", "lang": "hinglish", "text": "Personal loan chahiye 2 lakh, 3 saal. Main 26 saal ka hoon, job karta hoon, salary 40 hazaar. CIBIL pata nahi. Koi EMI nahi.",
-     "expected_fields": {"loan_type": "personal", "loan_amount": 200000, "tenure_years": 3, "age": 26, "employment_type": "salaried", "monthly_income": 40000, "existing_emi": 0}, "expected_status": "INCOMPLETE"},
+     "expected_fields": {"loan_type": "personal", "loan_amount": 200000, "tenure_years": 3, "age": 26, "employment_type": "salaried", "monthly_income": 40000, "credit_score": "unknown", "existing_emi": 0}, "expected_status": "CONDITIONAL"},
     {"id": "nl35", "lang": "en", "text": "Looking for a 12 lakh car loan over 5 years, on-road price 13 lakh. 42 years old, salaried, take-home 90,000, score 735, existing EMI 15,000.",
      "expected_fields": {"loan_amount": 1200000, "loan_type": "auto", "tenure_years": 5, "vehicle_price": 1300000, "age": 42, "employment_type": "salaried", "monthly_income": 90000, "credit_score": 735, "existing_emi": 15000}, "expected_status": "CONDITIONAL"},
     {"id": "nl36", "lang": "en", "text": "I'm 22, want a personal loan of 50,000 for 1 year. Salaried, salary 26,000, cibil 705, no EMI.",

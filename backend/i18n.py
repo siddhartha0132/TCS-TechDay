@@ -13,6 +13,9 @@ HINGLISH_WORDS = {"hai", "hoon", "hu", "mera", "meri", "mujhe", "chahiye", "kya"
                   "naukri", "kaam", "kamata", "kamati", "mein", "aur", "lena", "leni", "liye", "hoga", "hogi", "agar", "toh"}
 
 
+MARATHI_WORDS = {"आहे", "आहेत", "माझे", "माझा", "माझी", "माझं", "मला", "मी", "पाहिजे", "आणि", "नाही", "किती", "वर्षे",
+                 "वर्षांसाठी", "करायचे", "हवे", "हवा", "हवंय", "तुम्ही", "महिन्याला", "महिन्याचा", "पगार", "आहोत", "होय"}
+
 # Regional languages are translated to English and back (Sarvam); detected by Unicode script.
 TRANSLATED_LANGS = {"bn", "ta", "te", "kn", "ml", "mr", "gu", "pa", "od"}
 SCRIPTS = [("ta", r"[\u0B80-\u0BFF]"), ("te", r"[\u0C00-\u0C7F]"), ("kn", r"[\u0C80-\u0CFF]"), ("ml", r"[\u0D00-\u0D7F]"),
@@ -27,7 +30,8 @@ def detect_language(text: str, preference: str | None = None) -> str:
         if re.search(pat, text):
             return code
     if DEVANAGARI.search(text):
-        return "hi"
+        # Marathi shares the Devanagari script with Hindi; common Marathi-only words tell them apart.
+        return "mr" if set(re.findall(r"[ऀ-ॿ]+", text)) & MARATHI_WORDS else "hi"
     words = set(re.findall(r"[a-z]+", text.lower()))
     if len(words & HINGLISH_WORDS) >= 1 and len(words & HINGLISH_WORDS) / max(len(words), 1) > 0.12:
         return "hinglish"

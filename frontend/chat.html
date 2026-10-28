@@ -15,7 +15,7 @@
         <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 28 9v14l-12 7L4 23V9z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M16 2v28M4 9l24 14M28 9 4 23" stroke="currentColor" stroke-width=".8" opacity=".5"/></svg>
         <div>
           <div class="brand-name">LoanMitra</div>
-          <div class="brand-sub">← Overview</div>
+          <div class="brand-sub">← <span data-i18n>Overview</span></div>
         </div>
       </a>
       <div class="controls">
@@ -36,7 +36,7 @@
           <option value="od">ଓଡ଼ିଆ</option>
         </select>
         <button id="ttsBtn" class="icon-btn" title="Read replies aloud" aria-pressed="false" aria-label="Read replies aloud"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 10l4 4M21 10l-4 4"/></svg></button>
-        <button id="resetBtn" class="btn-ghost"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg><span class="resetText">New check</span></button>
+        <button id="resetBtn" class="btn-ghost"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg><span class="resetText" data-i18n>New check</span></button>
       </div>
     </div>
   </header>
@@ -44,13 +44,13 @@
   <section class="appbar">
     <div class="wrap">
       <div class="products" role="tablist" aria-label="Choose a loan">
-        <button class="product" data-type="personal" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span><b>Personal</b><small>from 11.5%</small></span></button>
-        <button class="product" data-type="home" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10M10 20v-6h4v6"/></svg><span><b>Home</b><small>from 8.5%</small></span></button>
-        <button class="product" data-type="auto" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17H3v-5l2.5-5h13L21 12v5h-2"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M9.5 17h5M3 12h18"/></svg><span><b>Car</b><small>from 9.5%</small></span></button>
-        <button class="product" data-type="education" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5M22 9v6"/></svg><span><b>Education</b><small>from 10%</small></span></button>
+        <button class="product" data-type="personal" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span><b data-i18n>Personal</b><small><i data-i18n>from</i> 11.5%</small></span></button>
+        <button class="product" data-type="home" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10M10 20v-6h4v6"/></svg><span><b data-i18n>Home</b><small><i data-i18n>from</i> 8.5%</small></span></button>
+        <button class="product" data-type="auto" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17H3v-5l2.5-5h13L21 12v5h-2"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M9.5 17h5M3 12h18"/></svg><span><b data-i18n>Car</b><small><i data-i18n>from</i> 9.5%</small></span></button>
+        <button class="product" data-type="education" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5M22 9v6"/></svg><span><b data-i18n>Education</b><small><i data-i18n>from</i> 10%</small></span></button>
       </div>
       <ul class="trust">
-        <li>No CIBIL impact</li><li>Reply under 15 s</li><li>PII auto-masked</li>
+        <li data-i18n>No CIBIL impact</li><li data-i18n>Reply under 15 s</li><li data-i18n>PII auto-masked</li>
       </ul>
     </div>
   </section>
@@ -59,22 +59,22 @@
     <!-- ================= Chat ================= -->
     <section class="chat card" aria-label="Chat with LoanMitra">
       <div class="mode-tabs" role="tablist" aria-label="How do you want to check?">
-        <button type="button" class="mode-tab" id="tabChat" role="tab" aria-selected="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Chat</button>
-        <button type="button" class="mode-tab" id="tabForm" role="tab" aria-selected="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Quick form</button>
+        <button type="button" class="mode-tab" id="tabChat" role="tab" aria-selected="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span data-i18n>Chat</span></button>
+        <button type="button" class="mode-tab" id="tabForm" role="tab" aria-selected="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span data-i18n>Quick form</span></button>
       </div>
 
       <div id="chatPanel" class="panel">
       <ol class="stepper" id="stepper" aria-label="Progress">
-        <li data-step="0"><span>1</span>Loan</li>
-        <li data-step="1"><span>2</span>About you</li>
-        <li data-step="2"><span>3</span>Finances</li>
-        <li data-step="3"><span>4</span>Result</li>
+        <li data-step="0"><span>1</span><em data-i18n>Loan</em></li>
+        <li data-step="1"><span>2</span><em data-i18n>About you</em></li>
+        <li data-step="2"><span>3</span><em data-i18n>Finances</em></li>
+        <li data-step="3"><span>4</span><em data-i18n>Result</em></li>
       </ol>
 
       <div id="messages" class="messages" aria-live="polite">
         <div class="msg bot">
           <div class="avatar" aria-hidden="true">₹</div>
-          <div class="bubble welcome"><div class="lead">Namaste, I'm LoanMitra.</div>Pick a loan below, or just tell me what you need — e.g. <i>“I'm 30, salaried, earn 60k a month and need a 5 lakh personal loan for 3 years.”</i></div>
+          <div class="bubble welcome"><div class="lead" data-i18n>Namaste, I'm LoanMitra.</div><span data-i18n>Pick a loan below, or just tell me what you need — for example: “I'm 30, salaried, earn 60k a month and need a 5 lakh personal loan for 3 years.”</span></div>
         </div>
       </div>
 
@@ -84,74 +84,74 @@
         <button type="button" id="attachBtn" class="mic" aria-label="Upload bank statement (PDF or CSV)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5 12 19.5a5 5 0 0 1-7-7l8-8a3.3 3.3 0 0 1 4.7 4.7l-8 8a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4"/></svg></button>
         <input type="file" id="stmtFile" accept=".pdf,.csv,application/pdf,text/csv" hidden>
         <button type="button" id="micBtn" class="mic" aria-label="Speak"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-        <textarea id="input" rows="1" placeholder="Type your message…" aria-label="Message"></textarea>
+        <textarea id="input" rows="1" placeholder="Type your message…" data-i18n-ph aria-label="Message"></textarea>
         <button type="submit" id="sendBtn" class="btn-primary" aria-label="Send"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       </form>
-      <div class="hint">Attach a bank statement to verify your income — read in memory, never stored. No statement handy? <a href="/static/demo_statement.pdf" download>Try the sample</a>.</div>
+      <div class="hint"><span data-i18n>Attach a bank statement to verify your income — read in memory, never stored.</span> <span data-i18n>No statement handy?</span> <a href="/static/demo_statement.pdf" download data-i18n>Try the sample</a></div>
       </div>
 
       <div id="formPanel" class="panel form-panel" hidden>
         <form id="quickForm" class="qform" novalidate>
-          <p class="form-intro">Prefer a form? Fill these in and get your result instantly. Nothing is stored.</p>
+          <p class="form-intro" data-i18n>Prefer a form? Fill these in and get your result instantly. Nothing is stored.</p>
           <div class="autofill">
-            <div class="autofill-head"><b>Fetch my details</b> <span class="sim-tag">simulated bureau + Account Aggregator</span></div>
+            <div class="autofill-head"><b data-i18n>Fetch my details</b> <span class="sim-tag" data-i18n>simulated bureau + Account Aggregator</span></div>
             <div class="autofill-row">
-              <input id="fMobile4" type="text" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="Mobile last 4 digits" aria-label="Mobile number, last 4 digits">
-              <label class="consent"><input id="fConsent" type="checkbox"> I consent to a soft credit check and bank-statement read</label>
-              <button type="button" id="fetchBtn" class="btn-ghost">Fetch</button>
+              <input id="fMobile4" type="text" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="Mobile last 4 digits" data-i18n-ph aria-label="Mobile number, last 4 digits">
+              <label class="consent"><input id="fConsent" type="checkbox"> <span data-i18n>I consent to a soft credit check and bank-statement read</span></label>
+              <button type="button" id="fetchBtn" class="btn-ghost" data-i18n>Fetch</button>
             </div>
             <div id="fetchOut" class="muted" aria-live="polite"></div>
-            <div class="autofill-head stmt-head"><b>Or verify from your bank statement</b> <span class="live-tag">live analysis · not stored</span></div>
+            <div class="autofill-head stmt-head"><b data-i18n>Or verify from your bank statement</b> <span class="live-tag" data-i18n>live analysis · not stored</span></div>
             <div class="autofill-row">
               <input type="file" id="fStmt" accept=".pdf,.csv,application/pdf,text/csv" aria-label="Bank statement PDF or CSV">
-              <a class="muted" href="/static/demo_statement.pdf" download>Sample statement</a>
+              <a class="muted" href="/static/demo_statement.pdf" download data-i18n>Sample statement</a>
             </div>
             <div id="stmtOut" class="muted" aria-live="polite"></div>
           </div>
           <div class="fgrid">
-            <label class="field full"><span>Loan type</span>
+            <label class="field full"><span data-i18n>Loan type</span>
               <select id="fType" required>
-                <option value="personal">Personal loan</option>
-                <option value="home">Home loan</option>
-                <option value="auto">Car loan</option>
-                <option value="education">Education loan</option>
+                <option value="personal" data-i18n>Personal loan</option>
+                <option value="home" data-i18n>Home loan</option>
+                <option value="auto" data-i18n>Car loan</option>
+                <option value="education" data-i18n>Education loan</option>
               </select></label>
-            <label class="field"><span>Loan amount (₹)</span><input id="fAmount" type="number" inputmode="numeric" min="10000" step="10000" placeholder="500000" required><small class="fmt" data-for="fAmount"></small></label>
-            <label class="field"><span>Repay over (years)</span><input id="fTenure" type="number" inputmode="decimal" min="1" max="30" step="1" placeholder="3" required></label>
-            <label class="field"><span>Your age</span><input id="fAge" type="number" inputmode="numeric" min="17" max="80" placeholder="30" required></label>
+            <label class="field"><span data-i18n>Loan amount (₹)</span><input id="fAmount" type="number" inputmode="numeric" min="10000" step="10000" placeholder="500000" required><small class="fmt" data-for="fAmount"></small></label>
+            <label class="field"><span data-i18n>Repay over (years)</span><input id="fTenure" type="number" inputmode="decimal" min="1" max="30" step="1" placeholder="3" required></label>
+            <label class="field"><span data-i18n>Your age</span><input id="fAge" type="number" inputmode="numeric" min="17" max="80" placeholder="30" required></label>
 
-            <label class="field" data-show="personal home auto"><span>Employment</span>
+            <label class="field" data-show="personal home auto"><span data-i18n>Employment</span>
               <select id="fEmp">
-                <option value="salaried">Salaried</option>
-                <option value="self_employed">Self-employed / business</option>
-                <option value="not_employed">Not working</option>
+                <option value="salaried" data-i18n>Salaried</option>
+                <option value="self_employed" data-i18n>Self-employed / business</option>
+                <option value="not_employed" data-i18n>Not working</option>
               </select></label>
-            <label class="field" data-show="personal home auto"><span>Net monthly income (₹)</span><input id="fIncome" type="number" inputmode="numeric" min="0" step="1000" placeholder="60000"><small class="fmt" data-for="fIncome"></small></label>
-            <label class="field" data-show="personal home auto"><span>Credit score (CIBIL)</span>
+            <label class="field" data-show="personal home auto"><span data-i18n>Net monthly income (₹)</span><input id="fIncome" type="number" inputmode="numeric" min="0" step="1000" placeholder="60000"><small class="fmt" data-for="fIncome"></small></label>
+            <label class="field" data-show="personal home auto"><span data-i18n>Credit score (CIBIL)</span>
               <select id="fScore">
-                <option value="780">750 and above (excellent)</option>
-                <option value="725">700 – 749 (good)</option>
-                <option value="675">650 – 699 (fair)</option>
-                <option value="620">Below 650</option>
-                <option value="unknown">I don't know</option>
+                <option value="780" data-i18n>750 and above (excellent)</option>
+                <option value="725" data-i18n>700 – 749 (good)</option>
+                <option value="675" data-i18n>650 – 699 (fair)</option>
+                <option value="620" data-i18n>Below 650</option>
+                <option value="unknown" data-i18n>I don't know</option>
               </select></label>
-            <label class="field" data-show="personal home auto"><span>Existing EMIs per month (₹)</span><input id="fEmi" type="number" inputmode="numeric" min="0" step="500" value="0"></label>
-            <label class="field" data-show="home"><span>Property value (₹)</span><input id="fProperty" type="number" inputmode="numeric" min="100000" step="100000" placeholder="7000000"><small class="fmt" data-for="fProperty"></small></label>
-            <label class="field" data-show="auto"><span>Vehicle on-road price (₹)</span><input id="fVehicle" type="number" inputmode="numeric" min="50000" step="10000" placeholder="1000000"><small class="fmt" data-for="fVehicle"></small></label>
+            <label class="field" data-show="personal home auto"><span data-i18n>Existing EMIs per month (₹)</span><input id="fEmi" type="number" inputmode="numeric" min="0" step="500" value="0"></label>
+            <label class="field" data-show="home"><span data-i18n>Property value (₹)</span><input id="fProperty" type="number" inputmode="numeric" min="100000" step="100000" placeholder="7000000"><small class="fmt" data-for="fProperty"></small></label>
+            <label class="field" data-show="auto"><span data-i18n>Vehicle on-road price (₹)</span><input id="fVehicle" type="number" inputmode="numeric" min="50000" step="10000" placeholder="1000000"><small class="fmt" data-for="fVehicle"></small></label>
 
-            <label class="field" data-show="education"><span>Where is the course?</span>
-              <select id="fAbroad"><option value="false">In India</option><option value="true">Abroad</option></select></label>
-            <label class="field" data-show="education"><span>Parent / guardian monthly income (₹)</span><input id="fCoIncome" type="number" inputmode="numeric" min="0" step="1000" placeholder="80000"><small class="fmt" data-for="fCoIncome"></small></label>
-            <label class="field" data-show="education"><span>Parent / guardian credit score</span>
+            <label class="field" data-show="education"><span data-i18n>Where is the course?</span>
+              <select id="fAbroad"><option value="false" data-i18n>In India</option><option value="true" data-i18n>Abroad</option></select></label>
+            <label class="field" data-show="education"><span data-i18n>Parent / guardian monthly income (₹)</span><input id="fCoIncome" type="number" inputmode="numeric" min="0" step="1000" placeholder="80000"><small class="fmt" data-for="fCoIncome"></small></label>
+            <label class="field" data-show="education"><span data-i18n>Parent / guardian credit score</span>
               <select id="fCoScore">
-                <option value="780">750 and above</option><option value="725">700 – 749</option>
-                <option value="675">650 – 699</option><option value="620">Below 650</option><option value="unknown">Don't know</option>
+                <option value="780" data-i18n>750 and above</option><option value="725" data-i18n>700 – 749</option>
+                <option value="675" data-i18n>650 – 699</option><option value="620" data-i18n>Below 650</option><option value="unknown" data-i18n>Don't know</option>
               </select></label>
-            <label class="field" data-show="education"><span>Parent / guardian EMIs per month (₹)</span><input id="fCoEmi" type="number" inputmode="numeric" min="0" step="500" value="0"></label>
+            <label class="field" data-show="education"><span data-i18n>Parent / guardian EMIs per month (₹)</span><input id="fCoEmi" type="number" inputmode="numeric" min="0" step="500" value="0"></label>
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn-cta">Check eligibility</button>
-            <span class="muted">Soft check · no CIBIL impact</span>
+            <button type="submit" class="btn-cta" data-i18n>Check eligibility</button>
+            <span class="muted" data-i18n>Soft check · no CIBIL impact</span>
           </div>
           <div id="formResult" class="form-result" hidden aria-live="polite"></div>
         </form>
@@ -173,53 +173,53 @@
               <path class="gauge-track" d="M10 65 A50 50 0 0 1 110 65" />
               <path id="gaugeFill" class="gauge-fill" d="M10 65 A50 50 0 0 1 110 65" />
             </svg>
-            <div class="gauge-label"><span id="gaugeScore">–</span><small>strength</small></div>
+            <div class="gauge-label"><span id="gaugeScore">–</span><small data-i18n>strength</small></div>
           </div>
         </div>
         <div class="kpis">
-          <div class="kpi"><small>Monthly EMI</small><strong id="kpiEmi">–</strong></div>
-          <div class="kpi"><small>Interest</small><strong id="kpiRate">–</strong></div>
-          <div class="kpi"><small>Tenure</small><strong id="kpiTenure">–</strong></div>
+          <div class="kpi"><small data-i18n>Monthly EMI</small><strong id="kpiEmi">–</strong></div>
+          <div class="kpi"><small data-i18n>Interest</small><strong id="kpiRate">–</strong></div>
+          <div class="kpi"><small data-i18n>Tenure</small><strong id="kpiTenure">–</strong></div>
           <div class="kpi"><small>FOIR</small><strong id="kpiFoir">–</strong></div>
         </div>
       </div>
 
       <div class="card" id="lendersCard" hidden>
-        <h3>Compare banks <span class="sim-tag">simulated lender panel</span></h3>
+        <h3><span data-i18n>Compare banks</span> <span class="sim-tag" data-i18n>simulated lender panel</span></h3>
         <div id="lendersList" class="lenders"></div>
       </div>
 
       <div class="card" id="simCard" hidden>
-        <h3>Try a different amount or tenure</h3>
+        <h3 data-i18n>Try a different amount or tenure</h3>
         <label class="slider">
-          <span>Loan amount <b id="simAmountVal">–</b></span>
+          <span><i data-i18n>Loan amount</i> <b id="simAmountVal">–</b></span>
           <input type="range" id="simAmount" min="0" max="100" step="1">
         </label>
         <label class="slider">
-          <span>Tenure <b id="simTenureVal">–</b></span>
+          <span><i data-i18n>Tenure</i> <b id="simTenureVal">–</b></span>
           <input type="range" id="simTenure" min="1" max="30" step="1">
         </label>
         <div class="sim-out" id="simOut" aria-live="polite"></div>
       </div>
 
       <div class="card" id="stepsCard" hidden>
-        <h3>How to improve your chances</h3>
+        <h3 data-i18n>How to improve your chances</h3>
         <ul id="stepsList" class="steps"></ul>
       </div>
 
       <details class="card fold" open>
-        <summary><h3>Rule checks</h3></summary>
+        <summary><h3 data-i18n>Rule checks</h3></summary>
         <ul id="checksList" class="checks"></ul>
-        <p class="muted" id="checksEmpty">Every bank rule we check will appear here, with the numbers.</p>
+        <p class="muted" id="checksEmpty" data-i18n>Every bank rule we check will appear here, with the numbers.</p>
       </details>
 
       <details class="card fold">
-        <summary><h3>Your details <span id="profileProgress" class="muted"></span></h3></summary>
+        <summary><h3><span data-i18n>Your details</span> <span id="profileProgress" class="muted"></span></h3></summary>
         <ul id="profileList" class="profile-list"></ul>
       </details>
 
       <details class="card fold" id="docsCard" hidden>
-        <summary><h3>Documents to keep ready</h3></summary>
+        <summary><h3 data-i18n>Documents to keep ready</h3></summary>
         <ul id="docsList" class="docs"></ul>
       </details>
 
@@ -231,10 +231,11 @@
     </aside>
   </main>
 
-  <footer class="footer wrap">
+  <footer class="footer wrap" data-i18n>
     LoanMitra is a demo built for TCS Technology Day. Rates and rules are illustrative (synthetic policy). Not a loan offer.
   </footer>
 
+  <script src="/static/ui_strings.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

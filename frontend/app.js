@@ -5,7 +5,25 @@
   const langSelect = $("langSelect"), micBtn = $("micBtn"), ttsBtn = $("ttsBtn"), resetBtn = $("resetBtn");
 
   let sessionId = null, tts = false, busy = false, voiceEngine = "browser";
-  let lastProfile = {}, lastEval = null;
+  let lastProfile = {}, lastEval = null, lastR = null, lastDetected = "en";
+
+  // Interface language follows the applicant: what they type or speak (Auto), or the language they pick.
+  // Strings come from ui_strings.js (generated offline); anything missing stays in English.
+  let uiLang = "en";
+  const T = (s) => (window.UI_STRINGS && window.UI_STRINGS[uiLang] && window.UI_STRINGS[uiLang][s]) || s;
+  document.querySelectorAll("[data-i18n]").forEach((el) => { if (!el.dataset.i18n) el.dataset.i18n = el.textContent.trim(); });
+  document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.dataset.i18nPh = el.placeholder; });
+  function setUILang(code, rerender = true) {
+    code = !code || code === "auto" || code === "hinglish" ? "en" : code;
+    if (code === uiLang) return;
+    uiLang = code;
+    document.documentElement.lang = code === "od" ? "or" : code;
+    document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = T(el.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.placeholder = T(el.dataset.i18nPh); });
+    if (!rerender) return;
+    if (lastR) updateDashboard(lastR, false); else { paintIdle(); renderQuick("loan_type", {}, null); }
+  }
+  const chipLang = () => (uiLang !== "en" ? uiLang : undefined);
 
   const PRODUCT = {
     personal: { label: "Personal Loan", amounts: [200000, 500000, 1000000], tenures: [2, 3, 5], tenure: [1, 5] },
@@ -40,11 +58,11 @@
   };
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const showValue = (k, v) => {
-    if (v === "unknown") return "Not known";
-    if (k === "loan_type") return PRODUCT[v]?.label || v;
-    if (k === "employment_type") return { salaried: "Salaried", self_employed: "Self-employed", not_employed: "Not employed" }[v] || v;
-    if (k === "study_abroad") return v ? "Abroad" : "India";
-    if (k === "tenure_years") return `${+v.toFixed ? +Number(v).toFixed(1) : v} yrs`;
+    if (v === "unknown") return T("Not known");
+    if (k === "loan_type") return T(PRODUCT[v]?.label || v);
+    if (k === "employment_type") return T({ salaried: "Salaried", self_employed: "Self-employed", not_employed: "Not employed" }[v] || v);
+    if (k === "study_abroad") return T(v ? "Abroad" : "India");
+    if (k === "tenure_years") return `${+v.toFixed ? +Number(v).toFixed(1) : v} ${T("years")}`;
     if (k === "employment_months") return `${v} months`;
     if (k === "age" || k.includes("score")) return String(v);
     return fmtINR(v);
@@ -68,7 +86,7 @@
     wrap.className = `msg ${role}`;
     // The chip comes from the rules engine, not the model: it is the authoritative decision.
     const chip = verdict && VERDICT[verdict.status]
-      ? `<div class="verified v-${verdict.status}" title="${esc(verdict.summary)}">Rules engine · ${VERDICT[verdict.status]}</div>` : "";
+      ? `<div class="verified v-${verdict.status}" title="${esc(verdict.summary)}">${T("Rules engine")} · ${T(VERDICT[verdict.status])}</div>` : "";
     const avatar = role === "bot" ? `<div class="avatar" aria-hidden="true">₹</div>` : "";
     wrap.innerHTML = `${avatar}<div class="bubble">${chip}${renderText(text)}${tag ? `<div class="tag">${esc(tag)}</div>` : ""}</div>`;
     messagesEl.appendChild(wrap);
@@ -90,7 +108,7 @@
       case "__confirm__": return [["Yes, confirm", "Yes, confirm"], ["Change something", "__edit__"]];
       case "loan_type": return Object.entries(PRODUCT).map(([k, v]) => [v.label, `I want a ${v.label.toLowerCase()}`]);
       case "loan_amount": return p.amounts.map((a) => [fmtINR(a), `${a / 1e5} lakh`]);
-      case "tenure_years": return p.tenures.map((t) => [`${t} years`, `${t} years`]);
+      case "tenure_years": return p.tenures.map((t) => [`${t} ${T("years")}`, `${t} years`]);
       case "monthly_income": return [30000, 50000, 75000, 100000].map((a) => [fmtINR(a), `My salary is ${a} per month`]);
       case "co_applicant_income": return [50000, 100000, 150000].map((a) => [fmtINR(a), `${co}income is ${a} per month`]);
       case "employment_type": return [["Salaried", "I am salaried"], ["Self-employed", "I am self-employed"], ["Not working", "I am not working"]];
@@ -106,8 +124,8 @@
     if (ev) {
       const t = Number(profile.tenure_years || 0), max = p.tenure[1];
       const out = [["Compare banks", "Which bank is best for me?"], ["Documents needed", "Which documents do I need?"]];
-      if (t && t < max) out.unshift([`What if ${Math.min(max, t + (max > 10 ? 5 : 2))} years?`, `What if I take it for ${Math.min(max, t + (max > 10 ? 5 : 2))} years?`]);
-      out.push(["↺ New check", "__reset__"]);
+      if (t && t < max) out.unshift([`${T("What if")} ${Math.min(max, t + (max > 10 ? 5 : 2))} ${T("years")}?`, `What if I take it for ${Math.min(max, t + (max > 10 ? 5 : 2))} years?`]);
+      out.push(["↺ " + T("New check"), "__reset__"]);
       return out;
     }
     return [];
@@ -115,12 +133,12 @@
   function renderQuick(field, profile, ev) {
     const items = quickReplies(field, profile, ev);
     $("quick").innerHTML = items.map(([label, text], i) =>
-      `<button type="button" class="chip${text === "__reset__" ? " alt" : ""}" data-i="${i}">${esc(label)}</button>`).join("");
+      `<button type="button" class="chip${text === "__reset__" ? " alt" : ""}" data-i="${i}">${esc(T(label))}</button>`).join("");
     $("quick").querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => {
-      const text = items[+c.dataset.i][1];
+      const [label, text] = items[+c.dataset.i];
       if (text === "__reset__") resetAll();
       else if (text === "__edit__") { input.placeholder = "e.g. “my salary is 65,000 per month”"; input.focus(); }
-      else send(text);
+      else send(text, chipLang(), uiLang !== "en" ? T(label) : undefined);
     }));
   }
 
@@ -145,42 +163,44 @@
   }
   document.querySelectorAll(".product").forEach((b) => b.addEventListener("click", () => {
     selectProduct(b.dataset.type);
-    send(`I want a ${PRODUCT[b.dataset.type].label.toLowerCase()}`);
+    const label = PRODUCT[b.dataset.type].label;
+    send(`I want a ${label.toLowerCase()}`, chipLang(), uiLang !== "en" ? T(label) : undefined);
   }));
 
   // ------------------------------------------------------------ dashboard
-  function updateDashboard(r) {
+  function updateDashboard(r, fresh = true) {
+    lastR = r;
     const ev = r.evaluation, profile = r.profile || {}, missing = r.missing_fields || [];
     lastProfile = profile; lastEval = ev; lastMissing = missing;
     if (profile.loan_type) selectProduct(profile.loan_type);
 
     const pl = $("profileList"); pl.innerHTML = "";
     const keys = Object.keys(profile);
-    for (const k of keys) pl.insertAdjacentHTML("beforeend", `<li><span>${FIELD_LABELS[k] || esc(k)}</span><b>${esc(showValue(k, profile[k]))}</b></li>`);
-    for (const k of missing) if (!(k in profile)) pl.insertAdjacentHTML("beforeend", `<li class="missing"><span>${FIELD_LABELS[k] || esc(k)}</span></li>`);
+    for (const k of keys) pl.insertAdjacentHTML("beforeend", `<li><span>${esc(T(FIELD_LABELS[k] || k))}</span><b>${esc(showValue(k, profile[k]))}</b></li>`);
+    for (const k of missing) if (!(k in profile)) pl.insertAdjacentHTML("beforeend", `<li class="missing"><span>${esc(T(FIELD_LABELS[k] || k))}</span></li>`);
     const total = keys.length + missing.filter((k) => !(k in profile)).length;
     $("profileProgress").textContent = total ? `${keys.length}/${total}` : "";
 
     const pill = $("statusPill"), gaugeFill = $("gaugeFill");
     if (ev) {
       pill.className = `pill pill-${ev.status}`;
-      pill.textContent = VERDICT[ev.status] || ev.status;
+      pill.textContent = T(VERDICT[ev.status] || ev.status);
       const eligibleAmt = ev.status === "ELIGIBLE" ? ev.requested_amount : ev.max_eligible_amount;
-      $("resultLabel").textContent = ev.status === "ELIGIBLE" ? "You're eligible for" : ev.status === "CONDITIONAL" ? "You're eligible for up to" : "Eligible amount today";
-      $("resultAmount").textContent = ev.status === "NOT_ELIGIBLE" ? "Not yet" : fmtINR(eligibleAmt);
+      $("resultLabel").textContent = T(ev.status === "ELIGIBLE" ? "You're eligible for" : ev.status === "CONDITIONAL" ? "You're eligible for up to" : "Eligible amount today");
+      $("resultAmount").textContent = ev.status === "NOT_ELIGIBLE" ? T("Not yet") : fmtINR(eligibleAmt);
       $("resultSub").textContent = ev.summary;
       $("gaugeScore").textContent = ev.score;
       gaugeFill.style.strokeDashoffset = String(157 - (157 * ev.score) / 100);
       gaugeFill.style.stroke = ev.status === "ELIGIBLE" ? "var(--ok)" : ev.status === "CONDITIONAL" ? "var(--warn)" : "var(--bad)";
       $("kpiEmi").textContent = ev.emi ? fmtINR(ev.emi) : "–";
       $("kpiRate").textContent = ev.interest_rate ? ev.interest_rate + "%" : "–";
-      $("kpiTenure").textContent = ev.tenure_years ? ev.tenure_years + " yrs" : "–";
+      $("kpiTenure").textContent = ev.tenure_years ? ev.tenure_years + " " + T("years") : "–";
       $("kpiFoir").textContent = ev.foir != null ? Math.round(ev.foir * 100) + "%" : "–";
 
       const cl = $("checksList"); cl.innerHTML = "";
       for (const c of ev.checks) {
         const cls = c.passed ? "pass" : c.hard ? "fail" : "warn";
-        cl.insertAdjacentHTML("beforeend", `<li><span class="dot ${cls}">${c.passed ? "✓" : c.hard ? "✕" : "!"}</span><div><b>${RULE_LABELS[c.rule] || esc(c.rule)}</b><br><span class="muted">${esc(c.detail)}</span></div></li>`);
+        cl.insertAdjacentHTML("beforeend", `<li><span class="dot ${cls}">${c.passed ? "✓" : c.hard ? "✕" : "!"}</span><div><b>${esc(T(RULE_LABELS[c.rule] || c.rule))}</b><br><span class="muted">${esc(c.detail)}</span></div></li>`);
       }
       $("checksEmpty").hidden = ev.checks.length > 0;
       $("stepsCard").hidden = !ev.improvements.length;
@@ -188,15 +208,15 @@
       $("docsCard").hidden = !(r.documents && r.documents.length);
       $("docsList").innerHTML = (r.documents || []).map((d) => `<li>${esc(d)}</li>`).join("");
       setupSimulator(profile, ev);
-      refreshLenders(profile);
+      if (fresh) refreshLenders(profile);
     } else {
       pill.className = "pill pill-INCOMPLETE";
-      pill.textContent = r.pending_confirmation ? "Confirm your details" : keys.length ? `Collecting details · ${keys.length}/${total}` : "Awaiting details";
-      $("resultLabel").textContent = "Your eligible amount";
-      $("resultAmount").textContent = r.pending_confirmation ? "One step left" : "—";
+      pill.textContent = r.pending_confirmation ? T("Confirm your details") : keys.length ? `${T("Collecting details")} · ${keys.length}/${total}` : T("Awaiting details");
+      $("resultLabel").textContent = T("Your eligible amount");
+      $("resultAmount").textContent = r.pending_confirmation ? T("One step left") : "—";
       $("resultSub").textContent = r.pending_confirmation
-        ? "Check the values in the chat and confirm — your result appears right after."
-        : missing.length ? "Still needed: " + missing.map((k) => (FIELD_LABELS[k] || k).toLowerCase()).join(", ") : "";
+        ? T("Check the values in the chat and confirm — your result appears right after.")
+        : missing.length ? T("Still needed:") + " " + missing.map((k) => T(FIELD_LABELS[k] || k).toLowerCase()).join(", ") : "";
       $("simCard").hidden = true;
       $("lendersCard").hidden = true;
     }
@@ -204,20 +224,20 @@
     renderQuick(r.pending_confirmation ? "__confirm__" : r.next_field, profile, ev);
 
     const lb = $("latencyBadge");
-    lb.textContent = `Latency ${(r.latency_ms / 1000).toFixed(1)} s`;
+    lb.textContent = `${T("Latency")} ${(r.latency_ms / 1000).toFixed(1)} s`;
     lb.className = "badge " + (r.latency_ms < 15000 ? "badge-ok" : "badge-bad");
     const pb = $("piiBadge");
     if (r.pii_masked && r.pii_masked.length) { pb.textContent = `PII masked: ${r.pii_masked.join(", ")}`; pb.className = "badge badge-warn"; }
-    else { pb.textContent = "PII guard on"; pb.className = "badge badge-muted"; }
+    else { pb.textContent = T("PII guard on"); pb.className = "badge badge-muted"; }
     const langName = [...langSelect.options].find((o) => o.value === r.language);
-    $("langBadge").textContent = "Language " + (r.language === "en" ? "English" : langName ? langName.textContent : r.language);
+    $("langBadge").textContent = T("Language") + " " + (r.language === "en" ? "English" : langName ? langName.textContent : r.language);
     setModeBadge(r.mode, r.model);
   }
   function setModeBadge(mode, model) {
     if (mode) { currentMode = mode; currentModel = model; }
     const mb = $("modeBadge");
     const short = (model || "").split("/").pop().replace(":free", "");
-    mb.textContent = mode === "genai" ? `AI · ${short}` : mode && mode.includes("error") ? "Rules engine (AI busy)" : "Rules engine";
+    mb.textContent = mode === "genai" ? `AI · ${short}` : mode && mode.includes("error") ? T("Rules engine") + " (AI busy)" : T("Rules engine");
     mb.className = "badge " + (mode === "genai" ? "badge-ok" : "badge-warn");
   }
 
@@ -232,11 +252,11 @@
     a.min = String(step); a.max = String(Math.ceil(top / step) * step); a.step = String(step); a.value = String(profile.loan_amount);
     t.min = String(p.tenure[0]); t.max = String(p.tenure[1]); t.value = String(Math.round(profile.tenure_years || p.tenure[0]));
     $("simCard").hidden = false;
-    paintSim(); $("simOut").textContent = "Move the sliders to see your eligibility change instantly.";
+    paintSim(); $("simOut").textContent = T("Move the sliders to see your eligibility change instantly.");
   }
   function paintSim() {
     $("simAmountVal").textContent = fmtINR(+$("simAmount").value);
-    $("simTenureVal").textContent = `${$("simTenure").value} years`;
+    $("simTenureVal").textContent = `${$("simTenure").value} ${T("years")}`;
   }
   function onSim() {
     paintSim();
@@ -248,7 +268,7 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const ev = await res.json();
         const cls = { ELIGIBLE: "v-ELIGIBLE", CONDITIONAL: "v-CONDITIONAL", NOT_ELIGIBLE: "v-NOT_ELIGIBLE" }[ev.status] || "";
-        $("simOut").innerHTML = `<span class="verified ${cls}">${esc(VERDICT[ev.status] || ev.status)}</span><br>` +
+        $("simOut").innerHTML = `<span class="verified ${cls}">${esc(T(VERDICT[ev.status] || ev.status))}</span><br>` +
           `EMI <b>${esc(fmtINR(ev.emi))}</b>/month · FOIR <b>${ev.foir != null ? Math.round(ev.foir * 100) + "%" : "–"}</b>` +
           (ev.status !== "ELIGIBLE" && ev.max_eligible_amount ? ` · max <b>${esc(fmtINR(ev.max_eligible_amount))}</b>` : "");
       } catch (e) { $("simOut").textContent = "Couldn't recalculate right now (" + e.message + ")."; }
@@ -258,13 +278,13 @@
   $("simTenure").addEventListener("input", onSim);
 
   // ------------------------------------------------------------ send / reset
-  async function send(text, langOverride) {
+  async function send(text, langOverride, display) {
     text = (text || input.value).trim();
     if (!text || busy) return;
     busy = true; sendBtn.disabled = true;
     input.value = ""; autosize();
     $("quick").innerHTML = "";
-    addMessage("user", text);
+    addMessage("user", display || text);
     const typing = addTyping();
     try {
       const res = await fetch("/api/chat", {
@@ -279,6 +299,8 @@
       const r = await res.json();
       sessionId = r.session_id;
       typing.remove();
+      lastDetected = r.language;
+      if (langSelect.value === "auto") setUILang(r.language, false);
       const src = r.reply_source === "genai+rules-template" ? "AI + rules" : r.mode === "genai" ? "AI" : "rules";
       addMessage("bot", r.reply, `${src} · ${(r.latency_ms / 1000).toFixed(1)} s`, r.verified_verdict);
       updateDashboard(r);
@@ -300,12 +322,10 @@
     if (sessionId) {
       try { await fetch("/api/reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session_id: sessionId }) }); } catch {}
     }
-    sessionId = null; lastProfile = {}; lastEval = null; lastMissing = [];
+    sessionId = null; lastProfile = {}; lastEval = null; lastMissing = []; lastR = null;
     messagesEl.querySelectorAll(".msg").forEach((m, i) => { if (i > 0) m.remove(); });
     $("profileList").innerHTML = ""; $("profileProgress").textContent = "";
-    $("statusPill").className = "pill pill-idle"; $("statusPill").textContent = "Awaiting details";
-    $("resultLabel").textContent = "Your eligible amount"; $("resultAmount").textContent = "—";
-    $("resultSub").textContent = "Share your details and your eligibility appears here.";
+    paintIdle();
     $("gaugeScore").textContent = "–"; $("gaugeFill").style.strokeDashoffset = "157";
     ["kpiEmi", "kpiRate", "kpiTenure", "kpiFoir"].forEach((id) => ($(id).textContent = "–"));
     $("checksList").innerHTML = ""; $("checksEmpty").hidden = false;
@@ -315,6 +335,11 @@
     renderQuick("loan_type", {}, null);
   }
   resetBtn.addEventListener("click", resetAll);
+  function paintIdle() {
+    $("statusPill").className = "pill pill-idle"; $("statusPill").textContent = T("Awaiting details");
+    $("resultLabel").textContent = T("Your eligible amount"); $("resultAmount").textContent = "—";
+    $("resultSub").textContent = T("Share your details and your eligibility appears here.");
+  }
 
   // ------------------------------------------------------------ voice (Sarvam via backend, browser fallback)
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -338,6 +363,7 @@
         const spoken = (language_code || "").split("-")[0];
         const known = [...langSelect.options].map((o) => o.value);
         const lang = langSelect.value === "auto" && known.includes(spoken) ? spoken : undefined;
+        if (lang) setUILang(lang);
         if (transcript && transcript.trim()) { input.value = transcript.trim(); autosize(); send(undefined, lang); }
       } catch (e) { addMessage("bot", "Sorry, I couldn't hear that clearly. Please try again or type. (" + e.message + ")"); }
       finally { input.placeholder = "Type your message…"; }
@@ -400,6 +426,7 @@
     $("formPanel").hidden = !form;
     if (form) $("fAmount").focus(); else input.focus();
   }
+  langSelect.addEventListener("change", () => setUILang(langSelect.value === "auto" ? lastDetected : langSelect.value));
   $("tabChat").addEventListener("click", () => showTab("chat"));
   $("tabForm").addEventListener("click", () => showTab("form"));
 

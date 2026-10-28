@@ -15,6 +15,16 @@ const onScroll = () => nav.classList.toggle("solid", window.scrollY > 40);
 window.addEventListener("scroll", onScroll, { passive: true });
 onScroll();
 
+// ------------------------------------------------------------ jury brief: criterion tabs -> "how we did it" panels
+const scoreTabs = [...document.querySelectorAll(".scorecard .score")];
+scoreTabs.forEach((tab) => tab.addEventListener("click", () => {
+  scoreTabs.forEach((t) => {
+    const on = t === tab;
+    t.setAttribute("aria-selected", String(on));
+    document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+  });
+}));
+
 // ------------------------------------------------------------ scroll progress shared with the 3D stage
 // 0 = hero; 1..5 = story chapters; >5 = past the story (content sections cover the stage).
 export function storyProgress() {

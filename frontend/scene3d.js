@@ -3,7 +3,7 @@
 import * as THREE from "/static/vendor/three.module.min.js";
 import { RoomEnvironment } from "/static/vendor/RoomEnvironment.js";
 
-const INK = 0x484860, LAVENDER = 0xa8a8c0, ICE = 0xdceeff, FOG = 0xa0a5b1;
+const INK = 0x484860, LAVENDER = 0xa8a8c0, ICE = 0xdceeff, FOG = 0xe6ecf5;
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const smooth = (t) => t * t * (3 - 2 * t);
 const easeOut = (t) => 1 - (1 - t) ** 3;
@@ -25,12 +25,12 @@ export function initScene(canvas, labelsEl, progressFn) {
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.2;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(FOG, 0.05);
+  scene.fog = new THREE.FogExp2(FOG, 0.03);
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
 
@@ -39,7 +39,7 @@ export function initScene(canvas, labelsEl, progressFn) {
   const look = new THREE.Vector3(...KEYS[0].look);
 
   // ---------- light: soft ambient + key with real shadows + cool rim
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x80869a, 1.1));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xb4c2dc, 1.3));
   const key = new THREE.DirectionalLight(0xffffff, 2.4);
   key.position.set(1.5, 9, 3);
   key.castShadow = true;
@@ -51,7 +51,7 @@ export function initScene(canvas, labelsEl, progressFn) {
   rim.position.set(-6, 2, -5);
   scene.add(rim);
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.07 }));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.1 }));
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -2.05;
   floor.receiveShadow = true;
@@ -74,7 +74,7 @@ export function initScene(canvas, labelsEl, progressFn) {
   crystalGeo.scale(1, 1.18, 1);
   const ice = new THREE.MeshPhysicalMaterial({
     color: 0xf4f8ff, metalness: 0, roughness: 0.14, transmission: 0.92, thickness: 1.8, ior: 1.31, specularIntensity: 1,
-    attenuationColor: new THREE.Color(ICE), attenuationDistance: 3.2, iridescence: 0.5, iridescenceIOR: 1.25,
+    attenuationColor: new THREE.Color(0x8fc0ff), attenuationDistance: 2.2, iridescence: 0.5, iridescenceIOR: 1.25,
     iridescenceThicknessRange: [120, 420], clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.35,
     flatShading: true, transparent: true, opacity: 0,
   });
@@ -102,7 +102,7 @@ export function initScene(canvas, labelsEl, progressFn) {
   const shieldGeo = new THREE.ExtrudeGeometry(sh, { depth: 0.12, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.035, bevelSegments: 4, curveSegments: 28 });
   shieldGeo.center();
   const shieldMat = new THREE.MeshPhysicalMaterial({ color: 0xe9edf6, metalness: 0.75, roughness: 0.18, clearcoat: 1, envMapIntensity: 1.8,
-    emissive: new THREE.Color(0x2a3047), emissiveIntensity: 0.25, transparent: true, opacity: 0 });
+    emissive: new THREE.Color(0x2f57c4), emissiveIntensity: 0.35, transparent: true, opacity: 0 });
   const shield = new THREE.Mesh(shieldGeo, shieldMat);
   shield.scale.setScalar(1.15);
   shield.castShadow = true;
@@ -147,7 +147,7 @@ export function initScene(canvas, labelsEl, progressFn) {
   for (let i = 0; i < D; i++) dust.set([(Math.random() - 0.5) * 26, Math.random() * 9 - 2, (Math.random() - 0.5) * 18], i * 3);
   const dustGeo = new THREE.BufferGeometry();
   dustGeo.setAttribute("position", new THREE.BufferAttribute(dust, 3));
-  const dustPts = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.03, transparent: true, opacity: 0.55, depthWrite: false }));
+  const dustPts = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0x7fa6e6, size: 0.03, transparent: true, opacity: 0.6, depthWrite: false }));
   scene.add(dustPts);
 
   // ---------- chapter 2: frosted profile indicators
@@ -258,7 +258,7 @@ export function initScene(canvas, labelsEl, progressFn) {
     ice.opacity = solid;
     shieldMat.opacity = clamp(build * 1.2);
     wireMat.opacity = build * (0.55 - 0.35 * solid);
-    cageMat.opacity = build * 0.07;
+    cageMat.opacity = build * 0.12;
     pMat.opacity = 0.7 - 0.5 * solid;
     orbits.forEach((o) => { o.material.opacity = build * (0.45 * Math.max(w(0), w(1), w(4), w(5))); });
 

@@ -21,6 +21,7 @@
       <span>LoanMitra</span>
     </a>
     <nav class="nav-links" aria-label="Sections">
+      <a href="#brief">Jury brief</a>
       <a href="#story">How it works</a>
       <a href="#problem">Problem</a>
       <a href="#relevance">Relevance</a>
@@ -38,7 +39,7 @@
       <p class="lead">Multilingual loan guidance in English, हिंदी and 10 more Indian languages — every bank rule checked transparently, with EMI estimates and a clear plan if you're not there yet.</p>
       <div class="cta">
         <a class="btn btn-solid" href="/chat">Check Loan Eligibility</a>
-        <a class="btn btn-outline" href="#story">Explore How It Works</a>
+        <a class="btn btn-outline" href="#brief">See the Jury Brief</a>
       </div>
     </div>
     <dl class="hero-meta">
@@ -48,6 +49,80 @@
       <div><dt>CIBIL IMPACT</dt><dd>None</dd></div>
     </dl>
     <p class="scroll-hint">SCROLL ↓</p>
+  </section>
+
+  <!-- ================= Jury brief: the whole concept on one screen ================= -->
+  <section class="section brief" id="brief">
+    <div class="container">
+      <div class="brief-head">
+        <div>
+          <span class="kicker">Jury brief · the whole idea on one screen</span>
+          <h2>An AI loan officer that explains every decision, in your language.</h2>
+        </div>
+        <a class="btn btn-solid" href="/chat">Try it live →</a>
+      </div>
+      <div class="concept">
+        <div><p class="meta">Problem</p><p>Applicants can't tell whether they qualify or why they were rejected. Bank staff answer the same eligibility questions all day.</p></div>
+        <div><p class="meta">Our solution</p><p>A single AI agent collects your details by chat, voice or bank statement. A transparent rules engine decides; the AI explains why and what to do next, compared across 4 lenders.</p></div>
+        <div><p class="meta">Market gap</p><p>Bank calculators return one number, in English, with no reasons. Nobody explains the rules, verifies income from a statement or plans the fix in 12 Indian languages.</p></div>
+      </div>
+      <div class="scorecard" role="tablist" aria-label="Judging criteria">
+        <button type="button" class="score" role="tab" id="tab-relevance" aria-controls="how-relevance" aria-selected="true">
+          <span class="score-top"><b>Relevance</b><span>30</span></span>
+          <ul><li>Every line of the TCS brief delivered</li><li>Verdict + reasons + next steps for 4 loan types</li><li>Under 15 s per reply · synthetic data, simulated APIs</li></ul>
+          <span class="how-link">How we did it ↓</span>
+        </button>
+        <button type="button" class="score" role="tab" id="tab-innovation" aria-controls="how-innovation" aria-selected="false">
+          <span class="score-top"><b>Innovation &amp; creativity</b><span>15</span></span>
+          <ul><li>Bank-statement check catches “I earn 1.2 L” vs ₹82k actual</li><li>Confirm-before-verdict + improvement plan, not just yes / no</li><li>Whole UI switches to the language you speak</li></ul>
+          <span class="how-link">How we did it ↓</span>
+        </button>
+        <button type="button" class="score" role="tab" id="tab-feasibility" aria-controls="how-feasibility" aria-selected="false">
+          <span class="score-top"><b>Feasibility &amp; scalability</b><span>15</span></span>
+          <ul><li>Policy is JSON — a bank plugs in its own rules and lenders</li><li>Docker, rate limits, PII masking, works with no AI at all</li><li>Real bureau / Account Aggregator APIs slot in behind the simulated ones</li></ul>
+          <span class="how-link">How we did it ↓</span>
+        </button>
+        <button type="button" class="score" role="tab" id="tab-ai" aria-controls="how-ai" aria-selected="false">
+          <span class="score-top"><b>Use of AI / ML / GenAI</b><span>20</span></span>
+          <ul><li>Tool-using LLM agent (Nemotron / Claude) with model fallback</li><li>Speech-to-text, text-to-speech and translation for 12 languages</li><li>AI understands &amp; explains; deterministic engine decides — no hallucinated verdicts</li></ul>
+          <span class="how-link">How we did it ↓</span>
+        </button>
+        <button type="button" class="score" role="tab" id="tab-team" aria-controls="how-team" aria-selected="false">
+          <span class="score-top"><b>Team work</b><span>20</span></span>
+          <ul><li>5 members, one module each: rules · AI agent · voice &amp; languages · UI · privacy &amp; testing</li><li>Shared schema + tool contract let all 5 build in parallel</li><li>Each member demos the part they built</li></ul>
+          <span class="how-link">How we did it ↓</span>
+        </button>
+      </div>
+      <div class="how-wrap">
+        <div class="how" role="tabpanel" id="how-relevance" aria-labelledby="tab-relevance">
+          <div class="how-head"><span class="meta">How we did it · Relevance · 30 marks</span></div>
+          <div class="how-row"><b>Single-agent chatbot</b><p>One LLM agent holds the conversation and works through 4 tools: update the applicant profile, run a what-if, compare lenders, list documents. Session memory keeps context across turns.</p><span>Chat page → type one sentence</span></div><div class="how-row"><b>Evaluates input against eligibility rules</b><p><code>rules.py</code> applies <code>data/rules.json</code>: age at maturity, minimum income, CIBIL cut-off, FOIR (EMIs ÷ income), loan-to-value, tenure, amount range, income multiple — for personal, home, car and education loans.</p><span>Rule checks panel shows every rule with your numbers</span></div><div class="how-row"><b>Personalised feedback &amp; next steps</b><p>The engine searches for the largest amount and the tenure that pass, the EMI you'd need to close, or a co-applicant. Every tip is re-run through the engine before it is shown, so advice is always true.</p><span>“How to improve your chances” card</span></div><div class="how-row"><b>80%+ accuracy</b><p>The decision is deterministic, never guessed by AI. Measured: 36/36 labelled multilingual conversations, 17/17 rule-boundary cases, 0 violations across 30,000 randomly generated profiles.</p><span><code>tests/</code> + <code>eval/run_eval.py</code></span></div><div class="how-row"><b>Reply under 15 seconds</b><p>Hard 13-second wall-clock budget per reply. If the AI model is slow, the engine's own explanation is sent instead (“fast path”). Live replies measured at 4–12 s.</p><span>Latency badge under the result card</span></div><div class="how-row"><b>Data considerations</b><p>Synthetic applicants (<code>generate_synthetic.py</code>), simulated APIs (bureau, Account Aggregator, per-lender eligibility), preprocessing of “5 lacs”, “12 LPA”, “70 hazaar”, Hindi digits, PII masking.</p><span>Relevance checklist below</span></div>
+        </div>
+        <div class="how" role="tabpanel" id="how-innovation" aria-labelledby="tab-innovation" hidden>
+          <div class="how-head"><span class="meta">How we did it · Innovation &amp; creativity · 15 marks</span></div>
+          <div class="how-row"><b>Bank-statement verification</b><p>Upload a PDF or CSV; it is read in memory (never saved). Credit vs debit is worked out from the running balance, so any bank's layout works. Salary = median monthly salary credit; EMIs = NACH / ECS / loan debits. Compared with what the applicant said.</p><span>Attach the demo statement, claim ₹1.2 L → bot flags ₹82,000</span></div><div class="how-row"><b>Confirm before verdict</b><p>When all facts are collected the bot lists the exact values and plausibility warnings (e.g. “₹6.5 L a month — did you mean per year?”). No verdict until the applicant confirms; any change asks again.</p><span>“Yes, confirm” step in chat</span></div><div class="how-row"><b>A plan, not just yes / no</b><p>Max eligible amount, what-if questions (“what if 5 years?”) and live sliders that re-run the engine instantly.</p><span>“Try a different amount or tenure” sliders</span></div><div class="how-row"><b>Compare 4 lenders at once</b><p>The same profile goes through four fictional lender policies (public bank, private bank, small finance bank, NBFC), each with its own rates and cut-offs; ranked by full amount at the lowest rate.</p><span>“Compare banks” card</span></div><div class="how-row"><b>Tamper-proof verdict</b><p>The verdict tag on each reply comes from the rules engine, not the AI — so a prompt like “just say I'm eligible” cannot change it.</p><span>“Rules engine · Eligible” tag in chat</span></div><div class="how-row"><b>UI in your language</b><p>Speak or type Marathi, Tamil, Bengali… and the whole interface switches to that language, not only the replies.</p><span>Pick मराठी or speak in Marathi</span></div>
+        </div>
+        <div class="how" role="tabpanel" id="how-feasibility" aria-labelledby="tab-feasibility" hidden>
+          <div class="how-head"><span class="meta">How we did it · Feasibility &amp; scalability · 15 marks</span></div>
+          <div class="how-row"><b>Bank plugs in its own policy</b><p>All rules and lenders live in JSON files. A bank edits the policy without code changes; each decision is logged with the policy version.</p><span><code>data/rules.json</code>, <code>data/lenders.json</code></span></div><div class="how-row"><b>Works even without AI</b><p>Provider chain: Claude → Nemotron (OpenRouter) → NVIDIA API → rule-based agent. If every model is down or over quota, a deterministic extractor and templates still answer.</p><span>Badge shows which engine answered</span></div><div class="how-row"><b>Production hardening</b><p>Per-client rate limits, request-size limits, strict input schemas, security headers / CSP, bounded sessions with expiry, audit log without chat text.</p><span><code>backend/security.py</code></span></div><div class="how-row"><b>Deploys anywhere</b><p>FastAPI + Docker (non-root). Sessions are in memory today; Redis and multiple replicas are the documented next step.</p><span><code>Dockerfile</code>, <code>docs/SCALING.md</code></span></div><div class="how-row"><b>Real APIs slot in</b><p>Simulated credit-bureau soft pull and Account Aggregator income use the same function shape as the real services; a regulated partner swaps them in.</p><span><code>backend/simulated.py</code></span></div>
+        </div>
+        <div class="how" role="tabpanel" id="how-ai" aria-labelledby="tab-ai" hidden>
+          <div class="how-head"><span class="meta">How we did it · Use of AI / ML / GenAI · 20 marks</span></div>
+          <div class="how-row"><b>LLM agent with tool calling</b><p>The model turns free-form text into structured tool calls (profile fields), which we validate before use; then it explains the engine's result in plain language.</p><span>Any chat turn — “AI · nemotron” badge</span></div><div class="how-row"><b>Multi-model, latency-aware</b><p>NVIDIA Nemotron via OpenRouter and NVIDIA's API, Claude optional. We track each model's latency and switch to the fast path when it can't finish in time.</p><span><code>backend/agent.py</code></span></div><div class="how-row"><b>Speech AI</b><p>Sarvam speech-to-text and text-to-speech for Indian languages; browser speech as fallback.</p><span>Mic button → speak Hindi / Marathi</span></div><div class="how-row"><b>Translation for 12 languages</b><p>English, Hindi and Hinglish handled natively by the model; 9 regional languages translated in and out (Sarvam). Language detected from the script, Marathi vs Hindi from common words.</p><span>Type in Tamil or Bengali</span></div><div class="how-row"><b>NLP preprocessing</b><p>Indian amounts and number words normalised (“5 lacs”, “12 LPA”, “पचास हज़ार”); clause-level extractor tells your income from your father's or your EMIs from the new loan.</p><span><code>backend/numbers.py</code>, <code>extractor.py</code></span></div><div class="how-row"><b>Responsible AI</b><p>AI understands and explains; it never decides. PII (PAN, Aadhaar, phone, account) is masked before any model sees the text.</p><span>Type a PAN → “PII masked” badge</span></div>
+        </div>
+        <div class="how" role="tabpanel" id="how-team" aria-labelledby="tab-team" hidden>
+          <div class="how-head"><span class="meta">How we did it · Team work · 20 marks</span></div>
+          <div class="how-row"><b>Member 1 · Rules engine &amp; data</b><p>Eligibility policy and engine (<code>rules.py</code>, <code>rules.json</code>), 4-lender panel, synthetic applicants, simulated bureau / Account Aggregator / lender APIs.</p><span>Rule checks + Compare banks</span></div><div class="how-row"><b>Member 2 · GenAI agent</b><p>Tool-calling LLM agent, model chain with fallback, 13-second budget and fast path, confirm-before-verdict flow, number &amp; fact extraction.</p><span>A full chat conversation</span></div><div class="how-row"><b>Member 3 · Voice &amp; languages</b><p>Sarvam speech-to-text, text-to-speech and translation, language detection (incl. Marathi vs Hindi), interface translated into 12 languages.</p><span>Speak Marathi → UI switches</span></div><div class="how-row"><b>Member 4 · Frontend &amp; UX</b><p>Landing page with the 3D story and jury brief, chat page, quick form, live result dashboard, what-if sliders, EMI planner.</p><span>Landing page + quick form</span></div><div class="how-row"><b>Member 5 · Privacy, security &amp; testing</b><p>Bank-statement analysis, PII masking, rate limits and security headers, audit log, test suite and evaluation, Docker and documentation.</p><span>Statement check + test results</span></div><div class="how-row"><b>How we worked together</b><p>We fixed the applicant-profile schema and the agent's 4 tools on day one, so all five built in parallel against one contract; the shared test suite ran on every change.</p><span><code>docs/ARCHITECTURE.md</code>, <code>tests/</code></span></div>
+        </div>
+      </div>
+      <div class="proof">
+        <div><b>36 / 36</b><span>labelled conversations correct</span></div>
+        <div><b>0</b><span>errors in 30,000 fuzzed profiles</span></div>
+        <div><b>4–12 s</b><span>live AI reply time</span></div>
+        <div><b>12</b><span>Indian languages, typed or spoken</span></div>
+        <div><b>0</b><span>files or chats stored</span></div>
+      </div>
+    </div>
   </section>
 
   <!-- ================= Story (scroll-driven 3D) ================= -->
@@ -164,26 +239,6 @@
             <tr><td>Privacy compliance via synthetic data</td><td>Synthetic data only; PII masked before processing; nothing stored</td><td><span class="pill ok">✓ Done</span></td></tr>
           </tbody>
         </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= Judging criteria ================= -->
-  <section class="section" id="criteria">
-    <div class="container">
-      <span class="kicker">Judging criteria</span>
-      <h2>How LoanMitra answers each criterion</h2>
-      <div class="criteria">
-        <div class="crit"><div class="crit-top"><b>Relevance</b><span class="marks">30 marks</span></div><div class="bar"><span class="w30"></span></div>
-          <ul><li>Every line of the brief delivered (table above)</li><li>Solves the stated pain: applicants, bank staff, rework</li><li>Indian context: CIBIL, FOIR, LTV, lakh / crore</li></ul></div>
-        <div class="crit"><div class="crit-top"><b>AI / ML / GenAI</b><span class="marks">20 marks</span></div><div class="bar"><span class="w20"></span></div>
-          <ul><li>Tool-using AI agent with a multi-model chain</li><li>Speech AI + translation for 12 languages</li><li>Rule-based reasoning the AI can't override</li></ul></div>
-        <div class="crit"><div class="crit-top"><b>Teamwork</b><span class="marks">20 marks</span></div><div class="bar"><span class="w20"></span></div>
-          <ul><li>Clear modules: rules · agent · UI &amp; voice · tests · pitch</li><li>Each member owns and demos one module</li><li>Shared tool interface let us build in parallel</li></ul></div>
-        <div class="crit"><div class="crit-top"><b>Innovation &amp; creativity</b><span class="marks">15 marks</span></div><div class="bar"><span class="w15"></span></div>
-          <ul><li>Tells you <i>why</i> and gives a plan, not just yes / no</li><li>Same applicant compared across 4 lenders</li><li>Verified-verdict chip defeats prompt injection</li></ul></div>
-        <div class="crit"><div class="crit-top"><b>Feasibility &amp; scalability</b><span class="marks">15 marks</span></div><div class="bar"><span class="w15"></span></div>
-          <ul><li>Policy is JSON — a bank swaps in its own rules</li><li>Docker, rate limits, works even without AI</li><li>Real APIs plug in behind the simulated ones</li></ul></div>
       </div>
     </div>
   </section>

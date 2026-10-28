@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LoanMitra — Loan Eligibility Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">₹</div>
+      <div>
+        <div class="brand-name">LoanMitra</div>
+        <div class="brand-sub">Automated Loan Eligibility Assistant · Soft check, no credit enquiry</div>
+      </div>
+    </div>
+    <div class="controls">
+      <span id="modeBadge" class="badge badge-muted" title="Which brain is answering">checking…</span>
+      <select id="langSelect" class="select" title="Reply language">
+        <option value="auto">Auto-detect</option>
+        <option value="en">English</option>
+        <option value="hi">हिंदी</option>
+        <option value="hinglish">Hinglish</option>
+      </select>
+      <button id="ttsBtn" class="icon-btn" title="Read replies aloud" aria-pressed="false">🔈</button>
+      <button id="resetBtn" class="btn-ghost">New application</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ================= Chat ================= -->
+    <section class="chat card">
+      <div id="messages" class="messages" aria-live="polite">
+        <div class="msg bot">
+          <div class="bubble">
+            Namaste! I'm <b>LoanMitra</b>. Tell me about the loan you need and a little about yourself, and I'll check your eligibility instantly — with reasons and what you can do next.<br><br>
+            You can type in English, हिंदी or Hinglish, or tap the mic to speak. Try one of the sample applicants below.
+          </div>
+        </div>
+      </div>
+
+      <div id="samples" class="samples"></div>
+
+      <form id="composer" class="composer" autocomplete="off">
+        <button type="button" id="micBtn" class="icon-btn mic" title="Speak (en-IN / hi-IN)">🎤</button>
+        <textarea id="input" rows="1" placeholder="e.g. I'm 30, salaried, earn 60k/month, need 5 lakh personal loan for 3 years…"></textarea>
+        <button type="submit" id="sendBtn" class="btn-primary">Send</button>
+      </form>
+      <div class="hint">Nothing you type is stored. PAN / Aadhaar / phone numbers are masked automatically before processing.</div>
+    </section>
+
+    <!-- ================= Dashboard ================= -->
+    <aside class="dash">
+      <div class="card status-card" id="statusCard">
+        <div class="gauge-wrap">
+          <svg class="gauge" viewBox="0 0 120 70" aria-hidden="true">
+            <path class="gauge-track" d="M10 65 A50 50 0 0 1 110 65" />
+            <path id="gaugeFill" class="gauge-fill" d="M10 65 A50 50 0 0 1 110 65" />
+          </svg>
+          <div class="gauge-label"><span id="gaugeScore">–</span><small>eligibility strength</small></div>
+        </div>
+        <div class="status-text">
+          <div id="statusPill" class="pill pill-idle">Awaiting details</div>
+          <p id="statusSummary" class="summary">Share your details in the chat and the verdict appears here, with every rule that was checked.</p>
+        </div>
+      </div>
+
+      <div class="card kpis">
+        <div class="kpi"><small>Indicative EMI</small><strong id="kpiEmi">–</strong></div>
+        <div class="kpi"><small>FOIR</small><strong id="kpiFoir">–</strong></div>
+        <div class="kpi"><small>Max eligible</small><strong id="kpiMax">–</strong></div>
+        <div class="kpi"><small>Rate</small><strong id="kpiRate">–</strong></div>
+      </div>
+
+      <div class="card">
+        <h3>Applicant profile <span id="profileProgress" class="muted"></span></h3>
+        <ul id="profileList" class="profile-list"></ul>
+      </div>
+
+      <div class="card">
+        <h3>Rule checks</h3>
+        <ul id="checksList" class="checks"></ul>
+        <p class="muted" id="checksEmpty">Rules run the moment enough data is available.</p>
+      </div>
+
+      <div class="card" id="stepsCard" hidden>
+        <h3>What-if &amp; next steps</h3>
+        <ul id="stepsList" class="steps"></ul>
+      </div>
+
+      <div class="card" id="docsCard" hidden>
+        <h3>Documents to keep ready</h3>
+        <ul id="docsList" class="docs"></ul>
+      </div>
+
+      <div class="meta">
+        <span id="latencyBadge" class="badge badge-muted">⏱ –</span>
+        <span id="piiBadge" class="badge badge-muted">🔒 PII guard on</span>
+        <span id="langBadge" class="badge badge-muted">🌐 –</span>
+      </div>
+    </aside>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

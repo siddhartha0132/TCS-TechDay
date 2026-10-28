@@ -140,5 +140,9 @@ if FRONTEND.exists():
     app.mount("/static", StaticFiles(directory=str(FRONTEND)), name="static")
 
     @app.get("/")
-    def index():
-        return FileResponse(str(FRONTEND / "index.html"))
+    def landing():
+        return FileResponse(str(FRONTEND / "landing.html"))
+
+    @app.get("/chat")
+    def chat_page():
+        return FileResponse(str(FRONTEND / "chat.html"))

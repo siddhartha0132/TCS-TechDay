@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LoanMitra — Loan eligibility, explained</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/landing.css">
+</head>
+<body>
+  <!-- ================= Nav ================= -->
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="/" aria-label="LoanMitra home"><span class="logo">₹</span>LoanMitra</a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="#problem">Problem</a>
+        <a href="#relevance">Relevance</a>
+        <a href="#gap">Market gap</a>
+        <a href="#solution">Solution</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="btn btn-primary btn-sm" href="/chat">Check eligibility →</a>
+    </div>
+  </header>
+
+  <!-- ================= Hero ================= -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="eyebrow">TCS Technology Day · Banking · Automated Loan Eligibility Chatbot</span>
+        <h1>Know if you'll get the loan <span class="hl">before</span> you apply — and exactly what to fix if not.</h1>
+        <p class="lead">LoanMitra is a single-agent AI chatbot that checks your loan eligibility against transparent bank rules in seconds — in English, हिंदी or Hinglish, by text or voice.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary btn-lg" href="/chat">Check my eligibility →</a>
+          <a class="btn btn-ghost btn-lg" href="#solution">See how it works</a>
+        </div>
+        <ul class="ticks">
+          <li>No impact on CIBIL</li>
+          <li>Answer in under 15 s</li>
+          <li>PAN / Aadhaar auto-masked</li>
+        </ul>
+      </div>
+
+      <div class="mock" aria-label="Example conversation">
+        <div class="mock-head"><span class="logo sm">₹</span><b>LoanMitra</b><span class="online">● online</span></div>
+        <div class="mock-body">
+          <div class="b user">Mujhe 60 lakh ka home loan chahiye, flat 70 lakh ka hai. Salary 1.1 lakh, EMI 25k, CIBIL 720.</div>
+          <div class="b bot">
+            <span class="chip warn">🔒 Rules-engine verdict: Conditionally eligible</span>
+            ₹60 L is above your limit today — but you <b>are eligible for up to ₹40.9 L</b> over 20 years.
+            <ul>
+              <li>Repayment ratio 70% vs 55% limit</li>
+              <li>Extend to 27 years → about ₹45 L</li>
+            </ul>
+          </div>
+          <div class="b user">What if my wife joins? She earns 50k.</div>
+          <div class="b bot"><span class="chip ok">What-if</span> Then you're eligible for up to <b>₹56 L</b> — limited by the 80% loan-to-value rule.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 1. Problem ================= -->
+  <section class="section" id="problem">
+    <div class="container">
+      <span class="kicker">01 · The problem</span>
+      <h2>Loan eligibility is a black box — for applicants and for banks.</h2>
+      <div class="stat-band">
+        <div class="stat"><b>~30%</b><span>of Indians have faced a loan or card rejection — many never told why<sup>1</sup></span></div>
+        <div class="stat"><b>1 number</b><span>is all a typical online eligibility calculator returns — no reasons, no plan<sup>2</sup></span></div>
+        <div class="stat"><b>Every</b><span>blind application risks a hard credit enquiry and another rejection</span></div>
+      </div>
+      <div class="cards-3">
+        <div class="card">
+          <div class="ico">🧾</div>
+          <h3>Applicants</h3>
+          <p>Criteria like FOIR, LTV, age-at-maturity and CIBIL cut-offs are hard to interpret. Static forms don't adapt, and a rejection rarely says what to change.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🏦</div>
+          <h3>Bank staff</h3>
+          <p>Hours go into answering the same eligibility and document questions, and into reworking applications that were never viable.</p>
+        </div>
+        <div class="card">
+          <div class="ico">📉</div>
+          <h3>The business</h3>
+          <p>Slow, inconsistent guidance means drop-offs, application errors and lost customers — the exact pain the TCS problem statement describes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 2. Relevance ================= -->
+  <section class="section alt" id="relevance">
+    <div class="container">
+      <span class="kicker">02 · Relevance to the problem statement</span>
+      <h2>Every requirement in the brief, delivered — with proof.</h2>
+      <div class="table-wrap">
+        <table class="req">
+          <thead><tr><th>TCS asked for</th><th>What LoanMitra does</th><th>Proof</th></tr></thead>
+          <tbody>
+            <tr><td>Single-agent chatbot that interacts with applicants</td><td>One AI agent with 3 tools: update profile, what-if, documents</td><td><span class="pill ok">Live</span></td></tr>
+            <tr><td>Evaluates input against eligibility rules</td><td>Transparent rules engine: age, income, CIBIL, FOIR, LTV, tenure, income multiple — 4 loan types</td><td><span class="pill ok">0 errors / 30,000 fuzzed profiles</span></td></tr>
+            <tr><td>Personalised feedback & next steps</td><td>Max eligible amount, tenure that works, EMIs to reduce, co-applicant income needed — only shown when true</td><td><span class="pill ok">Every suggestion re-verified</span></td></tr>
+            <tr><td>80%+ accuracy</td><td>Verdict always computed by the rules engine; AI only understands and explains</td><td><span class="pill ok">36 / 36 labelled conversations</span></td></tr>
+            <tr><td>Response under 15 seconds</td><td>Hard 13 s budget per reply; if a model is slow, the engine answers</td><td><span class="pill ok">4–12 s live</span></td></tr>
+            <tr><td>Synthetic data, privacy compliance</td><td>300 generated applicants; PII masked before processing; nothing stored</td><td><span class="pill ok">Masking tests pass</span></td></tr>
+            <tr><td>Natural-language understanding (GenAI)</td><td>English, हिंदी, Hinglish — typed or spoken (Sarvam AI speech)</td><td><span class="pill ok">Hindi voice round-trip</span></td></tr>
+            <tr><td>Chat UI, documentation, demo</td><td>This site + chatbot, architecture docs, demo script, test suite</td><td><span class="pill ok">On GitHub</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3. Market gap ================= -->
+  <section class="section" id="gap">
+    <div class="container">
+      <span class="kicker">03 · The market gap</span>
+      <h2>Tools exist. None of them tell you <i>why</i> — or how to get there.</h2>
+      <p class="sub">By tool category, from public descriptions of typical products; individual products vary.</p>
+      <div class="table-wrap">
+        <table class="compare">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Eligibility calculators<small>lender &amp; NBFC websites</small></th>
+              <th>Loan marketplaces<small>offer aggregators</small></th>
+              <th>Bank chatbots<small>customer-service bots</small></th>
+              <th class="us">LoanMitra</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th>Conversation instead of forms</th><td class="no">✕</td><td class="no">✕</td><td class="yes">✓</td><td class="yes us">✓</td></tr>
+            <tr><th>Tells you <i>why</i>, rule by rule</th><td class="no">✕ one number</td><td class="part">~ partial</td><td class="no">✕ FAQs</td><td class="yes us">✓</td></tr>
+            <tr><th>Plan to become eligible</th><td class="no">✕</td><td class="no">✕</td><td class="no">✕</td><td class="yes us">✓</td></tr>
+            <tr><th>Live “what if” on amount / tenure</th><td class="part">~ sliders</td><td class="no">✕</td><td class="no">✕</td><td class="yes us">✓</td></tr>
+            <tr><th>Hindi &amp; Hinglish, by voice</th><td class="no">✕</td><td class="no">✕</td><td class="part">~ some Hindi</td><td class="yes us">✓</td></tr>
+            <tr><th>No impact on credit score</th><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes us">✓</td></tr>
+            <tr><th>Auditable rules, not a black box</th><td class="part">~</td><td class="no">✕</td><td class="no">✕</td><td class="yes us">✓</td></tr>
+            <tr><th>PII masked, nothing stored</th><td class="part">~</td><td class="no">✕ lead capture</td><td class="part">~</td><td class="yes us">✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4. Solution ================= -->
+  <section class="section alt" id="solution">
+    <div class="container">
+      <span class="kicker">04 · How we solved it</span>
+      <h2>AI understands. Rules decide. You get a plan.</h2>
+      <div class="flow">
+        <div class="flow-step"><span class="n">1</span><h3>Tell us, your way</h3><p>One message in English, हिंदी or Hinglish — typed or spoken. PII is masked first.</p></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="flow-step"><span class="n">2</span><h3>AI extracts the facts</h3><p>The agent understands “12 LPA”, “70 hazaar”, “wife earns 40k” and asks only for what's missing.</p></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="flow-step"><span class="n">3</span><h3>Rules engine decides</h3><p>Every bank rule runs with your numbers. Auditable, repeatable — the AI never makes the decision.</p></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="flow-step"><span class="n">4</span><h3>Verdict + plan</h3><p>Eligible, a smaller amount, or the exact steps to get there — plus EMI and documents.</p></div>
+      </div>
+
+      <div class="cards-3 features">
+        <div class="card"><div class="ico">🔒</div><h3>Verified verdict</h3><p>Every decision carries a chip written by the rules engine, so a prompt-injected AI can't fake an approval.</p></div>
+        <div class="card"><div class="ico">⚡</div><h3>Never misses 15 s</h3><p>Free models chained with a hard time budget. Slow or busy? The rules engine answers — the demo never breaks.</p></div>
+        <div class="card"><div class="ico">🎙️</div><h3>Built for Bharat</h3><p>Hindi and Hinglish by voice with Indian-language speech AI, and Indian number formats like lakh and crore.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 5. FAQ ================= -->
+  <section class="section" id="faq">
+    <div class="container narrow">
+      <span class="kicker">05 · Questions the jury may ask</span>
+      <h2>FAQ</h2>
+      <details><summary>Does the AI decide who gets a loan?</summary>
+        <p>No. The AI only understands what you say and explains the result. The yes/no, the EMI and the maximum amount come from a deterministic rules engine whose policy lives in one JSON file — the same input always gives the same, auditable answer.</p></details>
+      <details><summary>How accurate is it, and how did you measure it?</summary>
+        <p>36 of 36 labelled multilingual conversations reach the correct verdict. The rules engine was attacked with 30,000 random applicant profiles checking EMI and FOIR maths, monotonicity, and that every “you qualify for up to X” and every improvement tip is actually true — zero violations.</p></details>
+      <details><summary>What if the AI service is down or slow?</summary>
+        <p>Replies have a hard 13-second budget. Models are tried in a chain (several free models from two providers); if all are busy, the built-in rules agent answers. Decisions never depend on an external API being up.</p></details>
+      <details><summary>Does checking affect my credit score?</summary>
+        <p>No. It is an indicative soft check: no credit bureau enquiry is made. Final approval is always subject to document verification.</p></details>
+      <details><summary>What about privacy?</summary>
+        <p>PAN, Aadhaar, phone, email, card and account numbers are masked before anything else sees the text — with checksum logic so real rupee amounts aren't destroyed. Sessions live in memory only and expire; nothing is written to disk.</p></details>
+      <details><summary>Is it secure enough for a bank?</summary>
+        <p>We red-teamed it: rate limits, request-size limits, strict input validation, security headers and CSP, unguessable sessions, no internal error leakage. The attack suite ships with the code and re-runs in one command.</p></details>
+      <details><summary>Which loans and languages are supported?</summary>
+        <p>Personal, home, car and education loans. English, Hindi (Devanagari) and Hinglish, by text or voice.</p></details>
+      <details><summary>Is this real customer data?</summary>
+        <p>No. All applicants are synthetic, and the bank policy is an illustrative synthetic policy, as the problem statement recommends.</p></details>
+      <details><summary>How would a bank take this to production?</summary>
+        <p>Swap the policy JSON for the bank's rules, plug in Account Aggregator for verified income, KYC and bureau APIs behind the same tools, move sessions to Redis, and add WhatsApp as a channel. The Docker image is ready.</p></details>
+    </div>
+  </section>
+
+  <!-- ================= CTA ================= -->
+  <section class="cta-band">
+    <div class="container cta-inner">
+      <div>
+        <h2>Try it — it takes one message.</h2>
+        <p>“I'm 30, salaried, earn 60k a month, need a 5 lakh personal loan for 3 years.”</p>
+      </div>
+      <a class="btn btn-light btn-lg" href="/chat">Check my eligibility →</a>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>LoanMitra · Built for TCS Technology Day. Rates and rules are illustrative (synthetic policy). Not a loan offer.</p>
+      <p class="refs"><sup>1</sup> Business Today, “30% Indians face loan rejection without knowing why”, May 2026.
+        <sup>2</sup> Public eligibility-calculator pages of Indian lenders and NBFCs (e.g. inputs: age, income, obligations → one amount).</p>
+    </div>
+  </footer>
+</body>
+</html>

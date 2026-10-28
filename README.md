@@ -29,7 +29,7 @@ uv venv --python 3.12 .venv            # or: python3.12 -m venv .venv
 uv pip install --python .venv/bin/python -r requirements.txt
 cp .env.example .env                   # add ANTHROPIC_API_KEY=... to enable GenAI mode
 .venv/bin/uvicorn backend.main:app --reload --port 8000
-# open http://localhost:8000
+# open http://localhost:8000 (overview) → "Check my eligibility" → /chat
 ```
 
 Regenerate data and run the evaluation:

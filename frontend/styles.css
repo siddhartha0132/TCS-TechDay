@@ -250,3 +250,71 @@ html { scroll-behavior: smooth; }
 #fStmt { font-size: 12.5px; color: var(--muted); max-width: 260px; }
 #stmtOut { margin-top: 6px; font-size: 12.5px; }
 .hint a { color: var(--brand); }
+
+/* ===================================================================================
+   Ice theme (matches the landing page). Overrides the earlier dark tokens and rules.
+   =================================================================================== */
+:root {
+  --bg: #A0A5B1; --card: rgba(255, 255, 255, .58); --ink: #111521; --muted: #5a5f74; --line: rgba(17, 21, 33, .14);
+  --brand: #484860; --brand-2: #484860; --brand-soft: rgba(255, 255, 255, .55); --accent: #111521;
+  --ok: #2f7d5b; --warn: #9a6b17; --bad: #a3393f; --bot: rgba(255, 255, 255, .78); --user: #111521;
+  --radius: 4px; --shadow: 0 1px 0 rgba(255, 255, 255, .4) inset, 0 10px 30px rgba(17, 21, 33, .08);
+  color-scheme: light;
+}
+body {
+  font-family: Inter, "Noto Sans Devanagari", system-ui, sans-serif; color: var(--ink);
+  background: radial-gradient(1200px 800px at 70% 10%, #c8ccd5, #A0A5B1 60%, #8e93a0); background-attachment: fixed;
+}
+.topbar { background: rgba(160, 165, 177, .7); border-bottom: 1px solid var(--line); }
+.appbar { background: rgba(255, 255, 255, .22); border-bottom: 1px solid var(--line); }
+.logo-mark { width: 28px; height: 28px; color: var(--ink); }
+.brand-name { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 22px; letter-spacing: 0; }
+.brand-sub, .card h3, .fold summary h3, .stepper li, .kpi small, .result-label, .mode-tab, .meta, .badge, .sim-tag, .live-tag, .tag,
+.field > span, .hint, .trust {
+  font-family: "JetBrains Mono", ui-monospace, monospace; letter-spacing: .04em;
+}
+.card h3, .fold summary h3 { font-size: 11px; color: var(--muted); }
+.card { background: var(--card); border: 1px solid rgba(255, 255, 255, .6); backdrop-filter: blur(16px); border-radius: 4px; }
+.select, .btn-ghost, .icon-btn { border-radius: 2px; background: rgba(255, 255, 255, .5); border: 1px solid var(--line); color: var(--ink); }
+.badge { border-radius: 2px; font-size: 11px; font-weight: 500; }
+.badge-ok { color: var(--ok); background: rgba(47, 125, 91, .1); border-color: rgba(47, 125, 91, .3); }
+.badge-warn { color: var(--warn); background: rgba(154, 107, 23, .1); border-color: rgba(154, 107, 23, .3); }
+.product { border-radius: 2px; background: rgba(255, 255, 255, .45); border: 1px solid var(--line); }
+.product:hover { border-color: var(--ink); }
+.product[aria-selected="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.product[aria-selected="true"] small { color: #c9ccd8; }
+.p-ico { filter: grayscale(1); }
+.mode-tabs { border-bottom: 1px solid var(--line); }
+.mode-tab { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+.mode-tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.stepper li span { background: rgba(255, 255, 255, .6); border-color: var(--line); border-radius: 2px; }
+.stepper li.active span { background: var(--ink); border-color: var(--ink); color: #fff; }
+.stepper li.done span { background: var(--ok); border-color: var(--ok); }
+.avatar { background: var(--ink); box-shadow: none; border-radius: 2px; }
+.bubble { border-radius: 4px; }
+.msg.bot .bubble { background: var(--bot); border: 1px solid rgba(255, 255, 255, .7); }
+.msg.user .bubble { background: var(--ink); color: #fff; }
+.chip { border-radius: 2px; background: rgba(255, 255, 255, .55); color: var(--ink); border: 1px solid var(--line); }
+.chip:hover { background: var(--ink); color: #fff; }
+.composer textarea { border-radius: 2px; background: rgba(255, 255, 255, .7); border: 1px solid var(--line); }
+.composer textarea:focus { border-color: var(--ink); }
+.mic { background: rgba(255, 255, 255, .6); border-radius: 2px; border: 1px solid var(--line); }
+.btn-primary, .btn-cta { background: var(--ink); color: #fff; box-shadow: none; border-radius: 2px; }
+.btn-primary { border-radius: 2px; }
+.result-amount { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 32px; }
+.gauge-fill { filter: none; }
+.verified { border-radius: 2px; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; letter-spacing: .04em; }
+.pill { border-radius: 2px; }
+.field input, .field select { background: rgba(255, 255, 255, .75); border-radius: 2px; border: 1px solid var(--line); color: var(--ink); }
+.field input:focus, .field select:focus { border-color: var(--ink); }
+.field select option, .select option { background: #fff; color: var(--ink); }
+.autofill { background: rgba(255, 255, 255, .4); border: 1px dashed rgba(17, 21, 33, .3); border-radius: 2px; }
+.autofill-row input[type="text"] { background: #fff; border-radius: 2px; }
+.lender { border-radius: 2px; background: rgba(255, 255, 255, .5); }
+.lender.best { background: rgba(47, 125, 91, .08); }
+.best-badge { border-radius: 2px; font-family: "JetBrains Mono", ui-monospace, monospace; }
+.form-result { background: rgba(255, 255, 255, .6); border-radius: 2px; }
+.sim-out { background: rgba(255, 255, 255, .6); border-radius: 2px; }
+.slider input, .calc input { accent-color: var(--ink); }
+.link-btn, .hint a { color: var(--ink); }
+.dot.pass { background: var(--ok); } .dot.fail { background: var(--bad); } .dot.warn { background: var(--warn); }

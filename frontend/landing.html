@@ -3,69 +3,108 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LoanMitra — Loan eligibility, explained</title>
+  <title>LoanMitra — Understand your loan possibilities</title>
+  <meta name="description" content="Multilingual loan guidance with transparent eligibility rules and EMI estimates.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/landing.css">
 </head>
 <body>
-  <!-- ================= Hero (framed, nav inside) ================= -->
-  <section class="hero">
-    <div class="frame">
-      <header class="nav">
-        <a class="brand" href="/" aria-label="LoanMitra home"><span class="spark" aria-hidden="true">✳</span>LoanMitra</a>
-        <nav class="nav-links" aria-label="Sections">
-          <a href="#problem">Problem</a>
-          <a href="#relevance">Relevance</a>
-          <a href="#criteria">Criteria</a>
-          <a href="#gap">Market gap</a>
-          <a href="#solution">Solution</a>
-          <a href="#faq">FAQ</a>
-        </nav>
-        <a class="btn btn-light btn-sm" href="/chat">Check eligibility</a>
-      </header>
+  <!-- Fixed 3D stage (WebGL). Purely decorative: every piece of content is HTML below. -->
+  <canvas id="stage" aria-hidden="true"></canvas>
+  <div id="labels" class="labels" aria-hidden="true"></div>
+  <div class="fallback-art" aria-hidden="true"></div>
 
-      <div class="hero-grid">
-        <div class="hero-copy">
-          <span class="badge-new">✦ Built for TCS Technology Day · Banking</span>
-          <h1>Know your loan <span class="grad">before you apply</span></h1>
-          <p class="lead">An AI loan-eligibility assistant that checks every bank rule in seconds — and tells you exactly what to fix. In English, हिंदी and 10 more Indian languages.</p>
-          <div class="hero-cta">
-            <a class="btn btn-light btn-lg" href="/chat">Get started</a>
-            <a class="btn btn-dark btn-lg" href="#solution">How it works</a>
-          </div>
-          <ul class="ticks">
-            <li>No CIBIL impact</li><li>PAN / Aadhaar auto-masked</li><li>4 lenders compared</li>
-          </ul>
-        </div>
+  <header class="nav">
+    <a class="brand" href="/" aria-label="LoanMitra home">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 28 9v14l-12 7L4 23V9z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M16 2v28M4 9l24 14M28 9 4 23" stroke="currentColor" stroke-width=".8" opacity=".5"/></svg>
+      <span>LoanMitra</span>
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#story">How it works</a>
+      <a href="#problem">Problem</a>
+      <a href="#relevance">Relevance</a>
+      <a href="#gap">Market gap</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-outline btn-sm" href="/chat">Check eligibility</a>
+  </header>
 
-        <div class="visual" aria-label="Example conversation">
-          <div class="glow" aria-hidden="true"></div>
-          <div class="mock">
-            <div class="mock-head"><span class="spark sm" aria-hidden="true">✳</span><b>LoanMitra</b><span class="online">● online</span></div>
-            <div class="mock-body">
-              <div class="b user">Mujhe 60 lakh ka home loan chahiye, flat 70 lakh ka hai. Salary 1.1 lakh, EMI 25k, CIBIL 720.</div>
-              <div class="b bot">
-                <span class="chip warn">🔒 Rules-engine verdict: Conditionally eligible</span>
-                You're eligible for up to <b>₹40.9 L</b> over 20 years.
-                <ul><li>Repayment ratio 70% vs 55% limit</li><li>Extend to 27 years → about ₹45 L</li></ul>
-              </div>
-              <div class="b user">Which bank is best for me?</div>
-              <div class="b bot"><span class="chip ok">🏦 4 lenders compared</span> Closest to your amount: <b>Udaan Finance</b> — up to ₹49 L at 9.75%.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="hero-stats">
-        <div><b>36/36</b><span>labelled test cases (rules mode)</span></div>
-        <div><b>&lt;15 s</b><span>every reply</span></div>
-        <div><b>12</b><span>Indian languages</span></div>
-        <div><b>30k</b><span>profiles fuzz-tested, 0 rule errors</span></div>
+  <!-- ================= Hero ================= -->
+  <section class="hero" data-chapter="0">
+    <div class="hero-copy">
+      <p class="meta">[ TCS TECHNOLOGY DAY ] &nbsp; BANKING / LOAN ELIGIBILITY</p>
+      <h1>Understand your loan <em>possibilities.</em></h1>
+      <p class="lead">Multilingual loan guidance in English, हिंदी and 10 more Indian languages — every bank rule checked transparently, with EMI estimates and a clear plan if you're not there yet.</p>
+      <div class="cta">
+        <a class="btn btn-solid" href="/chat">Check Loan Eligibility</a>
+        <a class="btn btn-outline" href="#story">Explore How It Works</a>
       </div>
     </div>
+    <dl class="hero-meta">
+      <div><dt>LANGUAGES</dt><dd>12</dd></div>
+      <div><dt>REPLY TIME</dt><dd>&lt; 15 s</dd></div>
+      <div><dt>LENDERS COMPARED</dt><dd>4</dd></div>
+      <div><dt>CIBIL IMPACT</dt><dd>None</dd></div>
+    </dl>
+    <p class="scroll-hint">SCROLL ↓</p>
   </section>
 
+  <!-- ================= Story (scroll-driven 3D) ================= -->
+  <div id="story" class="story">
+    <section class="chapter" data-chapter="1">
+      <div class="panel">
+        <p class="meta">01 / TRUST</p>
+        <h2>Built on rules you can read.</h2>
+        <p>Every decision comes from a transparent rules engine — age, income, CIBIL, repayment ratio, loan-to-value and tenure, written in one readable policy file. The AI listens and explains. It never decides.</p>
+      </div>
+    </section>
+    <section class="chapter" data-chapter="2">
+      <div class="panel">
+        <p class="meta">02 / YOUR FINANCIAL PROFILE</p>
+        <h2>Tell it once, your way.</h2>
+        <p>“Salary 65k, car EMI 8,500, need 5 lakh for 3 years.” Typed, spoken, or verified from your own bank statement — in memory, never stored. Before anything is decided, you confirm the exact numbers.</p>
+      </div>
+    </section>
+    <section class="chapter" data-chapter="3">
+      <div class="panel">
+        <p class="meta">03 / ELIGIBILITY ENGINE</p>
+        <h2>Every rule, evaluated together.</h2>
+        <p>Your facts converge on the engine: minimum income, credit score, fixed-obligation ratio, loan-to-value, age at maturity. The same policy runs across four lenders, so you see where you qualify and at what rate.</p>
+      </div>
+    </section>
+    <section class="chapter" data-chapter="4" id="explainSection">
+      <div class="panel wide">
+        <p class="meta">04 / TRANSPARENT EXPLANATION <span class="live">● LIVE FROM THE RULES ENGINE</span></p>
+        <h2>Not just yes or no — <em>why</em>, and what next.</h2>
+        <div id="explain" class="explain" aria-live="polite">
+          <p class="muted">Loading a live evaluation…</p>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" data-chapter="5" id="emi">
+      <div class="panel wide">
+        <p class="meta">05 / EMI PLANNING</p>
+        <h2>Plan the EMI before you apply.</h2>
+        <div class="calc">
+          <label><span>LOAN AMOUNT <b id="cAmountV"></b></span><input type="range" id="cAmount" min="50000" max="10000000" step="10000" value="500000"></label>
+          <label><span>INTEREST RATE <b id="cRateV"></b></span><input type="range" id="cRate" min="7" max="18" step="0.05" value="11.5"></label>
+          <label><span>TENURE <b id="cTenureV"></b></span><input type="range" id="cTenure" min="1" max="30" step="1" value="3"></label>
+          <div class="calc-out">
+            <div><dt>MONTHLY EMI</dt><dd id="cEmi">—</dd></div>
+            <div><dt>TOTAL INTEREST</dt><dd id="cInt">—</dd></div>
+            <div><dt>TOTAL PAYABLE</dt><dd id="cTot">—</dd></div>
+          </div>
+          <div class="split" aria-hidden="true"><span id="cBarP"></span><span id="cBarI"></span></div>
+          <p class="legend"><span class="sw p"></span>Principal <span class="sw i"></span>Interest</p>
+          <a id="cGo" class="btn btn-solid" href="/chat">Check eligibility for this loan</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= Content ================= -->
+  <main class="content">
   <!-- ================= 1. Problem ================= -->
   <section class="section" id="problem">
     <div class="container">
@@ -97,7 +136,7 @@
   </section>
 
   <!-- ================= 2. Relevance: brief checklist ================= -->
-  <section class="section alt" id="relevance">
+  <section class="section dark" id="relevance">
     <div class="container">
       <span class="kicker">02 · Relevance to the problem statement</span>
       <h2>Every line of the brief — done, with proof.</h2>
@@ -150,7 +189,7 @@
   </section>
 
   <!-- ================= 3. Market gap ================= -->
-  <section class="section" id="gap">
+  <section class="section dark" id="gap">
     <div class="container">
       <span class="kicker">03 · The market gap</span>
       <h2>Tools exist. None of them tell you <i>why</i> — or how to get there.</h2>
@@ -177,29 +216,6 @@
             <tr><th>PII masked, nothing stored</th><td class="part">~</td><td class="no">✕ lead capture</td><td class="part">~</td><td class="yes us">✓</td></tr>
           </tbody>
         </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= 4. Solution ================= -->
-  <section class="section alt" id="solution">
-    <div class="container">
-      <span class="kicker">04 · How we solved it</span>
-      <h2>AI understands. Rules decide. You get a plan.</h2>
-      <div class="flow">
-        <div class="flow-step"><span class="n">1</span><h3>Tell us, your way</h3><p>One message in English, हिंदी or Hinglish — typed or spoken. PII is masked first.</p></div>
-        <div class="arrow" aria-hidden="true">→</div>
-        <div class="flow-step"><span class="n">2</span><h3>AI extracts the facts</h3><p>The agent understands “12 LPA”, “70 hazaar”, “wife earns 40k” and asks only for what's missing.</p></div>
-        <div class="arrow" aria-hidden="true">→</div>
-        <div class="flow-step"><span class="n">3</span><h3>Rules engine decides</h3><p>Every bank rule runs with your numbers. Auditable, repeatable — the AI never makes the decision.</p></div>
-        <div class="arrow" aria-hidden="true">→</div>
-        <div class="flow-step"><span class="n">4</span><h3>Verdict + plan</h3><p>Eligible, a smaller amount, or the exact steps to get there — plus EMI and documents.</p></div>
-      </div>
-
-      <div class="cards-3 features">
-        <div class="card"><div class="ico">🔒</div><h3>Verified verdict</h3><p>Every decision carries a chip written by the rules engine, so a prompt-injected AI can't fake an approval.</p></div>
-        <div class="card"><div class="ico">⚡</div><h3>Never misses 15 s</h3><p>Free models chained with a hard time budget. Slow or busy? The rules engine answers — the demo never breaks.</p></div>
-        <div class="card"><div class="ico">🎙️</div><h3>Built for Bharat</h3><p>Hindi and Hinglish by voice with Indian-language speech AI, and Indian number formats like lakh and crore.</p></div>
       </div>
     </div>
   </section>
@@ -234,23 +250,27 @@
     </div>
   </section>
 
-  <!-- ================= CTA ================= -->
+
+  </main>
+
   <section class="cta-band">
     <div class="container cta-inner">
       <div>
-        <h2>Try it — it takes one message.</h2>
-        <p>“I'm 30, salaried, earn 60k a month, need a 5 lakh personal loan for 3 years.”</p>
+        <p class="meta">[ ONE MESSAGE IS ENOUGH ]</p>
+        <h2>“I'm 30, salaried, earn 60k a month, need a 5 lakh personal loan for 3 years.”</h2>
       </div>
-      <a class="btn btn-light btn-lg" href="/chat">Check my eligibility →</a>
+      <a class="btn btn-solid" href="/chat">Check Loan Eligibility</a>
     </div>
   </section>
 
   <footer class="footer">
     <div class="container">
-      <p>LoanMitra · Built for TCS Technology Day. Rates and rules are illustrative (synthetic policy). Not a loan offer.</p>
+      <p>LoanMitra · Built for TCS Technology Day. Rates and rules are illustrative (synthetic policy); lenders are fictional. Not a loan offer.</p>
       <p class="refs"><sup>1</sup> Business Today, “30% Indians face loan rejection without knowing why”, May 2026.
-        <sup>2</sup> Public eligibility-calculator pages of Indian lenders and NBFCs (e.g. inputs: age, income, obligations → one amount).</p>
+        <sup>2</sup> Public eligibility-calculator pages of Indian lenders and NBFCs. 3D: Three.js (MIT).</p>
     </div>
   </footer>
+
+  <script type="module" src="/static/landing.js"></script>
 </body>
 </html>

@@ -585,6 +585,8 @@
     renderQuick("loan_type", {}, null);
     syncFormFields();
     selectProduct(null);
+    const q = new URLSearchParams(location.search).get("q");  // hand-off from the landing page's EMI planner
+    if (q) { input.value = q.slice(0, 500); autosize(); }
     input.focus();
   })();
 })();

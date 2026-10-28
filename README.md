@@ -137,3 +137,13 @@ it is demo data, not a validation set.
 rates and cut-offs; each overrides the reference policy and the same engine decides. Ranking: full amount at the
 lowest rate first, otherwise the largest amount. Simulated bureau and Account Aggregator responses are deterministic
 per `mobile_last4`, flagged `"simulated": true`, and never touch real data.
+
+## Front end
+
+- `/` — immersive landing page: a Three.js (r160, MIT, served locally from `frontend/vendor/`) "ice vault" scene driven
+  by scroll through five chapters (trust → profile → engine → live explanation from `/api/evaluate` → EMI planner).
+  Respects `prefers-reduced-motion`, falls back to a static illustration without WebGL, pauses when off-screen.
+  `/?ch=1..5` deep-links to a chapter.
+- `/chat` — the assistant (chat + quick form), bank-statement upload (📎), lender comparison, voice.
+- Bank statements: `POST /api/statement/analyze?consent=true` (PDF/CSV, ≤ 5 MB) — analysed in memory, aggregates only.
+  `frontend/sample_statement.pdf` is a synthetic statement for demos (`python -m data.make_sample_statement`).

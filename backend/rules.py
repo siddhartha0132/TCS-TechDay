@@ -3,19 +3,32 @@
 This is the *decision* half of the hybrid design: every eligibility verdict comes
 from these auditable rules (loaded from data/rules.json), never from the LLM.
 The LLM only extracts applicant facts and explains the result.
+
+Design guarantees (checked by tests/fuzz_rules.py):
+- Input is validated: non-finite, negative or out-of-range values are rejected
+  (reported in `invalid_fields`) instead of crashing or skewing the verdict.
+- Every amount shown as "you qualify for up to X" re-evaluates as eligible at X.
+- Every improvement suggestion is only shown when applying it actually helps.
+- Displayed caps are rounded down and required amounts rounded up, never the
+  other way around.
 """
 from __future__ import annotations
 
 import json
 import math
-from dataclasses import dataclass, field, asdict
+import re
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Optional
+
+from .numbers import normalize_text, parse_number
 
 RULES_PATH = Path(__file__).resolve().parent.parent / "data" / "rules.json"
 
 LOAN_TYPES = ("personal", "home", "auto", "education")
-EMPLOYMENT_TYPES = ("salaried", "self_employed")
+EMPLOYMENT_TYPES = ("salaried", "self_employed", "not_employed")
+CREDIT_UNKNOWN = "unknown"
+EPS = 1e-9
 
 # Fields the engine needs before it can give a verdict, per product.
 REQUIRED_FIELDS: dict[str, list[str]] = {
@@ -23,6 +36,12 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "home": ["loan_amount", "tenure_years", "age", "monthly_income", "employment_type", "credit_score", "existing_emi", "property_value"],
     "auto": ["loan_amount", "tenure_years", "age", "monthly_income", "employment_type", "credit_score", "existing_emi", "vehicle_price"],
     "education": ["loan_amount", "tenure_years", "age", "study_abroad", "co_applicant_income", "co_applicant_credit_score", "co_applicant_existing_emi"],
+}
+# Fields that only make sense for one product; dropped when the applicant switches product.
+PRODUCT_SPECIFIC = {
+    "home": {"property_value"},
+    "auto": {"vehicle_price"},
+    "education": {"study_abroad", "co_applicant_income", "co_applicant_credit_score", "co_applicant_existing_emi"},
 }
 
 FIELD_LABELS = {
@@ -43,6 +62,23 @@ FIELD_LABELS = {
     "employment_months": "total work experience (months)",
 }
 
+# Valid ranges (inclusive). Values outside are rejected as invalid, not clamped.
+NUMERIC_RANGES: dict[str, tuple[float, float]] = {
+    "loan_amount": (1_000, 1e10),
+    "tenure_years": (0.25, 40),
+    "age": (15, 100),
+    "monthly_income": (0, 1e9),
+    "existing_emi": (0, 1e9),
+    "credit_score": (300, 900),
+    "property_value": (10_000, 1e11),
+    "vehicle_price": (10_000, 1e9),
+    "co_applicant_income": (0, 1e9),
+    "co_applicant_credit_score": (300, 900),
+    "co_applicant_existing_emi": (0, 1e9),
+    "employment_months": (0, 720),
+}
+ALLOWED_FIELDS = set(NUMERIC_RANGES) | {"loan_type", "employment_type", "study_abroad"}
+
 
 def load_rules() -> dict[str, Any]:
     with open(RULES_PATH, encoding="utf-8") as f:
@@ -52,19 +88,45 @@ def load_rules() -> dict[str, Any]:
 RULES = load_rules()
 
 
-# ---------------------------------------------------------------- helpers
-def fmt_inr(amount: float | None) -> str:
-    """Format in Indian style: ₹12.5 L / ₹1.2 Cr."""
-    if amount is None:
+# ---------------------------------------------------------------- formatting
+def fmt_inr(amount: float | None, rounding: str = "nearest") -> str:
+    """Indian style: ₹12.5 L / ₹1.2 Cr. rounding='floor' for caps, 'ceil' for amounts the user must find."""
+    if amount is None or not math.isfinite(float(amount)):
         return "—"
     amount = float(amount)
+    rnd = {"floor": math.floor, "ceil": math.ceil}.get(rounding, round)
+
+    def two_dp(x: float) -> str:
+        v = rnd(x * 100 + (EPS if rounding == "floor" else -EPS if rounding == "ceil" else 0)) / 100
+        return f"{v:.2f}".rstrip("0").rstrip(".")
+
     if amount >= 1e7:
-        return f"₹{amount / 1e7:.2f} Cr".replace(".00", "")
+        return f"₹{two_dp(amount / 1e7)} Cr"
     if amount >= 1e5:
-        return f"₹{amount / 1e5:.2f} L".replace(".00", "")
-    return f"₹{amount:,.0f}"
+        return f"₹{two_dp(amount / 1e5)} L"
+    return f"₹{int(rnd(amount)):,}"
 
 
+def fmt_pct(ratio: float, limit: float) -> str:
+    """Whole percent normally; one decimal near the limit so '50% vs 50%' can't hide a fail."""
+    if not math.isfinite(ratio):
+        return "n/a"
+    if abs(ratio - limit) >= 0.01:
+        return f"{ratio:.0%}"
+    if ratio > limit + EPS and round(ratio * 1000) <= round(limit * 1000):
+        return f"just above {limit:.0%}"
+    return f"{ratio:.1%}"
+
+
+def ceil_to(x: float, step: float) -> float:
+    return math.ceil(x / step - EPS) * step
+
+
+def floor_to(x: float, step: float) -> float:
+    return math.floor(x / step + EPS) * step
+
+
+# ---------------------------------------------------------------- maths
 def emi(principal: float, annual_rate_pct: float, tenure_years: float) -> float:
     n = max(int(round(tenure_years * 12)), 1)
     r = annual_rate_pct / 1200.0
@@ -85,7 +147,7 @@ def max_principal_for_emi(target_emi: float, annual_rate_pct: float, tenure_year
 
 
 def credit_band(score: float | None) -> str:
-    if score is None:
+    if not isinstance(score, (int, float)):
         return "Unknown"
     for band in RULES["credit_score_bands"]:
         if score >= band["min"]:
@@ -93,12 +155,23 @@ def credit_band(score: float | None) -> str:
     return "Poor"
 
 
-def _ltv_cap(product: dict, amount: float) -> float:
-    if "ltv_slabs" in product:
-        for slab in product["ltv_slabs"]:
-            if slab["upto"] is None or amount <= slab["upto"]:
-                return slab["max_ltv"]
+def ltv_ratio_for(product: dict, amount: float) -> float:
+    """Max LTV that applies to a loan of this size."""
+    for slab in product.get("ltv_slabs", []):
+        if slab["upto"] is None or amount <= slab["upto"]:
+            return slab["max_ltv"]
     return product.get("max_ltv", 1.0)
+
+
+def max_loan_by_ltv(product: dict, asset_value: float) -> float:
+    """Largest loan the asset supports across all LTV slabs (not just the slab of the requested amount)."""
+    if "ltv_slabs" not in product:
+        return asset_value * product.get("max_ltv", 1.0)
+    best = 0.0
+    for slab in product["ltv_slabs"]:
+        cap = asset_value * slab["max_ltv"]
+        best = max(best, cap if slab["upto"] is None else min(slab["upto"], cap))
+    return best
 
 
 # ---------------------------------------------------------------- result types
@@ -119,6 +192,7 @@ class Evaluation:
     loan_type: str
     checks: list[Check] = field(default_factory=list)
     missing_fields: list[str] = field(default_factory=list)
+    invalid_fields: list[str] = field(default_factory=list)
     emi: Optional[float] = None
     foir: Optional[float] = None
     interest_rate: Optional[float] = None
@@ -134,296 +208,343 @@ class Evaluation:
         d["checks"] = [c.as_dict() for c in self.checks]
         d["missing_field_labels"] = [FIELD_LABELS.get(f, f) for f in self.missing_fields]
         d["emi_display"] = fmt_inr(self.emi) if self.emi else None
-        d["max_eligible_display"] = fmt_inr(self.max_eligible_amount) if self.max_eligible_amount else None
+        d["max_eligible_display"] = fmt_inr(self.max_eligible_amount, "floor") if self.max_eligible_amount else None
         d["requested_display"] = fmt_inr(self.requested_amount) if self.requested_amount else None
         return d
 
 
-# ---------------------------------------------------------------- normalisation
-def normalize_profile(raw: dict[str, Any]) -> dict[str, Any]:
-    """Coerce loosely-typed applicant data into the shape the engine expects.
+# ---------------------------------------------------------------- normalisation & validation
+LOAN_ALIASES = {
+    "personal": "personal", "pl": "personal",
+    "home": "home", "housing": "home", "house": "home", "mortgage": "home", "flat": "home",
+    "auto": "auto", "car": "auto", "vehicle": "auto", "two wheeler": "auto", "two-wheeler": "auto", "bike": "auto",
+    "motorcycle": "auto", "scooter": "auto",
+    "education": "education", "educational": "education", "study": "education", "student": "education",
+}
+SALARIED = {"salaried", "salary", "employee", "employed", "job", "service", "government", "govt", "private job",
+            "salaried employee", "working professional", "naukri"}
+SELF_EMPLOYED = {"self_employed", "self employed", "self-employed", "business", "businessman", "business owner",
+                 "freelancer", "freelance", "professional", "self", "self employed professional", "consultant",
+                 "proprietor", "entrepreneur", "shop owner", "doctor", "ca", "lawyer", "trader"}
+NOT_EMPLOYED = {"not_employed", "unemployed", "not employed", "not working", "student", "retired", "homemaker",
+                "housewife", "none", "no job", "jobless"}
 
-    Handles strings like "12,50,000", "8.5 lakh", "salaried", "yes/no".
+
+def _norm_employment(val: Any) -> Optional[str]:
+    v = re.sub(r"[\s_]+", " ", str(val).strip().lower())
+    if v.replace(" ", "_") in EMPLOYMENT_TYPES:
+        return v.replace(" ", "_")
+    if v in NOT_EMPLOYED:
+        return "not_employed"
+    if v in SELF_EMPLOYED or v.startswith("self employed") or v.startswith("self-employed"):
+        return "self_employed"
+    if v in SALARIED:
+        return "salaried"
+    return None
+
+
+def _norm_loan_type(val: Any) -> Optional[str]:
+    v = re.sub(r"\s+", " ", str(val).strip().lower())
+    v = re.sub(r"\s*loan$", "", v)
+    return LOAN_ALIASES.get(v)
+
+
+def _norm_study_abroad(val: Any) -> Optional[bool]:
+    if isinstance(val, bool):
+        return val
+    s = normalize_text(str(val)).strip().lower()
+    if re.search(r"\bnot\s+(?:abroad|overseas|outside)", s):
+        return False
+    if re.search(r"\b(india|indian|bharat|domestic)\b|भारत", s):
+        return False
+    if re.search(r"\b(abroad|overseas|foreign|outside|usa|us|uk|canada|australia|germany|ireland|france|europe|"
+                 r"singapore|new zealand|japan|dubai|uae|videsh)\b|विदेश", s):
+        return True
+    if s in ("true", "yes", "y", "1"):
+        return True
+    if s in ("false", "no", "n", "0"):
+        return False
+    return None
+
+
+def validate_profile(raw: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    """Coerce loosely-typed applicant data (API, LLM tool calls, extractor) into engine input.
+
+    Returns (clean_profile, invalid_fields). Unknown keys are ignored. Invalid values are
+    dropped and reported so the conversation can ask for them again.
     """
     out: dict[str, Any] = {}
+    invalid: list[str] = []
     for key, val in (raw or {}).items():
-        if val is None or val == "":
+        if key not in ALLOWED_FIELDS or val is None or val == "":
             continue
         if key == "loan_type":
-            v = str(val).strip().lower()
-            alias = {"car": "auto", "vehicle": "auto", "two-wheeler": "auto", "housing": "home", "house": "home",
-                     "mortgage": "home", "study": "education", "student": "education"}
-            out[key] = alias.get(v, v)
+            v = _norm_loan_type(val)
         elif key == "employment_type":
-            v = str(val).strip().lower().replace("-", "_").replace(" ", "_")
-            if v in ("self_employed", "business", "businessman", "freelancer", "professional", "self"):
-                out[key] = "self_employed"
-            elif v in ("salaried", "employee", "job", "service"):
-                out[key] = "salaried"
-            else:
-                out[key] = v
+            v = _norm_employment(val)
         elif key == "study_abroad":
-            if isinstance(val, bool):
-                out[key] = val
-            else:
-                out[key] = str(val).strip().lower() in ("true", "yes", "abroad", "foreign", "overseas", "1")
+            v = _norm_study_abroad(val)
+        elif key in ("credit_score", "co_applicant_credit_score") and isinstance(val, str) and val.strip().lower() == CREDIT_UNKNOWN:
+            v = CREDIT_UNKNOWN
         else:
-            out[key] = parse_amount(val)
-    return out
+            v = parse_number(val)
+            lo, hi = NUMERIC_RANGES[key]
+            if v is not None and not (lo <= v <= hi):
+                v = None
+        if v is None:
+            invalid.append(key)
+        else:
+            out[key] = v
+    return out, invalid
 
 
-def parse_amount(val: Any) -> Optional[float]:
-    """'12,50,000' -> 1250000; '8.5 lakh' -> 850000; '1.2 cr' -> 12000000; '45k' -> 45000."""
-    if isinstance(val, bool):
-        return float(val)
-    if isinstance(val, (int, float)):
-        return float(val)
-    s = str(val).strip().lower().replace(",", "").replace("₹", "").replace("rs.", "").replace("rs", "").replace("inr", "")
-    s = s.strip()
-    mult = 1.0
-    for suffix, m in (("crore", 1e7), ("cr", 1e7), ("lakhs", 1e5), ("lakh", 1e5), ("lac", 1e5), ("l", 1e5), ("k", 1e3)):
-        if s.endswith(suffix):
-            s = s[: -len(suffix)].strip()
-            mult = m
-            break
-    try:
-        return float(s) * mult
-    except ValueError:
-        return None
+def normalize_profile(raw: dict[str, Any]) -> dict[str, Any]:
+    return validate_profile(raw)[0]
+
+
+parse_amount = parse_number  # public name kept for integrations
 
 
 # ---------------------------------------------------------------- the engine
 def evaluate(profile_in: dict[str, Any]) -> Evaluation:
-    p = normalize_profile(profile_in)
+    p, invalid = validate_profile(profile_in)
     loan_type = p.get("loan_type")
     if loan_type not in LOAN_TYPES:
-        return Evaluation(status="INCOMPLETE", loan_type=loan_type or "", missing_fields=["loan_type"],
+        return Evaluation(status="INCOMPLETE", loan_type="", missing_fields=["loan_type"], invalid_fields=invalid,
                           summary="I need to know which loan you are looking for: personal, home, car or education.")
 
     missing = [f for f in REQUIRED_FIELDS[loan_type] if p.get(f) is None]
     if missing:
-        return Evaluation(status="INCOMPLETE", loan_type=loan_type, missing_fields=missing,
+        return Evaluation(status="INCOMPLETE", loan_type=loan_type, missing_fields=missing, invalid_fields=invalid,
                           summary="A few more details are needed before I can check eligibility.")
 
     product = RULES["products"][loan_type]
     common = RULES["common"]
     checks: list[Check] = []
-    improvements: list[str] = []
+    advice: list[str] = []  # suggestions for non-capacity failures
 
     amount = float(p["loan_amount"])
     tenure = float(p["tenure_years"])
     age = float(p["age"])
     rate = product["interest_rate"]
 
-    # --- Education loans are underwritten on the co-applicant (parent/guardian)
-    if loan_type == "education":
+    # --- Who is underwritten
+    if loan_type == "education":  # underwritten on the co-applicant (parent/guardian)
         income = float(p["co_applicant_income"])
-        score = float(p["co_applicant_credit_score"])
+        score = p["co_applicant_credit_score"]
         existing_emi = float(p["co_applicant_existing_emi"])
         emp_type = "salaried"
-        who = "Co-applicant"
+        who, score_owner = "Co-applicant", "Co-applicant"
     else:
         income = float(p["monthly_income"])
-        score = float(p["credit_score"])
+        score = p["credit_score"]
         existing_emi = float(p["existing_emi"])
-        emp_type = p.get("employment_type", "salaried")
-        if emp_type not in EMPLOYMENT_TYPES:
-            emp_type = "salaried"
-        who = "Applicant"
-        # Optional co-applicant (spouse/parent): incomes and obligations are clubbed for repayment capacity
-        if p.get("co_applicant_income"):
+        emp_type = p["employment_type"]
+        who, score_owner = "Applicant", "Applicant"
+        if p.get("co_applicant_income"):  # optional spouse/parent: incomes and obligations clubbed
             income += float(p["co_applicant_income"])
             existing_emi += float(p.get("co_applicant_existing_emi") or 0)
             who = "Combined"
+    limits_type = "salaried" if emp_type == "not_employed" else emp_type
 
-    # 1. Tenure within product limits (clamp silently for the EMI maths, flag if outside)
-    if tenure < product["min_tenure_years"] or tenure > product["max_tenure_years"]:
-        clamped = min(max(tenure, product["min_tenure_years"]), product["max_tenure_years"])
+    # 1. Tenure within product limits (evaluate at the nearest allowed tenure, flag it)
+    lo_t, hi_t = product["min_tenure_years"], product["max_tenure_years"]
+    if tenure < lo_t or tenure > hi_t:
+        clamped = min(max(tenure, lo_t), hi_t)
         checks.append(Check("tenure_range", False,
-                            f"Tenure must be between {product['min_tenure_years']} and {product['max_tenure_years']} years; "
-                            f"you asked for {tenure:g}, so I evaluated at {clamped:g} years.", hard=False))
-        improvements.append(f"Choose a tenure between {product['min_tenure_years']} and {product['max_tenure_years']} years.")
+                            f"Tenure must be between {lo_t} and {hi_t} years; you asked for {tenure:g}, so I evaluated at {clamped:g} years.",
+                            hard=False))
+        advice.append(f"Choose a tenure between {lo_t} and {hi_t} years.")
         tenure = clamped
     else:
-        checks.append(Check("tenure_range", True, f"Tenure of {tenure:g} years is within the allowed {product['min_tenure_years']}–{product['max_tenure_years']} years."))
+        checks.append(Check("tenure_range", True, f"Tenure of {tenure:g} years is within the allowed {lo_t}–{hi_t} years."))
 
-    # 2. Age
+    # 2. Employment
+    if emp_type == "not_employed":
+        checks.append(Check("employment", False, "A regular income source (salaried or self-employed) is required to borrow."))
+        advice.append("Apply with an earning family member as the primary applicant, or once you have a regular income.")
+
+    # 3. Age
+    max_tenure_for_age = hi_t
     if loan_type == "education":
-        lo, hi = product["student_min_age"], product["student_max_age"]
-        ok = lo <= age <= hi
-        checks.append(Check("age", ok, f"Student age {age:g} is {'within' if ok else 'outside'} the {lo}–{hi} range."))
+        lo_a, hi_a = product["student_min_age"], product["student_max_age"]
+        ok = lo_a <= age <= hi_a
+        checks.append(Check("age", ok, f"Student age {age:g} is {'within' if ok else 'outside'} the {lo_a}–{hi_a} range."))
         if not ok:
-            improvements.append(f"Education loans are offered to students aged {lo}–{hi}.")
+            advice.append(f"Education loans are offered to students aged {lo_a}–{hi_a}.")
     else:
-        max_at_maturity = common["max_age_at_maturity"][emp_type]
-        age_at_maturity = age + tenure
+        max_at_maturity = common["max_age_at_maturity"][limits_type]
+        max_tenure_for_age = min(hi_t, max_at_maturity - age)
         if age < common["min_age"]:
             checks.append(Check("age", False, f"Minimum age is {common['min_age']} (you are {age:g})."))
-            improvements.append(f"You can apply once you turn {common['min_age']}.")
-        elif age_at_maturity > max_at_maturity:
-            max_tenure_by_age = max(max_at_maturity - age, 0)
+            advice.append(f"You can apply once you turn {common['min_age']}.")
+        elif age + tenure > max_at_maturity + EPS:
             checks.append(Check("age", False,
-                                f"Age at loan maturity would be {age_at_maturity:g}; the limit is {max_at_maturity} for {emp_type.replace('_', '-')} applicants."))
-            if max_tenure_by_age >= product["min_tenure_years"]:
-                improvements.append(f"Reduce the tenure to {max_tenure_by_age:g} years so the loan closes before age {max_at_maturity}.")
+                                f"Age at loan maturity would be {age + tenure:g}; the limit is {max_at_maturity} for {limits_type.replace('_', '-')} applicants."))
+            if max_tenure_for_age >= lo_t:
+                advice.append(f"Reduce the tenure to {math.floor(max_tenure_for_age):g} years so the loan closes before age {max_at_maturity}.")
             else:
-                improvements.append("Consider adding a younger co-applicant.")
+                advice.append("Consider adding a younger co-applicant as the primary borrower.")
         else:
-            checks.append(Check("age", True, f"Age {age:g} with maturity at {age_at_maturity:g} is within the limit of {max_at_maturity}."))
+            checks.append(Check("age", True, f"Age {age:g} with maturity at {age + tenure:g} is within the limit of {max_at_maturity}."))
 
-    # 3. Employment vintage (optional fields, only checked when supplied)
-    if loan_type != "education":
-        emp_months = p.get("employment_months")
-        min_months = common["min_employment_months"][emp_type]
-        if emp_months is not None:
-            ok = emp_months >= min_months
-            checks.append(Check("employment_vintage", ok,
-                                f"{emp_months:g} months of {emp_type.replace('_', '-')} experience vs. minimum {min_months}."))
-            if not ok:
-                improvements.append(f"Apply after {min_months - emp_months:g} more months of work history.")
+    # 4. Employment vintage (optional field, only checked when supplied)
+    if loan_type != "education" and p.get("employment_months") is not None and emp_type != "not_employed":
+        emp_months, min_months = p["employment_months"], common["min_employment_months"][limits_type]
+        ok = emp_months >= min_months
+        checks.append(Check("employment_vintage", ok, f"{emp_months:g} months of work experience vs. minimum {min_months}."))
+        if not ok:
+            advice.append(f"Apply after {math.ceil(min_months - emp_months):g} more months of work history.")
 
-    # 4. Minimum income
-    if loan_type == "education":
-        min_income = product["min_co_applicant_income"]
-    else:
-        min_income = product["min_monthly_income"][emp_type]
+    # 5. Minimum income
+    min_income = product["min_co_applicant_income"] if loan_type == "education" else product["min_monthly_income"][limits_type]
     ok = income >= min_income
     checks.append(Check("min_income", ok, f"{who} net income {fmt_inr(income)}/month vs. minimum {fmt_inr(min_income)}."))
     if not ok:
-        improvements.append(f"Minimum income for this product is {fmt_inr(min_income)}/month; a co-applicant's income can be added.")
+        advice.append(f"Minimum income for this product is {fmt_inr(min_income)}/month; an earning co-applicant's income can be added.")
 
-    # 5. Credit score
+    # 6. Credit score
     min_score = product["min_credit_score"]
-    ok = score >= min_score
-    score_owner = "Co-applicant" if loan_type == "education" else "Applicant"
-    checks.append(Check("credit_score", ok, f"{score_owner} credit score {score:g} ({credit_band(score)}) vs. minimum {min_score}."))
-    if not ok:
-        improvements.append(f"Improve the credit score by {min_score - score:g} points (pay EMIs/cards on time, keep card utilisation under 30%, avoid new hard enquiries).")
-    elif score < min_score + 30:
-        checks.append(Check("credit_score_margin", False, f"Score is close to the cut-off; a stronger score would get a better rate.", hard=False))
-
-    # 6. Amount within product bounds
-    if loan_type == "education":
-        max_amount = product["max_amount_abroad"] if p.get("study_abroad") else product["max_amount_india"]
+    if score == CREDIT_UNKNOWN:
+        checks.append(Check("credit_score", False,
+                            f"{score_owner} credit score not provided; this product needs at least {min_score}. Check it free on CIBIL before applying.",
+                            hard=False))
     else:
-        max_amount = product["max_amount"]
+        ok = score >= min_score
+        checks.append(Check("credit_score", ok, f"{score_owner} credit score {score:g} ({credit_band(score)}) vs. minimum {min_score}."))
+        if not ok:
+            gap = math.ceil(min_score - score)
+            advice.append(f"Improve the credit score by {gap} point{'s' if gap != 1 else ''} (pay EMIs and cards on time, "
+                          "keep card utilisation under 30%, avoid new loan enquiries).")
+        elif score < min_score + 30:
+            checks.append(Check("credit_score_margin", False, "Score is close to the cut-off; a stronger score would get a better rate.", hard=False))
+
+    # 7. Amount within product bounds
+    max_amount = (product["max_amount_abroad"] if p.get("study_abroad") else product["max_amount_india"]) \
+        if loan_type == "education" else product["max_amount"]
     min_amount = product["min_amount"]
     if amount < min_amount or amount > max_amount:
         checks.append(Check("amount_range", False, f"Amount must be between {fmt_inr(min_amount)} and {fmt_inr(max_amount)} for this product."))
-        improvements.append(f"Request an amount between {fmt_inr(min_amount)} and {fmt_inr(max_amount)}.")
     else:
         checks.append(Check("amount_range", True, f"Requested {fmt_inr(amount)} is within the product range."))
 
-    # 7. Collateral / LTV
-    ltv_limit_amount: Optional[float] = None
-    if loan_type == "home":
-        pv = float(p["property_value"])
-        cap = _ltv_cap(product, amount)
-        ltv_limit_amount = pv * cap
-        ok = amount <= ltv_limit_amount
-        checks.append(Check("ltv", ok, f"Loan-to-value {amount / pv:.0%} vs. maximum {cap:.0%} for this slab ({fmt_inr(ltv_limit_amount)} on a {fmt_inr(pv)} property)."))
+    # 8. Collateral / LTV
+    ltv_cap_amount: Optional[float] = None
+    asset = p.get("property_value") if loan_type == "home" else p.get("vehicle_price") if loan_type == "auto" else None
+    if asset is not None:
+        asset = float(asset)
+        cap_ratio = ltv_ratio_for(product, amount)
+        ltv_cap_amount = max_loan_by_ltv(product, asset)
+        ltv = amount / asset
+        ok = ltv <= cap_ratio + EPS
+        what = "Loan-to-value" if loan_type == "home" else "Financing"
+        checks.append(Check("ltv", ok, f"{what} {fmt_pct(ltv, cap_ratio)} of {fmt_inr(asset)} vs. maximum {cap_ratio:.0%} for a loan of this size."))
         if not ok:
-            improvements.append(f"Increase your down payment by {fmt_inr(amount - ltv_limit_amount)} (or request up to {fmt_inr(ltv_limit_amount)}).")
-    elif loan_type == "auto":
-        vp = float(p["vehicle_price"])
-        cap = product["max_ltv"]
-        ltv_limit_amount = vp * cap
-        ok = amount <= ltv_limit_amount
-        checks.append(Check("ltv", ok, f"Financing {amount / vp:.0%} of on-road price vs. maximum {cap:.0%} ({fmt_inr(ltv_limit_amount)})."))
-        if not ok:
-            improvements.append(f"Increase the down payment by {fmt_inr(amount - ltv_limit_amount)}.")
+            advice.append(f"Increase your down payment by {fmt_inr(ceil_to(amount - ltv_cap_amount, 1000), 'ceil')}, "
+                          f"or request up to {fmt_inr(floor_to(ltv_cap_amount, 10000), 'floor')}.")
     elif loan_type == "education" and amount > product["requires_collateral_above"]:
         checks.append(Check("collateral", False,
                             f"Loans above {fmt_inr(product['requires_collateral_above'])} need collateral (property, FD or LIC policy).", hard=False))
 
-    # 8. Repayment capacity: FOIR = (existing EMIs + new EMI) / income
+    # 9. Repayment capacity: FOIR = (existing EMIs + new EMI) / income
     new_emi = emi(amount, rate, tenure)
-    foir = (existing_emi + new_emi) / income if income else 1.0
     max_foir = product["max_foir"]
-    ok = foir <= max_foir
-    checks.append(Check("foir", ok,
-                        f"Fixed-obligation ratio {foir:.0%} (existing {fmt_inr(existing_emi)} + new EMI {fmt_inr(new_emi)} on {fmt_inr(income)} income) vs. limit {max_foir:.0%}."))
-
-    # Max eligible amount at this tenure, given FOIR, multiplier, product and LTV caps
-    headroom = max(income * max_foir - existing_emi, 0)
-    by_foir = max_principal_for_emi(headroom, rate, tenure)
-    caps = [by_foir, max_amount]
-    if "income_multiple_cap" in product:
-        caps.append(income * product["income_multiple_cap"])
-    if ltv_limit_amount is not None:
-        caps.append(ltv_limit_amount)
-    max_eligible = math.floor(min(caps) / 10000) * 10000
-
-    if not ok:
-        # Counterfactuals: what would make this work?
-        if max_eligible >= min_amount:
-            improvements.append(f"Based on your repayment capacity you qualify for up to {fmt_inr(max_eligible)} at {tenure:g} years.")
-        longest = product["max_tenure_years"]
-        if loan_type != "education":
-            longest = min(longest, common["max_age_at_maturity"][emp_type] - age)
-        if longest > tenure:
-            by_foir_long = max_principal_for_emi(headroom, rate, longest)
-            alt = math.floor(min([by_foir_long] + caps[1:]) / 10000) * 10000
-            if alt > max_eligible:
-                improvements.append(f"Extending the tenure to {longest:g} years raises your eligibility to about {fmt_inr(alt)}.")
-        emi_to_close = (existing_emi + new_emi) - income * max_foir
-        if existing_emi > 0 and emi_to_close > 0:
-            improvements.append(f"Closing existing EMIs worth {fmt_inr(min(emi_to_close, existing_emi))}/month would bring your FOIR within limit.")
-        extra_income = (existing_emi + new_emi) / max_foir - income
-        improvements.append(f"Adding a co-applicant with {fmt_inr(extra_income)}/month income would also make {fmt_inr(amount)} eligible.")
-    elif foir > max_foir - 0.05:
+    foir = (existing_emi + new_emi) / income if income > 0 else math.inf
+    foir_ok = foir <= max_foir + EPS
+    income_txt = fmt_inr(income) if income > 0 else "no"
+    checks.append(Check("foir", foir_ok,
+                        f"Fixed-obligation ratio {fmt_pct(foir, max_foir)} (existing {fmt_inr(existing_emi)} + new EMI {fmt_inr(new_emi)} "
+                        f"on {income_txt} income) vs. limit {max_foir:.0%}."))
+    if foir_ok and foir > max_foir - 0.05:
         checks.append(Check("foir_margin", False, "Repayment ratio is close to the limit; keep other borrowings low until disbursal.", hard=False))
 
-    # 9. Income multiplier cap (unsecured products)
+    # 10. Income multiple cap (unsecured / vehicle products)
+    multiple_cap: Optional[float] = None
     if "income_multiple_cap" in product and loan_type != "education":
-        cap_amount = income * product["income_multiple_cap"]
-        ok = amount <= cap_amount
+        multiple_cap = income * product["income_multiple_cap"]
+        ok = amount <= multiple_cap + EPS
+        times = f"{amount / income:.0f}×" if income > 0 else "—"
         checks.append(Check("income_multiple", ok,
-                            f"Requested amount is {amount / income:.0f}× monthly income vs. cap of {product['income_multiple_cap']}× ({fmt_inr(cap_amount)})."))
-        if not ok:
-            improvements.append(f"Maximum loan at your income is {fmt_inr(cap_amount)} ({product['income_multiple_cap']}× monthly income).")
+                            f"Requested amount is {times} monthly income vs. cap of {product['income_multiple_cap']}× ({fmt_inr(multiple_cap, 'floor')})."))
+
+    # --- Maximum eligible amount at this tenure (every cap applied)
+    def max_for(t: float) -> float:
+        headroom = max(income * max_foir - existing_emi, 0.0)
+        caps = [max_principal_for_emi(headroom, rate, t), max_amount]
+        if multiple_cap is not None:
+            caps.append(multiple_cap)
+        if ltv_cap_amount is not None:
+            caps.append(ltv_cap_amount)
+        return floor_to(min(caps), 10000)
+
+    max_eligible = max_for(tenure)
 
     # --- Verdict
     hard_fails = [c for c in checks if c.hard and not c.passed]
     soft_flags = [c for c in checks if not c.hard and not c.passed]
-    only_amount_fails = hard_fails and all(c.rule in ("foir", "ltv", "income_multiple", "amount_range") for c in hard_fails)
+    capacity_rules = {"foir", "ltv", "income_multiple", "amount_range"}
+    only_capacity_fails = bool(hard_fails) and all(c.rule in capacity_rules for c in hard_fails)
 
     if not hard_fails:
         status = "CONDITIONAL" if soft_flags else "ELIGIBLE"
-    elif only_amount_fails and max_eligible >= min_amount:
+        max_eligible = max(max_eligible, amount)  # the requested amount itself passed every cap
+    elif only_capacity_fails and max_eligible >= min_amount:
         status = "CONDITIONAL"
     else:
         status = "NOT_ELIGIBLE"
 
-    # Eligibility strength (for the gauge): share of hard checks passed, weighted by margins
+    # --- Capacity advice (only what is true and would actually help)
+    improvements = list(advice)
+    other_fails = [c for c in hard_fails if c.rule != "foir"]
+    if only_capacity_fails or (not foir_ok and hard_fails):
+        if max_eligible >= min_amount and max_eligible < amount:
+            improvements.append(f"Based on your repayment capacity you qualify for up to {fmt_inr(max_eligible, 'floor')} at {tenure:g} years.")
+        longest = math.floor(max_tenure_for_age) if loan_type != "education" else hi_t
+        if not foir_ok and only_capacity_fails and longest > tenure:
+            alt = max_for(longest)
+            if alt > max_eligible and alt >= min_amount:
+                improvements.append(f"Extending the tenure to {longest:g} years raises your eligibility to about {fmt_inr(alt, 'floor')}.")
+        if not foir_ok and income > 0:
+            need = (existing_emi + new_emi) - income * max_foir
+            if 0 < need <= existing_emi:
+                improvements.append(f"Reducing your existing EMIs by {fmt_inr(ceil_to(need, 100), 'ceil')}/month would bring your repayment ratio within limit.")
+        if loan_type != "education" and not foir_ok and not other_fails and emp_type != "not_employed":
+            # extra income must satisfy both FOIR and the income-multiple cap; round up with a margin
+            req = (existing_emi + new_emi) / max_foir - income
+            if "income_multiple_cap" in product:
+                req = max(req, amount / product["income_multiple_cap"] - income)
+            req = ceil_to(req + 1000, 1000)
+            improvements.append(f"Adding an earning co-applicant with at least {fmt_inr(req, 'ceil')}/month income would make {fmt_inr(amount)} eligible.")
+        elif amount > max_amount and loan_type != "education":
+            pass  # the amount cap already explains itself via the 'qualify for up to' line
+    if amount < min_amount:
+        improvements.append(f"Request at least {fmt_inr(min_amount)}.")
+    elif amount > max_amount and max_eligible < min_amount:
+        improvements.append(f"Request an amount between {fmt_inr(min_amount)} and {fmt_inr(max_amount)}.")
+
+    # --- Gauge
     hard_checks = [c for c in checks if c.hard]
     base = sum(1 for c in hard_checks if c.passed) / max(len(hard_checks), 1)
-    score_pts = int(round(base * 100))
-    if status == "ELIGIBLE":
-        score_pts = max(score_pts, 85)
-    elif status == "CONDITIONAL":
-        score_pts = min(max(score_pts, 55), 80)
-    else:
-        score_pts = min(score_pts, 45)
+    pts = int(round(base * 100))
+    pts = max(pts, 85) if status == "ELIGIBLE" else min(max(pts, 55), 80) if status == "CONDITIONAL" else min(pts, 45)
 
-    # Summary line
+    # --- Summary
+    label = product["label"]
     if status == "ELIGIBLE":
-        summary = f"You are eligible for a {product['label']} of {fmt_inr(amount)} over {tenure:g} years. Indicative EMI: {fmt_inr(new_emi)}/month at {rate}% p.a."
-    elif status == "CONDITIONAL" and only_amount_fails and amount < min_amount:
-        summary = (f"The minimum {product['label']} is {fmt_inr(min_amount)}; you are eligible for anything from {fmt_inr(min_amount)} "
-                   f"up to {fmt_inr(max_eligible)} over {tenure:g} years.")
-    elif status == "CONDITIONAL" and only_amount_fails:
-        summary = (f"{fmt_inr(amount)} is above what you qualify for, but you are eligible for up to {fmt_inr(max_eligible)} "
+        summary = f"You are eligible for a {label} of {fmt_inr(amount)} over {tenure:g} years. Indicative EMI: {fmt_inr(new_emi)}/month at {rate}% p.a."
+    elif status == "CONDITIONAL" and only_capacity_fails and amount < min_amount:
+        summary = f"The minimum {label} is {fmt_inr(min_amount)}; you are eligible for anything from {fmt_inr(min_amount)} up to {fmt_inr(max_eligible, 'floor')} over {tenure:g} years."
+    elif status == "CONDITIONAL" and only_capacity_fails:
+        summary = (f"{fmt_inr(amount)} is above what you qualify for, but you are eligible for up to {fmt_inr(max_eligible, 'floor')} "
                    f"over {tenure:g} years (EMI about {fmt_inr(emi(max_eligible, rate, tenure))}/month).")
     elif status == "CONDITIONAL":
         summary = f"You are eligible for {fmt_inr(amount)} over {tenure:g} years, subject to: " + "; ".join(c.detail for c in soft_flags)
     else:
-        summary = f"You are not eligible for a {product['label']} of {fmt_inr(amount)} right now. Main reasons: " + "; ".join(c.detail for c in hard_fails[:3])
+        summary = f"You are not eligible for a {label} of {fmt_inr(amount)} right now. Main reasons: " + "; ".join(c.detail for c in hard_fails[:3])
 
-    # de-duplicate improvements preserving order
-    seen = set()
+    seen: set[str] = set()
     improvements = [i for i in improvements if not (i in seen or seen.add(i))]
-
-    return Evaluation(status=status, loan_type=loan_type, checks=checks, emi=round(new_emi), foir=round(foir, 3),
+    return Evaluation(status=status, loan_type=loan_type, checks=checks, invalid_fields=invalid,
+                      emi=round(new_emi), foir=round(foir, 4) if math.isfinite(foir) else None,
                       interest_rate=rate, max_eligible_amount=max_eligible, requested_amount=amount, tenure_years=tenure,
-                      improvements=improvements, summary=summary, score=score_pts)
+                      improvements=improvements, summary=summary, score=pts)

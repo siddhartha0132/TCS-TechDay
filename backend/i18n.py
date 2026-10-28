@@ -118,6 +118,13 @@ T = {
         "hinglish": "Aap 'what if' sawaal bhi pooch sakte hain, jaise “7 saal ke liye loon to?”",
     },
     "reset": {"en": "Starting over. ", "hi": "फिर से शुरू करते हैं। ", "hinglish": "Phir se shuru karte hain. "},
+    "what_if": {"en": "Here's what would happen if you change that", "hi": "अगर आप यह बदलें तो परिणाम यह होगा",
+                "hinglish": "Agar aap ye badlein to result ye hoga"},
+    "hypothetical": {"en": "(Hypothetical — your saved details are unchanged.)", "hi": "(यह केवल अनुमान है — आपकी सहेजी गई जानकारी नहीं बदली।)",
+                     "hinglish": "(Ye sirf hypothetical hai — aapki saved details nahi badli.)"},
+    "invalid": {"en": "That {field} doesn't look right.", "hi": "यह {field} सही नहीं लग रहा।", "hinglish": "Ye {field} sahi nahi lag raha."},
+    "estimate_ok": {"en": "An approximate figure is fine, e.g. “about 40k”. ", "hi": "अनुमानित राशि भी चलेगी, जैसे “लगभग 40 हज़ार”। ",
+                    "hinglish": "Approx figure bhi chalega, jaise “around 40k”. "},
 }
 
 
@@ -129,7 +136,9 @@ def ask_for(lang: str, field: str) -> str:
     return ASK.get(field, {}).get(lang) or ASK.get(field, {}).get("en") or f"Please share your {field.replace('_', ' ')}."
 
 
-def render_evaluation(lang: str, ev: dict, documents: list[str]) -> str:
+def render_evaluation(lang: str, ev: dict, documents: list[str], hypothetical: bool = False) -> str:
+    if ev["status"] == "INCOMPLETE":
+        return ev["summary"]
     lines = [t(lang, ev["status"]), ev["summary"], ""]
     failed = [c for c in ev["checks"] if not c["passed"]]
     passed = [c for c in ev["checks"] if c["passed"]]
@@ -147,5 +156,7 @@ def render_evaluation(lang: str, ev: dict, documents: list[str]) -> str:
         lines.append("")
         lines.append(t(lang, "documents"))
         lines += [f"• {d}" for d in documents]
-    lines += ["", t(lang, "disclaimer"), t(lang, "ask_more")]
+    lines += ["", t(lang, "hypothetical") if hypothetical else t(lang, "disclaimer")]
+    if not hypothetical:
+        lines.append(t(lang, "ask_more"))
     return "\n".join(lines)

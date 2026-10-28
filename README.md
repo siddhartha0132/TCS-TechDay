@@ -75,17 +75,35 @@ Response includes `reply`, `evaluation` (status, checks, EMI, FOIR, max eligible
 
 ## Configuration
 
+All keys are optional. With none, everything runs on the rules engine.
+
 | Variable | Default | Meaning |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | — | Enables GenAI mode (direct Anthropic API) |
-| `OPENROUTER_API_KEY` | — | Enables GenAI mode through OpenRouter when no Anthropic key is set |
-| `SARVAM_API_KEY` | — | Sarvam AI speech-to-text / text-to-speech for EN + Indian languages; browser speech otherwise |
-| `LLM_MODEL` | `claude-opus-5-5` | Any current Claude model (mapped to `anthropic/claude-opus-5.5` on OpenRouter) |
-| `LLM_EFFORT` | `low` | `low` / `medium` / `high` — trade reasoning depth for latency |
+| `ANTHROPIC_API_KEY` | — | Claude (paid) as first choice in the model chain |
+| `ANTHROPIC_MODEL` | `claude-opus-5-5` | Claude model when the key above is set |
+| `OPENROUTER_API_KEY` | — | Free models via OpenRouter |
+| `OPENROUTER_MODEL` | `nvidia/nemotron-3.5-super-vl:free` | Primary free model (fastest with correct tool calling in our tests: ~7 s) |
+| `OPENROUTER_FALLBACK_MODELS` | `nvidia/nemotron-3.5-lightning:free,…` | Tried after NVIDIA if the primary is rate-limited |
+| `NVIDIA_API_KEY` | — | NVIDIA's free API (Nemotron Ultra), second in the chain |
+| `SARVAM_API_KEY` | — | Sarvam AI speech-to-text / text-to-speech for Indian languages; browser speech otherwise |
+| `LLM_TURN_BUDGET_S` | `13` | Hard latency budget per reply; past it the rules engine answers, so replies stay < 15 s |
+| `LLM_EFFORT` | `low` | Reasoning effort for Claude |
+| `RATE_CHAT_PER_MIN` / `RATE_VOICE_PER_MIN` / `RATE_API_PER_MIN` | 20 / 10 / 120 | Per-client rate limits |
+| `ALLOWED_ORIGINS` | — (same-origin) | Comma-separated origins allowed to call the API cross-site |
 
-The GenAI path sends `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`) so a safety refusal
-re-runs on a fallback model instead of failing the turn. Remove those two lines in `agent.py` if your account
-doesn't have the beta.
+**Model chain:** Claude (if keyed) → OpenRouter free → NVIDIA free → more OpenRouter free → rules engine.
+Each step is skipped on rate limit / error / timeout. If a model can't explain a verdict inside the budget,
+the engine's own explanation is used ("fast path"), so the decision never waits on a model.
+
+## Tests (attack suite)
+
+```bash
+.venv/bin/python tests/run_all.py   # never calls a paid API
+```
+
+Invariant fuzzer over 30k random profiles (EMI/FOIR maths, monotonicity, every "you qualify for up to X"
+and every improvement suggestion re-checked), NaN/inf/garbage inputs, 81 realistic EN/HI/Hinglish messages,
+PII masking, HTTP hardening (rate limits, body limits, headers), multi-turn conversations, labelled eval.
 
 ## Verdict categories
 

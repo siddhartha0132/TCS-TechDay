@@ -12,6 +12,7 @@ import httpx
 
 SARVAM_URL = "https://api.sarvam.ai"
 TTS_MAX_CHARS = 1400
+ALLOWED_AUDIO_TYPES = {"audio/webm", "audio/ogg", "audio/mp4", "audio/wav", "audio/x-wav", "audio/wave", "audio/mpeg"}
 EMOJI_AND_MARKS = re.compile(r"[\U0001F300-\U0001FAFF☀-➿•→☐*#_`]")
 
 

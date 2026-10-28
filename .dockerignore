@@ -1,0 +1,10 @@
+.env
+.env.*
+.venv
+.git
+__pycache__
+*.pyc
+eval
+docs
+data/applicants.csv
+data/test_cases.json

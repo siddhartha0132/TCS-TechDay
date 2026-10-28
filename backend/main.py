@@ -4,60 +4,63 @@ Run:  uvicorn backend.main:app --reload --port 8000
 """
 from __future__ import annotations
 
-import time
+import logging
+import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Literal, Optional, Union
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
 from . import agent, voice
 from .documents import required_documents
-from .rules import RULES, evaluate
+from .rules import evaluate
+from .security import SecurityMiddleware
+from .store import sessions
 
 ROOT = Path(__file__).resolve().parent.parent
 FRONTEND = ROOT / "frontend"
-SESSION_TTL_S = 60 * 60
+ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+log = logging.getLogger("loanmitra")
 
-app = FastAPI(title="LoanMitra — Automated Loan Eligibility Chatbot", version="1.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-
-_sessions: dict[str, agent.Session] = {}
-
-
-def _session(session_id: Optional[str]) -> agent.Session:
-    now = time.time()
-    for sid in [s for s, v in _sessions.items() if now - v.updated > SESSION_TTL_S]:
-        _sessions.pop(sid, None)  # memory-only sessions expire; nothing is written to disk
-    if session_id and session_id in _sessions:
-        return _sessions[session_id]
-    s = agent.Session()
-    _sessions[s.id] = s
-    return s
+app = FastAPI(title="LoanMitra — Automated Loan Eligibility Chatbot", version="2.0.0",
+              docs_url=None, redoc_url=None, openapi_url=None)  # no public schema browsing in demo/prod
+app.add_middleware(SecurityMiddleware)
+if ALLOWED_ORIGINS:  # same-origin by default; list partner origins explicitly to allow cross-site calls
+    app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["GET", "POST"],
+                       allow_headers=["Content-Type"])
 
 
 class ChatIn(BaseModel):
-    session_id: Optional[str] = None
+    model_config = ConfigDict(extra="forbid")
+    session_id: Optional[str] = Field(None, max_length=64)
     message: str = Field(..., min_length=1, max_length=2000)
-    language: str = "auto"  # auto | en | hi | hinglish
+    language: Literal["auto", "en", "hi", "hinglish"] = "auto"
 
 
 class EvaluateIn(BaseModel):
-    applicant: dict[str, Any]
+    model_config = ConfigDict(extra="forbid")
+    applicant: dict[str, Union[StrictBool, float, int, str, None]] = Field(..., max_length=30)
+
+
+class ResetIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    session_id: str = Field(..., max_length=64)
 
 
 class TtsIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     text: str = Field(..., min_length=1, max_length=4000)
-    language: str = "en"
+    language: Literal["auto", "en", "hi", "hinglish"] = "en"
 
 
 @app.get("/api/health")
 def health():
     return {"status": "ok", "mode": "genai" if agent.genai_available() else "deterministic",
-            "provider": agent.provider(), "model": agent.MODEL if agent.genai_available() else None,
+            "model": agent.MODEL if agent.genai_available() else None,
             "voice": "sarvam" if voice.available() else "browser"}
 
 
@@ -66,13 +69,17 @@ async def stt(request: Request):
     """Body: raw audio blob from MediaRecorder (audio/webm)."""
     if not voice.available():
         raise HTTPException(503, "Sarvam not configured")
-    audio = await request.body()
-    if not audio or len(audio) > 10 * 1024 * 1024:
-        raise HTTPException(400, "empty or too large recording")
+    content_type = request.headers.get("content-type", "").split(";")[0].strip().lower()
+    if content_type not in voice.ALLOWED_AUDIO_TYPES:
+        raise HTTPException(415, "Unsupported audio type")
+    audio = await request.body()  # size already bounded by SecurityMiddleware (Content-Length)
+    if not audio:
+        raise HTTPException(400, "Empty recording")
     try:
-        return voice.speech_to_text(audio, request.headers.get("content-type", "audio/webm"))
-    except Exception as exc:
-        raise HTTPException(502, f"speech-to-text failed: {type(exc).__name__}")
+        return voice.speech_to_text(audio, content_type)
+    except Exception:
+        log.exception("speech-to-text failed")
+        raise HTTPException(502, "Speech service unavailable, please type instead.")
 
 
 @app.post("/api/tts")
@@ -81,21 +88,27 @@ def tts(body: TtsIn):
         raise HTTPException(503, "Sarvam not configured")
     try:
         return {"audio_wav_base64": voice.text_to_speech(body.text, body.language)}
-    except Exception as exc:
-        raise HTTPException(502, f"text-to-speech failed: {type(exc).__name__}")
+    except Exception:
+        log.exception("text-to-speech failed")
+        raise HTTPException(502, "Speech service unavailable.")
 
 
 @app.post("/api/chat")
 def chat(body: ChatIn):
-    s = _session(body.session_id)
-    out = agent.handle_message(s, body.message, body.language)
+    s, lock = sessions.get_or_create(body.session_id)
+    if not lock.acquire(blocking=False):
+        raise HTTPException(409, "Your previous message is still being processed.")
+    try:
+        out = agent.handle_message(s, body.message, body.language)
+    finally:
+        lock.release()
     out["session_id"] = s.id
     return out
 
 
 @app.post("/api/reset")
-def reset(body: dict):
-    s = _sessions.get(body.get("session_id", ""))
+def reset(body: ResetIn):
+    s = sessions.get(body.session_id)
     if s:
         s.reset()
     return {"ok": True}
@@ -108,11 +121,6 @@ def evaluate_direct(body: EvaluateIn):
     if ev["status"] != "INCOMPLETE":
         ev["documents"] = required_documents(ev["loan_type"], body.applicant.get("employment_type"))
     return ev
-
-
-@app.get("/api/rules")
-def rules():
-    return RULES
 
 
 @app.get("/api/samples")

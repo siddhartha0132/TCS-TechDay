@@ -146,4 +146,6 @@ per `mobile_last4`, flagged `"simulated": true`, and never touch real data.
   `/?ch=1..5` deep-links to a chapter.
 - `/chat` — the assistant (chat + quick form), bank-statement upload (📎), lender comparison, voice.
 - Bank statements: `POST /api/statement/analyze?consent=true` (PDF/CSV, ≤ 5 MB) — analysed in memory, aggregates only.
-  `frontend/sample_statement.pdf` is a synthetic statement for demos (`python -m data.make_sample_statement`).
+  `frontend/demo_statement.pdf` is the synthetic statement used on stage (`python -m data.make_demo_statement`): salary
+  ₹82,000 and EMIs ₹9,300/month, so claiming "1.2 lakh, no EMIs" triggers both statement warnings.
+  `frontend/sample_statement.pdf` / `.csv` is a simpler one (`python -m data.make_sample_statement`).

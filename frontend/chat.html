@@ -35,8 +35,8 @@
           <option value="pa">ਪੰਜਾਬੀ</option>
           <option value="od">ଓଡ଼ିଆ</option>
         </select>
-        <button id="ttsBtn" class="icon-btn" title="Read replies aloud" aria-pressed="false" aria-label="Read replies aloud">🔈</button>
-        <button id="resetBtn" class="btn-ghost">↺ New check</button>
+        <button id="ttsBtn" class="icon-btn" title="Read replies aloud" aria-pressed="false" aria-label="Read replies aloud"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 10l4 4M21 10l-4 4"/></svg></button>
+        <button id="resetBtn" class="btn-ghost"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg><span class="resetText">New check</span></button>
       </div>
     </div>
   </header>
@@ -44,13 +44,13 @@
   <section class="appbar">
     <div class="wrap">
       <div class="products" role="tablist" aria-label="Choose a loan">
-        <button class="product" data-type="personal" role="tab"><span class="p-ico">👤</span><span><b>Personal</b><small>from 11.5%</small></span></button>
-        <button class="product" data-type="home" role="tab"><span class="p-ico">🏠</span><span><b>Home</b><small>from 8.5%</small></span></button>
-        <button class="product" data-type="auto" role="tab"><span class="p-ico">🚗</span><span><b>Car</b><small>from 9.5%</small></span></button>
-        <button class="product" data-type="education" role="tab"><span class="p-ico">🎓</span><span><b>Education</b><small>from 10%</small></span></button>
+        <button class="product" data-type="personal" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span><b>Personal</b><small>from 11.5%</small></span></button>
+        <button class="product" data-type="home" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10M10 20v-6h4v6"/></svg><span><b>Home</b><small>from 8.5%</small></span></button>
+        <button class="product" data-type="auto" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17H3v-5l2.5-5h13L21 12v5h-2"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M9.5 17h5M3 12h18"/></svg><span><b>Car</b><small>from 9.5%</small></span></button>
+        <button class="product" data-type="education" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5M22 9v6"/></svg><span><b>Education</b><small>from 10%</small></span></button>
       </div>
       <ul class="trust">
-        <li>🛡️ No CIBIL impact</li><li>⚡ Under 15 s</li><li>🔒 PII auto-masked</li>
+        <li>No CIBIL impact</li><li>Reply under 15 s</li><li>PII auto-masked</li>
       </ul>
     </div>
   </section>
@@ -59,8 +59,8 @@
     <!-- ================= Chat ================= -->
     <section class="chat card" aria-label="Chat with LoanMitra">
       <div class="mode-tabs" role="tablist" aria-label="How do you want to check?">
-        <button type="button" class="mode-tab" id="tabChat" role="tab" aria-selected="true">💬 Chat with LoanMitra</button>
-        <button type="button" class="mode-tab" id="tabForm" role="tab" aria-selected="false">📝 Quick form</button>
+        <button type="button" class="mode-tab" id="tabChat" role="tab" aria-selected="true"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Chat</button>
+        <button type="button" class="mode-tab" id="tabForm" role="tab" aria-selected="false"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Quick form</button>
       </div>
 
       <div id="chatPanel" class="panel">
@@ -74,37 +74,37 @@
       <div id="messages" class="messages" aria-live="polite">
         <div class="msg bot">
           <div class="avatar" aria-hidden="true">₹</div>
-          <div class="bubble welcome"><b>Namaste! I'm LoanMitra 👋</b><br>Pick a loan above, or just tell me what you need — e.g. <i>“I'm 30, salaried, earn 60k a month and need a 5 lakh personal loan for 3 years.”</i></div>
+          <div class="bubble welcome"><div class="lead">Namaste, I'm LoanMitra.</div>Pick a loan below, or just tell me what you need — e.g. <i>“I'm 30, salaried, earn 60k a month and need a 5 lakh personal loan for 3 years.”</i></div>
         </div>
       </div>
 
       <div id="quick" class="quick" aria-label="Quick replies"></div>
 
       <form id="composer" class="composer" autocomplete="off">
-        <button type="button" id="attachBtn" class="mic" title="Upload bank statement (PDF/CSV) to verify income" aria-label="Upload bank statement">📎</button>
+        <button type="button" id="attachBtn" class="mic" aria-label="Upload bank statement (PDF or CSV)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5 12 19.5a5 5 0 0 1-7-7l8-8a3.3 3.3 0 0 1 4.7 4.7l-8 8a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4"/></svg></button>
         <input type="file" id="stmtFile" accept=".pdf,.csv,application/pdf,text/csv" hidden>
-        <button type="button" id="micBtn" class="mic" title="Speak" aria-label="Speak">🎤</button>
+        <button type="button" id="micBtn" class="mic" aria-label="Speak"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
         <textarea id="input" rows="1" placeholder="Type your message…" aria-label="Message"></textarea>
-        <button type="submit" id="sendBtn" class="btn-primary" aria-label="Send">➤</button>
+        <button type="submit" id="sendBtn" class="btn-primary" aria-label="Send"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       </form>
-      <div class="hint">📎 Verify your income from your bank statement — read in memory, never stored. No statement handy? <a href="/static/sample_statement.pdf" download>Try the sample</a>.</div>
+      <div class="hint">Attach a bank statement to verify your income — read in memory, never stored. No statement handy? <a href="/static/demo_statement.pdf" download>Try the sample</a>.</div>
       </div>
 
       <div id="formPanel" class="panel form-panel" hidden>
         <form id="quickForm" class="qform" novalidate>
           <p class="form-intro">Prefer a form? Fill these in and get your result instantly. Nothing is stored.</p>
           <div class="autofill">
-            <div class="autofill-head"><b>⚡ Fetch my details</b> <span class="sim-tag">simulated bureau + Account Aggregator</span></div>
+            <div class="autofill-head"><b>Fetch my details</b> <span class="sim-tag">simulated bureau + Account Aggregator</span></div>
             <div class="autofill-row">
               <input id="fMobile4" type="text" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="Mobile last 4 digits" aria-label="Mobile number, last 4 digits">
               <label class="consent"><input id="fConsent" type="checkbox"> I consent to a soft credit check and bank-statement read</label>
               <button type="button" id="fetchBtn" class="btn-ghost">Fetch</button>
             </div>
             <div id="fetchOut" class="muted" aria-live="polite"></div>
-            <div class="autofill-head stmt-head"><b>📄 Or verify from your bank statement</b> <span class="live-tag">live analysis · not stored</span></div>
+            <div class="autofill-head stmt-head"><b>Or verify from your bank statement</b> <span class="live-tag">live analysis · not stored</span></div>
             <div class="autofill-row">
               <input type="file" id="fStmt" accept=".pdf,.csv,application/pdf,text/csv" aria-label="Bank statement PDF or CSV">
-              <a class="muted" href="/static/sample_statement.pdf" download>Sample statement</a>
+              <a class="muted" href="/static/demo_statement.pdf" download>Sample statement</a>
             </div>
             <div id="stmtOut" class="muted" aria-live="polite"></div>
           </div>
@@ -224,9 +224,9 @@
       </details>
 
       <div class="meta">
-        <span id="latencyBadge" class="badge badge-muted">⏱ –</span>
-        <span id="piiBadge" class="badge badge-muted">🔒 PII guard on</span>
-        <span id="langBadge" class="badge badge-muted">🌐 –</span>
+        <span id="latencyBadge" class="badge badge-muted">Latency –</span>
+        <span id="piiBadge" class="badge badge-muted">PII guard on</span>
+        <span id="langBadge" class="badge badge-muted">Language –</span>
       </div>
     </aside>
   </main>

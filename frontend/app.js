@@ -68,7 +68,7 @@
     wrap.className = `msg ${role}`;
     // The chip comes from the rules engine, not the model: it is the authoritative decision.
     const chip = verdict && VERDICT[verdict.status]
-      ? `<div class="verified v-${verdict.status}" title="${esc(verdict.summary)}">🔒 Rules-engine verdict: ${VERDICT[verdict.status]}</div>` : "";
+      ? `<div class="verified v-${verdict.status}" title="${esc(verdict.summary)}">Rules engine · ${VERDICT[verdict.status]}</div>` : "";
     const avatar = role === "bot" ? `<div class="avatar" aria-hidden="true">₹</div>` : "";
     wrap.innerHTML = `${avatar}<div class="bubble">${chip}${renderText(text)}${tag ? `<div class="tag">${esc(tag)}</div>` : ""}</div>`;
     messagesEl.appendChild(wrap);
@@ -87,7 +87,7 @@
     const p = PRODUCT[profile.loan_type] || PRODUCT.personal;
     const co = profile.loan_type === "education" ? "My father's " : "";
     switch (field) {
-      case "__confirm__": return [["✅ Yes, confirm", "Yes, confirm"], ["✏️ Change something", "__edit__"]];
+      case "__confirm__": return [["Yes, confirm", "Yes, confirm"], ["Change something", "__edit__"]];
       case "loan_type": return Object.entries(PRODUCT).map(([k, v]) => [v.label, `I want a ${v.label.toLowerCase()}`]);
       case "loan_amount": return p.amounts.map((a) => [fmtINR(a), `${a / 1e5} lakh`]);
       case "tenure_years": return p.tenures.map((t) => [`${t} years`, `${t} years`]);
@@ -105,7 +105,7 @@
     }
     if (ev) {
       const t = Number(profile.tenure_years || 0), max = p.tenure[1];
-      const out = [["🏦 Compare banks", "Which bank is best for me?"], ["📄 Documents needed", "Which documents do I need?"]];
+      const out = [["Compare banks", "Which bank is best for me?"], ["Documents needed", "Which documents do I need?"]];
       if (t && t < max) out.unshift([`What if ${Math.min(max, t + (max > 10 ? 5 : 2))} years?`, `What if I take it for ${Math.min(max, t + (max > 10 ? 5 : 2))} years?`]);
       out.push(["↺ New check", "__reset__"]);
       return out;
@@ -204,20 +204,20 @@
     renderQuick(r.pending_confirmation ? "__confirm__" : r.next_field, profile, ev);
 
     const lb = $("latencyBadge");
-    lb.textContent = `⏱ ${(r.latency_ms / 1000).toFixed(1)} s`;
+    lb.textContent = `Latency ${(r.latency_ms / 1000).toFixed(1)} s`;
     lb.className = "badge " + (r.latency_ms < 15000 ? "badge-ok" : "badge-bad");
     const pb = $("piiBadge");
-    if (r.pii_masked && r.pii_masked.length) { pb.textContent = `🔒 masked: ${r.pii_masked.join(", ")}`; pb.className = "badge badge-warn"; }
-    else { pb.textContent = "🔒 PII guard on"; pb.className = "badge badge-muted"; }
+    if (r.pii_masked && r.pii_masked.length) { pb.textContent = `PII masked: ${r.pii_masked.join(", ")}`; pb.className = "badge badge-warn"; }
+    else { pb.textContent = "PII guard on"; pb.className = "badge badge-muted"; }
     const langName = [...langSelect.options].find((o) => o.value === r.language);
-    $("langBadge").textContent = "🌐 " + (r.language === "en" ? "English" : langName ? langName.textContent : r.language);
+    $("langBadge").textContent = "Language " + (r.language === "en" ? "English" : langName ? langName.textContent : r.language);
     setModeBadge(r.mode, r.model);
   }
   function setModeBadge(mode, model) {
     if (mode) { currentMode = mode; currentModel = model; }
     const mb = $("modeBadge");
     const short = (model || "").split("/").pop().replace(":free", "");
-    mb.textContent = mode === "genai" ? `✨ AI · ${short}` : mode && mode.includes("error") ? "Rules engine (AI busy)" : "Rules engine";
+    mb.textContent = mode === "genai" ? `AI · ${short}` : mode && mode.includes("error") ? "Rules engine (AI busy)" : "Rules engine";
     mb.className = "badge " + (mode === "genai" ? "badge-ok" : "badge-warn");
   }
 
@@ -368,7 +368,7 @@
 
   let currentAudio = null;
   ttsBtn.addEventListener("click", () => {
-    tts = !tts; ttsBtn.setAttribute("aria-pressed", String(tts)); ttsBtn.textContent = tts ? "🔊" : "🔈";
+    tts = !tts; ttsBtn.setAttribute("aria-pressed", String(tts)); ttsBtn.querySelector("path:last-child").setAttribute("d", tts ? "M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12" : "M17 10l4 4M21 10l-4 4");
     if (!tts) { window.speechSynthesis?.cancel(); currentAudio?.pause(); }
   });
   async function speak(text, lang) {
@@ -473,9 +473,9 @@
       updateDashboard({ evaluation: ev, profile: applicant, missing_fields: [], documents: ev.documents || [], latency_ms: ms,
         pii_masked: [], language: "en", mode: currentMode, model: currentModel, next_field: null });
       out.hidden = false;
-      out.innerHTML = `<span class="verified v-${esc(ev.status)}">🔒 ${esc(VERDICT[ev.status] || ev.status)}</span><div>${esc(ev.summary)}</div>` +
+      out.innerHTML = `<span class="verified v-${esc(ev.status)}">Rules engine · ${esc(VERDICT[ev.status] || ev.status)}</span><div>${esc(ev.summary)}</div>` +
         (ev.improvements.length ? `<ul>${ev.improvements.slice(0, 2).map((s) => `<li>${esc(s)}</li>`).join("")}</ul>` : "") +
-        `<button type="button" class="link-btn" id="discussBtn">💬 Discuss this result in chat →</button>`;
+        `<button type="button" class="link-btn" id="discussBtn">Discuss this result in chat →</button>`;
       $("discussBtn").addEventListener("click", () => { showTab("chat"); send(chatSentence(applicant)); });
     } catch (err) {
       out.hidden = false; out.textContent = "Couldn't check right now (" + err.message + "). Please try again.";
@@ -545,13 +545,13 @@
     const file = $("stmtFile").files[0];
     $("stmtFile").value = "";
     if (!file) return;
-    addMessage("user", `📎 ${file.name}`);
+    addMessage("user", `Attached: ${file.name}`);
     const typing = addTyping();
     try {
       const a = await analyzeStatement(file);
       sessionId = a.session_id || sessionId;
       typing.remove();
-      addMessage("bot", `📄 Statement analysed (${a.period}). ${stmtSummary(a)}.\nThe file wasn't stored.`);
+      addMessage("bot", `Statement analysed (${a.period}). ${stmtSummary(a)}.\nThe file wasn't stored.`);
       send(`My bank statement shows ${a.income_type === "salaried" ? "a salary" : "income"} of ${Math.round(a.avg_monthly_income)} per month and ` +
         `${a.avg_monthly_emi ? `EMIs of ${Math.round(a.avg_monthly_emi)} per month` : "no EMIs"}. I am ${a.income_type === "salaried" ? "salaried" : "self-employed"}.`);
     } catch (e) { typing.remove(); addMessage("bot", "Sorry — " + e.message); }

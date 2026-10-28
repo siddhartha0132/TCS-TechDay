@@ -17,6 +17,8 @@ import os
 import re
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeout
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -266,6 +268,9 @@ def _bget(block: Any, key: str, default: Any = None) -> Any:
     return block.get(key, default) if isinstance(block, dict) else getattr(block, key, default)
 
 
+_POOL = ThreadPoolExecutor(max_workers=16, thread_name_prefix="llm")
+
+
 class BackendUnavailable(Exception):
     pass
 
@@ -349,8 +354,15 @@ class GenAIAgent:
             if remaining < MIN_CALL_S:
                 break
             started = time.perf_counter()
+            fn = self._call_nvidia if b.kind == "nvidia" else self._call_anthropic
+            # Hard wall-clock deadline: providers that stream keep-alive bytes never trip an HTTP read timeout,
+            # so wait on a worker thread and abandon the call (it finishes in the background) when time is up.
+            future = _POOL.submit(fn, b, list(session.history), remaining)
             try:
-                reply = (self._call_nvidia if b.kind == "nvidia" else self._call_anthropic)(b, session.history, remaining)
+                reply = future.result(timeout=remaining)
+            except FuturesTimeout:
+                log.warning("backend %s/%s exceeded the turn budget; trying next", b.kind, b.model)
+                continue
             except BackendUnavailable as exc:
                 log.warning("backend %s/%s unavailable (%s); trying next", b.kind, b.model, exc)
                 continue

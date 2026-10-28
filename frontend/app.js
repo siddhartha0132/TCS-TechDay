@@ -104,7 +104,7 @@
     }
     if (ev) {
       const t = Number(profile.tenure_years || 0), max = p.tenure[1];
-      const out = [["📄 Documents needed", "Which documents do I need?"]];
+      const out = [["🏦 Compare banks", "Which bank is best for me?"], ["📄 Documents needed", "Which documents do I need?"]];
       if (t && t < max) out.unshift([`What if ${Math.min(max, t + (max > 10 ? 5 : 2))} years?`, `What if I take it for ${Math.min(max, t + (max > 10 ? 5 : 2))} years?`]);
       out.push(["↺ New check", "__reset__"]);
       return out;
@@ -185,6 +185,7 @@
       $("docsCard").hidden = !(r.documents && r.documents.length);
       $("docsList").innerHTML = (r.documents || []).map((d) => `<li>${esc(d)}</li>`).join("");
       setupSimulator(profile, ev);
+      refreshLenders(profile);
     } else {
       pill.className = "pill pill-INCOMPLETE";
       pill.textContent = keys.length ? `Collecting details · ${keys.length}/${total}` : "Awaiting details";
@@ -192,6 +193,7 @@
       $("resultAmount").textContent = "—";
       $("resultSub").textContent = missing.length ? "Still needed: " + missing.map((k) => (FIELD_LABELS[k] || k).toLowerCase()).join(", ") : "";
       $("simCard").hidden = true;
+      $("lendersCard").hidden = true;
     }
     updateStepper(profile, ev);
     renderQuick(r.next_field, profile, ev);
@@ -202,7 +204,8 @@
     const pb = $("piiBadge");
     if (r.pii_masked && r.pii_masked.length) { pb.textContent = `🔒 masked: ${r.pii_masked.join(", ")}`; pb.className = "badge badge-warn"; }
     else { pb.textContent = "🔒 PII guard on"; pb.className = "badge badge-muted"; }
-    $("langBadge").textContent = "🌐 " + ({ en: "English", hi: "हिंदी", hinglish: "Hinglish" }[r.language] || r.language);
+    const langName = [...langSelect.options].find((o) => o.value === r.language);
+    $("langBadge").textContent = "🌐 " + (r.language === "en" ? "English" : langName ? langName.textContent : r.language);
     setModeBadge(r.mode, r.model);
   }
   function setModeBadge(mode, model) {
@@ -250,7 +253,7 @@
   $("simTenure").addEventListener("input", onSim);
 
   // ------------------------------------------------------------ send / reset
-  async function send(text) {
+  async function send(text, langOverride) {
     text = (text || input.value).trim();
     if (!text || busy) return;
     busy = true; sendBtn.disabled = true;
@@ -261,7 +264,7 @@
     try {
       const res = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, message: text, language: langSelect.value }),
+        body: JSON.stringify({ session_id: sessionId, message: text, language: langOverride || langSelect.value }),
       });
       if (!res.ok) {
         let detail = `HTTP ${res.status}`;
@@ -326,8 +329,11 @@
       try {
         const res = await fetch("/api/stt", { method: "POST", headers: { "Content-Type": blob.type }, body: blob });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const { transcript } = await res.json();
-        if (transcript && transcript.trim()) { input.value = transcript.trim(); autosize(); send(); }
+        const { transcript, language_code } = await res.json();
+        const spoken = (language_code || "").split("-")[0];
+        const known = [...langSelect.options].map((o) => o.value);
+        const lang = langSelect.value === "auto" && known.includes(spoken) ? spoken : undefined;
+        if (transcript && transcript.trim()) { input.value = transcript.trim(); autosize(); send(undefined, lang); }
       } catch (e) { addMessage("bot", "Sorry, I couldn't hear that clearly. Please try again or type. (" + e.message + ")"); }
       finally { input.placeholder = "Type your message…"; }
     };
@@ -340,7 +346,8 @@
     if (!SR) return;
     if (rec) { rec.stop(); return; }
     rec = new SR();
-    rec.lang = langSelect.value === "hi" || langSelect.value === "hinglish" ? "hi-IN" : "en-IN";
+    const v = langSelect.value;
+    rec.lang = v === "hinglish" ? "hi-IN" : ["auto", "en"].includes(v) ? "en-IN" : `${v}-IN`;
     rec.interimResults = true;
     micBtn.classList.add("listening");
     let finalText = "";
@@ -468,6 +475,48 @@
     } catch (err) {
       out.hidden = false; out.textContent = "Couldn't check right now (" + err.message + "). Please try again.";
     } finally { btn.disabled = false; }
+  });
+
+  // ------------------------------------------------------------ lender comparison (simulated panel)
+  async function refreshLenders(profile) {
+    try {
+      const res = await fetch("/api/lenders/compare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ applicant: profile }) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const r = await res.json();
+      $("lendersList").innerHTML = r.offers.map((o) => {
+        const best = o.lender_id === r.best_lender_id;
+        const line = o.full_amount ? `EMI ${fmtINR(o.emi)}/mo · fee ${fmtINR(o.processing_fee)}`
+          : o.status === "CONDITIONAL" ? `Up to ${fmtINR(o.max_eligible_amount)}` : "Not eligible";
+        const why = !o.full_amount && o.top_reason ? `<div class="why">${esc(o.top_reason)}</div>` : "";
+        return `<div class="lender${best ? " best" : ""}"><div><b>${esc(o.lender)}</b>${best ? '<span class="best-badge">BEST</span>' : ""}<br>` +
+          `<small>${esc(o.type)} · ${esc(line)}</small></div><div class="rate">${o.interest_rate}%</div>${why}</div>`;
+      }).join("");
+      $("lendersCard").hidden = false;
+    } catch (e) { $("lendersCard").hidden = true; }
+  }
+
+  // ------------------------------------------------------------ simulated bureau + Account Aggregator autofill
+  $("fetchBtn").addEventListener("click", async () => {
+    const last4 = $("fMobile4").value.trim(), out = $("fetchOut");
+    if (!/^[0-9]{4}$/.test(last4)) { out.textContent = "Enter the last 4 digits of your mobile number."; return; }
+    if (!$("fConsent").checked) { out.textContent = "Please tick the consent box first."; return; }
+    const body = JSON.stringify({ consent: true, mobile_last4: last4 }), headers = { "Content-Type": "application/json" };
+    out.textContent = "Fetching…";
+    try {
+      const [cb, aa] = await Promise.all([
+        fetch("/api/sim/bureau/soft-pull", { method: "POST", headers, body }).then((r) => r.json()),
+        fetch("/api/sim/aa/income", { method: "POST", headers, body }).then((r) => r.json()),
+      ]);
+      if ($("fType").value === "education") $("fType").value = "personal", syncFormFields();
+      $("fEmp").value = aa.employment_type;
+      $("fIncome").value = String(Math.round(aa.avg_monthly_income)); $("fIncome").dispatchEvent(new Event("input"));
+      $("fEmi").value = String(cb.total_monthly_emi);
+      let opt = [...$("fScore").options].find((o) => o.value === String(cb.credit_score));
+      if (!opt) { opt = new Option(`${cb.credit_score} (fetched)`, String(cb.credit_score)); $("fScore").add(opt, 0); }
+      $("fScore").value = String(cb.credit_score);
+      out.textContent = `Filled from simulated bureau (score ${cb.credit_score}, ${cb.active_loans.length} active loan(s), report ${cb.report_id}) ` +
+        `and Account Aggregator (avg income ${fmtINR(aa.avg_monthly_income)} over 6 months). Simulated data only.`;
+    } catch (e) { out.textContent = "Couldn't fetch right now (" + e.message + ")."; }
   });
 
   // ------------------------------------------------------------ boot

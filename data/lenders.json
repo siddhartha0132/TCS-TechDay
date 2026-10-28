@@ -1,0 +1,55 @@
+{
+  "_comment": "SYNTHETIC lender panel for the demo. Fictional names; rates and cut-offs are illustrative, chosen to reflect how real lender types differ (public banks: lower rates, stricter score; NBFCs: higher rates, more lenient). Each product block overrides the reference policy in rules.json.",
+  "lenders": [
+    {
+      "id": "sahyog",
+      "name": "Sahyog Public Bank",
+      "type": "Public sector bank",
+      "processing_fee_pct": 0.5,
+      "products": {
+        "personal": {"interest_rate": 10.75, "min_credit_score": 740, "max_foir": 0.50, "max_amount": 2000000},
+        "home": {"interest_rate": 8.35, "min_credit_score": 700, "max_foir": 0.55},
+        "auto": {"interest_rate": 9.0, "min_credit_score": 700, "max_foir": 0.50},
+        "education": {"interest_rate": 9.5, "min_credit_score": 680}
+      }
+    },
+    {
+      "id": "novaedge",
+      "name": "NovaEdge Bank",
+      "type": "Private bank",
+      "processing_fee_pct": 1.0,
+      "products": {
+        "personal": {"interest_rate": 11.25, "min_credit_score": 720, "max_foir": 0.55},
+        "home": {"interest_rate": 8.6, "min_credit_score": 680, "max_foir": 0.60},
+        "auto": {"interest_rate": 9.4, "min_credit_score": 680, "max_foir": 0.55},
+        "education": {"interest_rate": 10.25, "min_credit_score": 660}
+      }
+    },
+    {
+      "id": "pragati",
+      "name": "Pragati Small Finance Bank",
+      "type": "Small finance bank",
+      "processing_fee_pct": 1.5,
+      "products": {
+        "personal": {"interest_rate": 13.0, "min_credit_score": 680, "max_foir": 0.55, "max_amount": 1500000,
+                     "min_monthly_income": {"salaried": 20000, "self_employed": 25000}},
+        "home": {"interest_rate": 9.25, "min_credit_score": 650, "max_foir": 0.60},
+        "auto": {"interest_rate": 10.5, "min_credit_score": 650, "max_foir": 0.55},
+        "education": {"interest_rate": 11.0, "min_credit_score": 650}
+      }
+    },
+    {
+      "id": "udaan",
+      "name": "Udaan Finance",
+      "type": "NBFC",
+      "processing_fee_pct": 2.0,
+      "products": {
+        "personal": {"interest_rate": 14.5, "min_credit_score": 650, "max_foir": 0.60, "max_amount": 1500000,
+                     "min_monthly_income": {"salaried": 18000, "self_employed": 22000}},
+        "home": {"interest_rate": 9.75, "min_credit_score": 640, "max_foir": 0.65},
+        "auto": {"interest_rate": 11.5, "min_credit_score": 625, "max_foir": 0.60, "max_ltv": 0.95},
+        "education": {"interest_rate": 11.75, "min_credit_score": 640}
+      }
+    }
+  ]
+}

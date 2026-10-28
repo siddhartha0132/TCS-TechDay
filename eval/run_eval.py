@@ -155,7 +155,7 @@ if __name__ == "__main__":
     ap.add_argument("--no-llm", action="store_true", help="force deterministic mode")
     args = ap.parse_args()
     if args.no_llm:
-        for key in ("ANTHROPIC_API_KEY", "OPENROUTER_API_KEY"):
+        for key in ("ANTHROPIC_API_KEY", "OPENROUTER_API_KEY", "NVIDIA_API_KEY"):
             os.environ[key] = ""  # empty (not popped) so load_dotenv() can't refill it
     report = run()
     REPORT.write_text(report, encoding="utf-8")

@@ -50,7 +50,7 @@ CLAUSE_SPLIT = re.compile(r"(?<!\d)[.,]|[.,](?!\d)|[;!?।\n]|\s(?:and|but|aur|l
 
 ZERO_EMI = re.compile(
     r"(?:\b(?:no|not|don'?t|do not|dont|never|without|zero|nil|koi|bina)\b|नहीं|कोई|बिना)[^.;।]{0,30}?(?:\bemis?\b|\bloans?\b|\bobligations?\b|\bdues\b|ईएमआई|लोन|कर्ज)"
-    r"|(?:\bemis?\b|\bloans?\b|ईएमआई|लोन)[^.;।]{0,15}?(?:\b(?:nil|zero|none|nahi|nahin|no)\b|नहीं)", re.I)
+    r"|(?:\bemis?\b|\bloans?\b|ईएमआई|लोन)[^.;।]{0,15}?(?:\b(?:nil|zero|none|nahi|nahin|no|not there|not any)\b|नहीं)", re.I)
 
 LOAN_WORDS = {
     "personal": r"personal|पर्सनल|व्यक्तिगत",

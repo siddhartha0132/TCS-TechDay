@@ -14,9 +14,24 @@ from typing import Optional
 _DEV_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
 
 
+_UNITS_W = {w: i for i, w in enumerate("zero one two three four five six seven eight nine ten eleven twelve thirteen "
+                                         "fourteen fifteen sixteen seventeen eighteen nineteen".split())}
+_TENS_W = {w: 10 * (i + 2) for i, w in enumerate("twenty thirty forty fifty sixty seventy eighty ninety".split())}
+_WORD_NUM = re.compile(r"\b(?:(" + "|".join(_TENS_W) + r")(?:[\s-]+(" + "|".join(k for k in _UNITS_W if _UNITS_W[k] < 10) + r"))?"
+                       r"|(" + "|".join(_UNITS_W) + r"))(\s+and\s+a\s+half)?\b", re.I)
+
+
+def _words_to_digits(text: str) -> str:
+    """'five lakhs' -> '5 lakhs', 'twenty five' -> '25', 'two and a half years' -> '2.5 years' (translations spell numbers)."""
+    def repl(m: re.Match) -> str:
+        v = _TENS_W[m.group(1).lower()] + (_UNITS_W[m.group(2).lower()] if m.group(2) else 0) if m.group(1) else _UNITS_W[m.group(3).lower()]
+        return f"{v}.5" if m.group(4) else str(v)
+    return _WORD_NUM.sub(repl, text)
+
+
 def normalize_text(text: str) -> str:
-    """NFC (folds precomposed ज़ / ड़ into one form) and Devanagari digits -> ASCII."""
-    return unicodedata.normalize("NFC", text).translate(_DEV_DIGITS)
+    """NFC (folds precomposed ज़ / ड़), Devanagari digits -> ASCII, English number words -> digits."""
+    return _words_to_digits(unicodedata.normalize("NFC", text).translate(_DEV_DIGITS))
 
 
 def _n(s: str) -> str:

@@ -25,7 +25,7 @@ from typing import Any, Optional
 import httpx
 from dotenv import load_dotenv
 
-from . import i18n
+from . import i18n, lenders, voice
 from .documents import required_documents
 from .extractor import extract
 from .privacy import mask_pii
@@ -38,7 +38,8 @@ EFFORT = os.getenv("LLM_EFFORT", "low")  # low keeps replies well under the 15 s
 MAX_TOOL_ROUNDS = 4
 MAX_HISTORY_MESSAGES = 40  # ~10 user turns incl. tool round-trips; then the history restarts with the profile
 MAX_TRANSCRIPT = 60
-LANG_NAMES = {"en": "English", "hi": "Hindi (Devanagari script)", "hinglish": "Hinglish (Hindi written in Roman letters)"}
+LANG_NAMES = {"en": "English", "hi": "Hindi (Devanagari script)", "hinglish": "Hinglish (Hindi written in Roman letters)",
+              **{k: "English" for k in ("bn", "ta", "te", "kn", "ml", "mr", "gu", "pa", "od")}}  # regional: translated by Sarvam
 log = logging.getLogger("loanmitra.agent")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api"
 
@@ -217,6 +218,16 @@ TOOLS = [
         },
     },
     {
+        "name": "compare_lenders",
+        "description": (
+            "Compare the applicant's saved profile across the bank's lender panel (different banks / NBFCs with "
+            "different interest rates, CIBIL cut-offs and FOIR limits). Returns each lender's verdict, rate, EMI, "
+            "maximum amount and processing fee, best option first. Use when the user asks which bank is best, "
+            "for the lowest rate, or where else they could get the loan."
+        ),
+        "input_schema": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
         "name": "list_required_documents",
         "description": "Checklist of documents needed for a given loan type and employment type.",
         "input_schema": {
@@ -251,6 +262,8 @@ Rules you must follow
 - When you give a verdict: one line with the verdict and the amount / EMI, then at most 2 short reasons (only
   the failed or borderline checks) and at most 2 next steps from the tool. The screen already shows every rule,
   the full plan and the document list, so do not repeat them; mention documents only when asked.
+- Use `compare_lenders` when the user asks which bank is best, about interest rates, or where else to apply;
+  name the best option and one alternative in a sentence (the screen shows the full table).
 - Use `what_if` for hypothetical questions ("what if I add my wife as co-applicant", "and for 7 years?").
 - This is an indicative soft check; mention it in a few words only on the first verdict.
 - Personal data: do not ask for PAN, Aadhaar, phone or account numbers; they are not needed for a soft check.
@@ -418,6 +431,8 @@ class GenAIAgent:
                         out = tool_update_profile(session, args)
                     elif name == "what_if":
                         out = tool_what_if(session, args.get("changes") or {})
+                    elif name == "compare_lenders":
+                        out = lenders.compare(session.profile)
                     elif name == "list_required_documents":
                         out = tool_documents(args.get("loan_type", ""), args.get("employment_type"))
                     else:
@@ -437,6 +452,8 @@ class GenAIAgent:
     @staticmethod
     def _render(session: Session, tool: str, out: dict) -> str:
         lang = session.lang
+        if tool == "compare_lenders":
+            return lenders.compare_text(out)
         if tool == "list_required_documents":
             return i18n.t(lang, "documents") + "\n" + "\n".join(f"• {d}" for d in out.get("documents", []))
         if out.get("status") == "INCOMPLETE":
@@ -476,6 +493,7 @@ def _to_openai(history: list) -> list[dict]:
 RESET_CMD = re.compile(r"^\s*(?:please\s+)?(?:reset|restart|start over|start again|new application|naya application|"
                        r"phir se shuru(?:\s+kar(?:o|ein|en))?|dobara shuru(?:\s+kar(?:o|ein|en))?|फिर से शुरू(?:\s+कर(?:ें|ो))?)\s*[.!]*\s*$", re.I)
 WHAT_IF = re.compile(r"^\s*(?:what if|and if|if i|if my|suppose|agar|kya hoga agar)\b|^\s*अगर", re.I)
+COMPARE = re.compile(r"\b(?:compare|comparison|which bank|best bank|other banks?|lenders?|lowest rate|cheapest|kaunsa bank|konsa bank|sabse sasta)\b|कौन सा बैंक|बैंक", re.I)
 MONEY_FIELDS = {"monthly_income", "existing_emi", "co_applicant_income", "co_applicant_existing_emi"}
 
 
@@ -496,6 +514,9 @@ class DeterministicAgent:
                 ev = tool_what_if(session, changes)
                 shown = ", ".join(f"{FIELD_LABELS.get(k, k)}: {self._show(k, v)}" for k, v in ev["hypothetical_changes"].items())
                 return f"{i18n.t(lang, 'what_if')} ({shown})\n" + i18n.render_evaluation(lang, ev, [], hypothetical=True)
+
+        if session.evaluation and COMPARE.search(text):
+            return lenders.compare_text(lenders.compare(session.profile))
 
         fields = extract(text, session.expected_field, loan_type)
         asked = session.expected_field
@@ -571,6 +592,16 @@ def handle_message(session: Session, raw_text: str, lang_pref: str = "auto") -> 
         detected = session.lang
     session.lang = detected
 
+    # Regional languages: translate in -> run the same agent in English -> translate the reply back (Sarvam).
+    # English, Hindi and Hinglish are handled natively. PII is already masked before anything leaves the server.
+    user_lang, translated = session.lang, False
+    if user_lang in i18n.TRANSLATED_LANGS and voice.available():
+        try:
+            text = voice.translate(text, user_lang, "en")
+            session.lang, translated = "en", True
+        except Exception:
+            log.warning("translation into English failed; continuing with the original text")
+
     before = (session.evaluation or {}).get("status"), (session.evaluation or {}).get("summary")
     session.last_model = None
     session.reply_source = "rules"
@@ -589,6 +620,13 @@ def handle_message(session: Session, raw_text: str, lang_pref: str = "auto") -> 
         session.history = []
         mode = "deterministic (genai error)"
         reply = _det.respond(session, text)
+
+    if translated:
+        session.lang = user_lang
+        try:
+            reply = voice.translate(reply, "en", user_lang)
+        except Exception:
+            log.warning("translation of the reply failed; answering in English")
 
     latency_ms = int((time.perf_counter() - started) * 1000)
     session.updated = time.time()

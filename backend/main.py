@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
-from . import agent, voice
+from . import agent, lenders, simulated, voice
 from .documents import required_documents
 from .rules import evaluate
 from .security import SecurityMiddleware
@@ -38,12 +38,18 @@ class ChatIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     session_id: Optional[str] = Field(None, max_length=64)
     message: str = Field(..., min_length=1, max_length=2000)
-    language: Literal["auto", "en", "hi", "hinglish"] = "auto"
+    language: Literal["auto", "en", "hi", "hinglish", "bn", "ta", "te", "kn", "ml", "mr", "gu", "pa", "od"] = "auto"
 
 
 class EvaluateIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     applicant: dict[str, Union[StrictBool, float, int, str, None]] = Field(..., max_length=30)
+
+
+class SimConsentIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    consent: Literal[True]  # explicit applicant consent is mandatory, as it would be for a real bureau / AA call
+    mobile_last4: str = Field(..., pattern=r"^[0-9]{4}$")
 
 
 class ResetIn(BaseModel):
@@ -54,7 +60,7 @@ class ResetIn(BaseModel):
 class TtsIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     text: str = Field(..., min_length=1, max_length=4000)
-    language: Literal["auto", "en", "hi", "hinglish"] = "en"
+    language: Literal["auto", "en", "hi", "hinglish", "bn", "ta", "te", "kn", "ml", "mr", "gu", "pa", "od"] = "en"
 
 
 @app.get("/api/health")
@@ -121,6 +127,39 @@ def evaluate_direct(body: EvaluateIn):
     if ev["status"] != "INCOMPLETE":
         ev["documents"] = required_documents(ev["loan_type"], body.applicant.get("employment_type"))
     return ev
+
+
+@app.get("/api/lenders")
+def lender_list():
+    """The (synthetic) lender panel with headline rates per product."""
+    return lenders.public_list()
+
+
+@app.post("/api/lenders/compare")
+def lender_compare(body: EvaluateIn):
+    """Eligibility, rate, EMI and fees at every lender on the panel, best first."""
+    return lenders.compare(body.applicant)
+
+
+@app.post("/api/sim/lenders/{lender_id}/eligibility")
+def sim_lender_eligibility(lender_id: str, body: EvaluateIn):
+    """SIMULATED lender eligibility API: one lender's decision on one applicant."""
+    try:
+        return lenders.lender_eligibility(lender_id, body.applicant)
+    except KeyError:
+        raise HTTPException(404, "Unknown lender")
+
+
+@app.post("/api/sim/bureau/soft-pull")
+def sim_bureau(body: SimConsentIn):
+    """SIMULATED credit bureau soft pull (no score impact). Deterministic per mobile_last4."""
+    return simulated.bureau_soft_pull(body.mobile_last4)
+
+
+@app.post("/api/sim/aa/income")
+def sim_aa(body: SimConsentIn):
+    """SIMULATED Account Aggregator income summary from 6 months of statements."""
+    return simulated.aa_income(body.mobile_last4)
 
 
 @app.get("/api/samples")

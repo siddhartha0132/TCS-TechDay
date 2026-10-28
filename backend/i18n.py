@@ -13,10 +13,19 @@ HINGLISH_WORDS = {"hai", "hoon", "hu", "mera", "meri", "mujhe", "chahiye", "kya"
                   "naukri", "kaam", "kamata", "kamati", "mein", "aur", "lena", "leni", "liye", "hoga", "hogi", "agar", "toh"}
 
 
+# Regional languages are translated to English and back (Sarvam); detected by Unicode script.
+TRANSLATED_LANGS = {"bn", "ta", "te", "kn", "ml", "mr", "gu", "pa", "od"}
+SCRIPTS = [("ta", r"[\u0B80-\u0BFF]"), ("te", r"[\u0C00-\u0C7F]"), ("kn", r"[\u0C80-\u0CFF]"), ("ml", r"[\u0D00-\u0D7F]"),
+           ("bn", r"[\u0980-\u09FF]"), ("gu", r"[\u0A80-\u0AFF]"), ("pa", r"[\u0A00-\u0A7F]"), ("od", r"[\u0B00-\u0B7F]")]
+
+
 def detect_language(text: str, preference: str | None = None) -> str:
-    """Return 'en' | 'hi' | 'hinglish'. A UI preference other than 'auto' wins."""
+    """Return en | hi | hinglish | a regional code. A UI preference other than 'auto' wins."""
     if preference and preference != "auto":
         return preference
+    for code, pat in SCRIPTS:
+        if re.search(pat, text):
+            return code
     if DEVANAGARI.search(text):
         return "hi"
     words = set(re.findall(r"[a-z]+", text.lower()))

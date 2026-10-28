@@ -5,58 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LoanMitra — Loan eligibility, explained</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/landing.css">
 </head>
 <body>
-  <!-- ================= Nav ================= -->
-  <header class="nav">
-    <div class="container nav-inner">
-      <a class="brand" href="/" aria-label="LoanMitra home"><span class="logo">₹</span>LoanMitra</a>
-      <nav class="nav-links" aria-label="Sections">
-        <a href="#problem">Problem</a>
-        <a href="#relevance">Relevance</a>
-        <a href="#gap">Market gap</a>
-        <a href="#solution">Solution</a>
-        <a href="#faq">FAQ</a>
-      </nav>
-      <a class="btn btn-primary btn-sm" href="/chat">Check eligibility →</a>
-    </div>
-  </header>
-
-  <!-- ================= Hero ================= -->
+  <!-- ================= Hero (framed, nav inside) ================= -->
   <section class="hero">
-    <div class="container hero-grid">
-      <div>
-        <span class="eyebrow">TCS Technology Day · Banking · Automated Loan Eligibility Chatbot</span>
-        <h1>Know if you'll get the loan <span class="hl">before</span> you apply — and exactly what to fix if not.</h1>
-        <p class="lead">LoanMitra is a single-agent AI chatbot that checks your loan eligibility against transparent bank rules in seconds — in English, हिंदी or Hinglish, by text or voice.</p>
-        <div class="hero-cta">
-          <a class="btn btn-primary btn-lg" href="/chat">Check my eligibility →</a>
-          <a class="btn btn-ghost btn-lg" href="#solution">See how it works</a>
+    <div class="frame">
+      <header class="nav">
+        <a class="brand" href="/" aria-label="LoanMitra home"><span class="spark" aria-hidden="true">✳</span>LoanMitra</a>
+        <nav class="nav-links" aria-label="Sections">
+          <a href="#problem">Problem</a>
+          <a href="#relevance">Relevance</a>
+          <a href="#criteria">Criteria</a>
+          <a href="#gap">Market gap</a>
+          <a href="#solution">Solution</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <a class="btn btn-light btn-sm" href="/chat">Check eligibility</a>
+      </header>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <span class="badge-new">✦ Built for TCS Technology Day · Banking</span>
+          <h1>Know your loan <span class="grad">before you apply</span></h1>
+          <p class="lead">An AI loan-eligibility assistant that checks every bank rule in seconds — and tells you exactly what to fix. In English, हिंदी and 10 more Indian languages.</p>
+          <div class="hero-cta">
+            <a class="btn btn-light btn-lg" href="/chat">Get started</a>
+            <a class="btn btn-dark btn-lg" href="#solution">How it works</a>
+          </div>
+          <ul class="ticks">
+            <li>No CIBIL impact</li><li>PAN / Aadhaar auto-masked</li><li>4 lenders compared</li>
+          </ul>
         </div>
-        <ul class="ticks">
-          <li>No impact on CIBIL</li>
-          <li>Answer in under 15 s</li>
-          <li>PAN / Aadhaar auto-masked</li>
-        </ul>
+
+        <div class="visual" aria-label="Example conversation">
+          <div class="glow" aria-hidden="true"></div>
+          <div class="mock">
+            <div class="mock-head"><span class="spark sm" aria-hidden="true">✳</span><b>LoanMitra</b><span class="online">● online</span></div>
+            <div class="mock-body">
+              <div class="b user">Mujhe 60 lakh ka home loan chahiye, flat 70 lakh ka hai. Salary 1.1 lakh, EMI 25k, CIBIL 720.</div>
+              <div class="b bot">
+                <span class="chip warn">🔒 Rules-engine verdict: Conditionally eligible</span>
+                You're eligible for up to <b>₹40.9 L</b> over 20 years.
+                <ul><li>Repayment ratio 70% vs 55% limit</li><li>Extend to 27 years → about ₹45 L</li></ul>
+              </div>
+              <div class="b user">Which bank is best for me?</div>
+              <div class="b bot"><span class="chip ok">🏦 4 lenders compared</span> Closest to your amount: <b>Udaan Finance</b> — up to ₹49 L at 9.75%.</div>
+            </div>
+          </div>
+          <div class="pedestal" aria-hidden="true"><span class="coin c1">₹</span><span class="coin c2">₹</span><span class="coin c3">₹</span></div>
+        </div>
       </div>
 
-      <div class="mock" aria-label="Example conversation">
-        <div class="mock-head"><span class="logo sm">₹</span><b>LoanMitra</b><span class="online">● online</span></div>
-        <div class="mock-body">
-          <div class="b user">Mujhe 60 lakh ka home loan chahiye, flat 70 lakh ka hai. Salary 1.1 lakh, EMI 25k, CIBIL 720.</div>
-          <div class="b bot">
-            <span class="chip warn">🔒 Rules-engine verdict: Conditionally eligible</span>
-            ₹60 L is above your limit today — but you <b>are eligible for up to ₹40.9 L</b> over 20 years.
-            <ul>
-              <li>Repayment ratio 70% vs 55% limit</li>
-              <li>Extend to 27 years → about ₹45 L</li>
-            </ul>
-          </div>
-          <div class="b user">What if my wife joins? She earns 50k.</div>
-          <div class="b bot"><span class="chip ok">What-if</span> Then you're eligible for up to <b>₹56 L</b> — limited by the 80% loan-to-value rule.</div>
-        </div>
+      <div class="hero-stats">
+        <div><b>36/36</b><span>verdicts correct</span></div>
+        <div><b>&lt;15 s</b><span>every reply</span></div>
+        <div><b>12</b><span>Indian languages</span></div>
+        <div><b>30k</b><span>profiles fuzz-tested</span></div>
       </div>
     </div>
   </section>
@@ -91,25 +97,55 @@
     </div>
   </section>
 
-  <!-- ================= 2. Relevance ================= -->
+  <!-- ================= 2. Relevance: brief checklist ================= -->
   <section class="section alt" id="relevance">
     <div class="container">
       <span class="kicker">02 · Relevance to the problem statement</span>
-      <h2>Every requirement in the brief, delivered — with proof.</h2>
+      <h2>Every line of the brief — done, with proof.</h2>
+      <p class="sub">Taken line by line from the TCS problem statement: “Solution expectations” and “Data considerations”.</p>
       <div class="table-wrap">
         <table class="req">
-          <thead><tr><th>TCS asked for</th><th>What LoanMitra does</th><th>Proof</th></tr></thead>
+          <thead><tr><th>The brief asks for</th><th>What LoanMitra does</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td>Single-agent chatbot that interacts with applicants</td><td>One AI agent with 3 tools: update profile, what-if, documents</td><td><span class="pill ok">Live</span></td></tr>
-            <tr><td>Evaluates input against eligibility rules</td><td>Transparent rules engine: age, income, CIBIL, FOIR, LTV, tenure, income multiple — 4 loan types</td><td><span class="pill ok">0 errors / 30,000 fuzzed profiles</span></td></tr>
-            <tr><td>Personalised feedback & next steps</td><td>Max eligible amount, tenure that works, EMIs to reduce, co-applicant income needed — only shown when true</td><td><span class="pill ok">Every suggestion re-verified</span></td></tr>
-            <tr><td>80%+ accuracy</td><td>Verdict always computed by the rules engine; AI only understands and explains</td><td><span class="pill ok">36 / 36 labelled conversations</span></td></tr>
-            <tr><td>Response under 15 seconds</td><td>Hard 13 s budget per reply; if a model is slow, the engine answers</td><td><span class="pill ok">4–12 s live</span></td></tr>
-            <tr><td>Synthetic data, privacy compliance</td><td>300 generated applicants; PII masked before processing; nothing stored</td><td><span class="pill ok">Masking tests pass</span></td></tr>
-            <tr><td>Natural-language understanding (GenAI)</td><td>English, हिंदी, Hinglish — typed or spoken (Sarvam AI speech)</td><td><span class="pill ok">Hindi voice round-trip</span></td></tr>
-            <tr><td>Chat UI, documentation, demo</td><td>This site + chatbot, architecture docs, demo script, test suite</td><td><span class="pill ok">On GitHub</span></td></tr>
+            <tr class="grp"><td colspan="3">Solution expectations</td></tr>
+            <tr><td>Single-agent chatbot that interacts with applicants</td><td>One AI agent with 4 tools: update profile, what-if, compare lenders, documents</td><td><span class="pill ok">✓ Done</span></td></tr>
+            <tr><td>Evaluates input data against eligibility rules</td><td>Transparent rules engine for personal, home, car and education loans</td><td><span class="pill ok">✓ 0 errors / 30k fuzzed profiles</span></td></tr>
+            <tr><td>Personalised feedback on qualification &amp; next steps</td><td>Max eligible amount, tenure that works, EMIs to reduce, co-applicant needed — each re-verified</td><td><span class="pill ok">✓ Done</span></td></tr>
+            <tr><td>80%+ accuracy</td><td>Decision always from the rules engine; AI understands and explains</td><td><span class="pill ok">✓ 36 / 36 labelled cases</span></td></tr>
+            <tr><td>Response time under 15 seconds</td><td>Hard 13 s budget per reply with automatic fallback</td><td><span class="pill ok">✓ 4–12 s live</span></td></tr>
+            <tr><td>Chat UI</td><td>Chat + quick form, live result card, what-if sliders, voice</td><td><span class="pill ok">✓ Done</span></td></tr>
+            <tr><td>Documentation on eligibility logic</td><td>README, architecture doc, rules in readable JSON</td><td><span class="pill ok">✓ Done</span></td></tr>
+            <tr><td>Demo video of typical applicant interactions</td><td>Script ready; recording by the team</td><td><span class="pill todo">⏳ Team recording</span></td></tr>
+            <tr><td>GenAI: natural language understanding</td><td>English, हिंदी, Hinglish + 9 Indian languages, typed or spoken</td><td><span class="pill ok">✓ Done</span></td></tr>
+            <tr><td>Rule-based reasoning</td><td>Every rule shown with the applicant's numbers and pass / fail</td><td><span class="pill ok">✓ Done</span></td></tr>
+            <tr class="grp"><td colspan="3">Data considerations</td></tr>
+            <tr><td>Eligibility rules &amp; criteria in structured format</td><td>rules.json (policy) + lenders.json (4-lender panel)</td><td><span class="pill ok">✓ Done</span></td></tr>
+            <tr><td>Synthetic applicant data with financial parameters</td><td>300 generated applicants + labelled test set</td><td><span class="pill ok">✓ Done</span></td></tr>
+            <tr><td>Simulated APIs for eligibility checking</td><td>Lender eligibility API per bank, credit-bureau soft pull, Account Aggregator income</td><td><span class="pill ok">✓ Done</span></td></tr>
+            <tr><td>Preprocessing to normalise inputs and criteria</td><td>“5 lacs”, “12 LPA”, “70 hazaar”, “५०००० ”, spelled-out numbers → validated values</td><td><span class="pill ok">✓ Done</span></td></tr>
+            <tr><td>Privacy compliance via synthetic data</td><td>Synthetic data only; PII masked before processing; nothing stored</td><td><span class="pill ok">✓ Done</span></td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Judging criteria ================= -->
+  <section class="section" id="criteria">
+    <div class="container">
+      <span class="kicker">Judging criteria</span>
+      <h2>How LoanMitra answers each criterion</h2>
+      <div class="criteria">
+        <div class="crit"><div class="crit-top"><b>Relevance</b><span class="marks">30 marks</span></div><div class="bar"><span class="w30"></span></div>
+          <ul><li>Every line of the brief delivered (table above)</li><li>Solves the stated pain: applicants, bank staff, rework</li><li>Indian context: CIBIL, FOIR, LTV, lakh / crore</li></ul></div>
+        <div class="crit"><div class="crit-top"><b>AI / ML / GenAI</b><span class="marks">20 marks</span></div><div class="bar"><span class="w20"></span></div>
+          <ul><li>Tool-using AI agent with a multi-model chain</li><li>Speech AI + translation for 12 languages</li><li>Rule-based reasoning the AI can't override</li></ul></div>
+        <div class="crit"><div class="crit-top"><b>Teamwork</b><span class="marks">20 marks</span></div><div class="bar"><span class="w20"></span></div>
+          <ul><li>Clear modules: rules · agent · UI &amp; voice · tests · pitch</li><li>Each member owns and demos one module</li><li>Shared tool interface let us build in parallel</li></ul></div>
+        <div class="crit"><div class="crit-top"><b>Innovation &amp; creativity</b><span class="marks">15 marks</span></div><div class="bar"><span class="w15"></span></div>
+          <ul><li>Tells you <i>why</i> and gives a plan, not just yes / no</li><li>Same applicant compared across 4 lenders</li><li>Verified-verdict chip defeats prompt injection</li></ul></div>
+        <div class="crit"><div class="crit-top"><b>Feasibility &amp; scalability</b><span class="marks">15 marks</span></div><div class="bar"><span class="w15"></span></div>
+          <ul><li>Policy is JSON — a bank swaps in its own rules</li><li>Docker, rate limits, works even without AI</li><li>Real APIs plug in behind the simulated ones</li></ul></div>
       </div>
     </div>
   </section>
@@ -187,7 +223,9 @@
       <details><summary>Is it secure enough for a bank?</summary>
         <p>We red-teamed it: rate limits, request-size limits, strict input validation, security headers and CSP, unguessable sessions, no internal error leakage. The attack suite ships with the code and re-runs in one command.</p></details>
       <details><summary>Which loans and languages are supported?</summary>
-        <p>Personal, home, car and education loans. English, Hindi (Devanagari) and Hinglish, by text or voice.</p></details>
+        <p>Personal, home, car and education loans. English, हिंदी, Hinglish, বাংলা, தமிழ், తెలుగు, मराठी, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ and ଓଡ଼ିଆ — by text or voice.</p></details>
+      <details><summary>Different banks have different rates — does it handle that?</summary>
+        <p>Yes. The same applicant is checked against a panel of four lenders (public bank, private bank, small finance bank, NBFC), each with its own rate, CIBIL cut-off and FOIR limit, and ranked by who can lend the full amount at the lowest rate. The panel is simulated with fictional names; a real deployment would plug in each lender's eligibility API.</p></details>
       <details><summary>Is this real customer data?</summary>
         <p>No. All applicants are synthetic, and the bank policy is an illustrative synthetic policy, as the problem statement recommends.</p></details>
       <details><summary>How would a bank take this to production?</summary>

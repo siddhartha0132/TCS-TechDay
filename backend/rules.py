@@ -306,7 +306,9 @@ parse_amount = parse_number  # public name kept for integrations
 
 
 # ---------------------------------------------------------------- the engine
-def evaluate(profile_in: dict[str, Any]) -> Evaluation:
+def evaluate(profile_in: dict[str, Any], policy: Optional[dict[str, Any]] = None) -> Evaluation:
+    """Evaluate against the reference policy, or against a lender's policy (see lenders.py)."""
+    policy = policy or RULES
     p, invalid = validate_profile(profile_in)
     loan_type = p.get("loan_type")
     if loan_type not in LOAN_TYPES:
@@ -318,8 +320,8 @@ def evaluate(profile_in: dict[str, Any]) -> Evaluation:
         return Evaluation(status="INCOMPLETE", loan_type=loan_type, missing_fields=missing, invalid_fields=invalid,
                           summary="A few more details are needed before I can check eligibility.")
 
-    product = RULES["products"][loan_type]
-    common = RULES["common"]
+    product = policy["products"][loan_type]
+    common = policy["common"]
     checks: list[Check] = []
     advice: list[str] = []  # suggestions for non-capacity failures
 

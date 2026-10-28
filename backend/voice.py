@@ -8,6 +8,8 @@ from __future__ import annotations
 import os
 import re
 
+from concurrent.futures import ThreadPoolExecutor
+
 import httpx
 
 SARVAM_URL = "https://api.sarvam.ai"
@@ -35,11 +37,42 @@ def speech_to_text(audio: bytes, content_type: str) -> dict:
     return {"transcript": d.get("transcript", ""), "language_code": d.get("language_code")}
 
 
+REGIONAL = {"bn", "ta", "te", "kn", "ml", "mr", "gu", "pa", "od"}
+
+
+def _code(lang: str) -> str:
+    return "en-IN" if lang in ("en", "auto", "hinglish") else f"{lang}-IN"
+
+
+def _translate_chunk(chunk: str, source: str, target: str) -> str:
+    r = httpx.post(f"{SARVAM_URL}/translate", headers=_headers(), timeout=8,
+                   json={"input": chunk, "source_language_code": _code(source), "target_language_code": _code(target)})
+    r.raise_for_status()
+    return r.json()["translated_text"]
+
+
+def translate(text: str, source: str, target: str) -> str:
+    """Sarvam translation. Lines are packed into <=900-char chunks translated in parallel (usually one call)."""
+    chunks, cur = [], ""
+    for line in text.split("\n"):
+        if cur and len(cur) + len(line) + 1 > 900:
+            chunks.append(cur)
+            cur = ""
+        cur = f"{cur}\n{line}" if cur else line[:900]
+    if cur:
+        chunks.append(cur)
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        return "\n".join(pool.map(lambda c: _translate_chunk(c, source, target), chunks))
+
+
 def text_to_speech(text: str, language: str) -> str:
-    """Return base64 WAV. Devanagari or language 'hi' -> Hindi voice, otherwise Indian English."""
+    """Return base64 WAV in the reply's language (Indian-language voices; Indian English otherwise)."""
     clean = EMOJI_AND_MARKS.sub(" ", text)
     clean = re.sub(r"\s+", " ", clean).strip()[:TTS_MAX_CHARS]
-    lang = "hi-IN" if language == "hi" or re.search(r"[ऀ-ॿ]", clean) else "en-IN"
+    if language in REGIONAL:
+        lang = f"{language}-IN"
+    else:
+        lang = "hi-IN" if language == "hi" or re.search(r"[\u0900-\u097F]", clean) else "en-IN"
     r = httpx.post(f"{SARVAM_URL}/text-to-speech", headers=_headers(), timeout=30,
                    json={"text": clean, "target_language_code": lang})
     r.raise_for_status()

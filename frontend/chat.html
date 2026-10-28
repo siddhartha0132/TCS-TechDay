@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LoanMitra — Check Loan Eligibility</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -25,6 +25,15 @@
           <option value="en">English</option>
           <option value="hi">हिंदी</option>
           <option value="hinglish">Hinglish</option>
+          <option value="bn">বাংলা</option>
+          <option value="ta">தமிழ்</option>
+          <option value="te">తెలుగు</option>
+          <option value="mr">मराठी</option>
+          <option value="gu">ગુજરાતી</option>
+          <option value="kn">ಕನ್ನಡ</option>
+          <option value="ml">മലയാളം</option>
+          <option value="pa">ਪੰਜਾਬੀ</option>
+          <option value="od">ଓଡ଼ିଆ</option>
         </select>
         <button id="ttsBtn" class="icon-btn" title="Read replies aloud" aria-pressed="false" aria-label="Read replies aloud">🔈</button>
         <button id="resetBtn" class="btn-ghost">↺ New check</button>
@@ -85,6 +94,15 @@
       <div id="formPanel" class="panel form-panel" hidden>
         <form id="quickForm" class="qform" novalidate>
           <p class="form-intro">Prefer a form? Fill these in and get your result instantly. Nothing is stored.</p>
+          <div class="autofill">
+            <div class="autofill-head"><b>⚡ Fetch my details</b> <span class="sim-tag">simulated bureau + Account Aggregator</span></div>
+            <div class="autofill-row">
+              <input id="fMobile4" type="text" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="Mobile last 4 digits" aria-label="Mobile number, last 4 digits">
+              <label class="consent"><input id="fConsent" type="checkbox"> I consent to a soft credit check and bank-statement read</label>
+              <button type="button" id="fetchBtn" class="btn-ghost">Fetch</button>
+            </div>
+            <div id="fetchOut" class="muted" aria-live="polite"></div>
+          </div>
           <div class="fgrid">
             <label class="field full"><span>Loan type</span>
               <select id="fType" required>
@@ -159,6 +177,11 @@
           <div class="kpi"><small>Tenure</small><strong id="kpiTenure">–</strong></div>
           <div class="kpi"><small>FOIR</small><strong id="kpiFoir">–</strong></div>
         </div>
+      </div>
+
+      <div class="card" id="lendersCard" hidden>
+        <h3>Compare banks <span class="sim-tag">simulated lender panel</span></h3>
+        <div id="lendersList" class="lenders"></div>
       </div>
 
       <div class="card" id="simCard" hidden>

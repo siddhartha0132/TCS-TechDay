@@ -113,3 +113,25 @@ PII masking, HTTP hardening (rate limits, body limits, headers), multi-turn conv
 - **INCOMPLETE** — still collecting facts.
 
 This is an indicative *soft check*: no bureau enquiry is made and no data is stored.
+
+## Multi-lender comparison & simulated APIs
+
+The same applicant is evaluated against a **synthetic lender panel** (`data/lenders.json`: public bank, private bank,
+small finance bank, NBFC — fictional names, illustrative rates). Each lender overrides the reference policy's rate,
+CIBIL cut-off, FOIR limit and caps; the same rules engine decides for every lender. Ranking: lenders that can give the
+full amount (cheapest rate first), then the largest reduced amount.
+
+| Endpoint | Simulates |
+|---|---|
+| `GET /api/lenders` | Lender panel with headline rates |
+| `POST /api/lenders/compare` | Eligibility, rate, EMI, fee at every lender, best first |
+| `POST /api/sim/lenders/{id}/eligibility` | One lender's eligibility API |
+| `POST /api/sim/bureau/soft-pull` | Credit bureau soft pull (score, active loans, enquiries) — needs `consent: true` |
+| `POST /api/sim/aa/income` | Account Aggregator: 6 months of income credits and EMI debits — needs `consent: true` |
+
+Simulated services are deterministic per `mobile_last4`, return `"simulated": true`, and never touch real data.
+
+## Languages
+
+English, हिंदी and Hinglish natively; বাংলা, தமிழ், తెలుగు, मराठी, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, ଓଡ଼ିଆ via Sarvam
+translation (message → English → same agent → reply translated back). Voice in and out in all of them.

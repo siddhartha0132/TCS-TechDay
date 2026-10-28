@@ -365,7 +365,11 @@
         const lang = langSelect.value === "auto" && known.includes(spoken) ? spoken : undefined;
         if (lang) setUILang(lang);
         if (transcript && transcript.trim()) { input.value = transcript.trim(); autosize(); send(undefined, lang); }
-      } catch (e) { addMessage("bot", "Sorry, I couldn't hear that clearly. Please try again or type. (" + e.message + ")"); }
+      } catch (e) {
+        // Speech service down or out of credits: switch to the browser's own speech recognition for the rest of the session.
+        if (SR) { voiceEngine = "browser"; addMessage("bot", "The voice service is busy, so I've switched to your browser's voice input. Tap the mic and speak again."); }
+        else addMessage("bot", "Sorry, I couldn't hear that clearly. Please type your message. (" + e.message + ")");
+      }
       finally { input.placeholder = "Type your message…"; }
     };
     recorder.start();
